@@ -124,8 +124,10 @@ export function StylePicker({ category, onSelect, onClose }: Props) {
       }}>
         <div style={{
           width: '100%', maxWidth: 720, maxHeight: '85vh',
-          background: 'var(--surface-1)', border: '1px solid var(--hairline-strong)',
-          borderRadius: 'var(--r-xl)', boxShadow: '0 24px 80px rgba(0,0,0,0.6)',
+          background: '#111116',
+          border: '1px solid rgba(255,255,255,0.1)',
+          borderRadius: 'var(--r-xl)',
+          boxShadow: '0 32px 96px rgba(0,0,0,0.8)',
           display: 'flex', flexDirection: 'column',
           overflow: 'hidden', pointerEvents: 'all',
           animation: 'scaleIn .18s cubic-bezier(.16,1,.3,1)',
