@@ -17,7 +17,7 @@ export type IngredientType = 'malt' | 'hop' | 'yeast' | 'adjunct' | 'chemical' |
 export type HopUse = 'bittering' | 'flavor' | 'aroma' | 'dry_hop' | 'whirlpool'
 export type FermentationStage = 'primary' | 'secondary' | 'conditioning'
 
-export interface Recipe {
+export type Recipe = {
   id: string
   created_at: string
   updated_at: string
@@ -44,7 +44,7 @@ export interface Recipe {
   adjuncts: RecipeAdjunct[]
 }
 
-export interface RecipeMalt {
+export type RecipeMalt = {
   id: string
   name: string
   amount_kg: number
@@ -52,7 +52,7 @@ export interface RecipeMalt {
   extract_potential: number
 }
 
-export interface RecipeHop {
+export type RecipeHop = {
   id: string
   name: string
   amount_g: number
@@ -61,7 +61,7 @@ export interface RecipeHop {
   time_min: number
 }
 
-export interface RecipeYeast {
+export type RecipeYeast = {
   id: string
   name: string
   brand: string
@@ -70,7 +70,7 @@ export interface RecipeYeast {
   temp_max: number
 }
 
-export interface RecipeAdjunct {
+export type RecipeAdjunct = {
   id: string
   name: string
   amount: number
@@ -80,7 +80,7 @@ export interface RecipeAdjunct {
   sugar_content?: number | null // g/100g or g/100ml for sugar calculation
 }
 
-export interface BrewLog {
+export type BrewLog = {
   id: string
   created_at: string
   updated_at: string
@@ -101,7 +101,7 @@ export interface BrewLog {
   cost_per_liter: number | null
 }
 
-export interface FermentationLog {
+export type FermentationLog = {
   id: string
   created_at: string
   brew_log_id: string
@@ -114,7 +114,7 @@ export interface FermentationLog {
   notes: string | null
 }
 
-export interface InventoryItem {
+export type InventoryItem = {
   id: string
   created_at: string
   updated_at: string
@@ -128,14 +128,43 @@ export interface InventoryItem {
   notes: string | null
 }
 
-export interface Database {
+export type Database = {
   public: {
     Tables: {
-      recipes:          { Row: Recipe;          Insert: Omit<Recipe, 'id'|'created_at'|'updated_at'>;          Update: Partial<Recipe> }
-      brew_logs:        { Row: BrewLog;         Insert: Omit<BrewLog, 'id'|'created_at'|'updated_at'>;         Update: Partial<BrewLog> }
-      fermentation_logs:{ Row: FermentationLog; Insert: Omit<FermentationLog, 'id'|'created_at'>;              Update: Partial<FermentationLog> }
-      inventory:        { Row: InventoryItem;   Insert: Omit<InventoryItem, 'id'|'created_at'|'updated_at'>;   Update: Partial<InventoryItem> }
+      recipes: {
+        Row: Recipe
+        Insert: Omit<Recipe, 'id'|'created_at'|'updated_at'>
+        Update: Partial<Recipe>
+        Relationships: []
+      }
+      brew_logs: {
+        Row: BrewLog
+        Insert: Omit<BrewLog, 'id'|'created_at'|'updated_at'>
+        Update: Partial<BrewLog>
+        Relationships: []
+      }
+      fermentation_logs: {
+        Row: FermentationLog
+        Insert: Omit<FermentationLog, 'id'|'created_at'>
+        Update: Partial<FermentationLog>
+        Relationships: []
+      }
+      inventory: {
+        Row: InventoryItem
+        Insert: Omit<InventoryItem, 'id'|'created_at'|'updated_at'>
+        Update: Partial<InventoryItem>
+        Relationships: []
+      }
     }
+    Views: { [_ in never]: never }
+    Functions: { [_ in never]: never }
+    Enums: {
+      beverage_category: BeverageCategory
+      brew_status: BrewStatus
+      ingredient_type: IngredientType
+      fermentation_stage: FermentationStage
+    }
+    CompositeTypes: { [_ in never]: never }
   }
 }
 

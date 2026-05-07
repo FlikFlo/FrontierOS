@@ -66,7 +66,9 @@ export function getBrewStatusBadge(status: string): string {
 export function getIngredientTypeLabel(type: string): string {
   const labels: Record<string, string> = {
     malt: 'Солод', hop: 'Хмель', yeast: 'Дрожжи',
-    adjunct: 'Добавка', chemical: 'Химия', other: 'Прочее',
+    adjunct: 'Добавка', chemical: 'Химия',
+    fruit: 'Фрукты', sugar: 'Сахар', spice: 'Специи',
+    tea: 'Чай', juice: 'Сок', other: 'Прочее',
   }
   return labels[type] ?? type
 }

@@ -1,13 +1,14 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Trash2, FlaskConical, Droplets, Clock, Percent, ChevronDown } from 'lucide-react'
+import { Plus, Trash2, FlaskConical, Droplets, Clock, Percent } from 'lucide-react'
 import type { BeverageCategory, RecipeMalt, RecipeHop, RecipeYeast, RecipeAdjunct } from '@/types/database'
 import { BEVERAGE_CATEGORIES } from '@/types/database'
 import { calcUniversalStats } from '@/lib/beverage-calc'
 import { COMMON_MALTS, COMMON_HOPS, COMMON_YEASTS } from '@/lib/beer-calc'
 import { COMMON_ADJUNCTS } from '@/lib/beverage-calc'
+import { saveRecipe } from '@/app/actions/recipes'
 import RecipeStatsPanel from './RecipeStatsPanel'
 
 const uid = () => Math.random().toString(36).slice(2)
@@ -33,9 +34,47 @@ export default function RecipeEditor() {
   const [hops, setHops] = useState<RecipeHop[]>([])
   const [yeasts, setYeasts] = useState<RecipeYeast[]>([])
   const [adjuncts, setAdjuncts] = useState<RecipeAdjunct[]>([])
+  const [notes, setNotes] = useState('')
 
   // Active tab
   const [activeTab, setActiveTab] = useState<'ingredients' | 'process' | 'notes'>('ingredients')
+
+  // Save state
+  const [isPending, startTransition] = useTransition()
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
+  const onSave = () => {
+    setErrorMsg(null)
+    if (!name.trim()) {
+      setErrorMsg('Укажите название рецепта')
+      return
+    }
+    startTransition(async () => {
+      const res = await saveRecipe({
+        name: name.trim(),
+        category,
+        style: style.trim(),
+        description: description.trim() || null,
+        batch_size_l: batchSize,
+        efficiency,
+        boil_time_min: boilTime,
+        notes: notes.trim() || null,
+        og_target: stats.og,
+        fg_target: stats.fg,
+        abv_target: stats.abv,
+        ibu_target: stats.ibu,
+        srm_target: stats.srm,
+        brix_target: stats.brix,
+        ph_target: null,
+        malts, hops, yeasts, adjuncts,
+      })
+      if (!res.ok) {
+        setErrorMsg(res.error)
+        return
+      }
+      router.push(`/recipes/${res.id}`)
+    })
+  }
 
   // Stats (recalculated live)
   const stats = calcUniversalStats(category, malts, hops, yeasts, adjuncts, batchSize, efficiency, boilTime)
@@ -434,18 +473,40 @@ export default function RecipeEditor() {
               {activeTab === 'notes' && (
                 <div>
                   <label className="block text-xs text-white/40 mb-2 uppercase tracking-wider">Заметки пивовара</label>
-                  <textarea className="glass-input resize-none h-40 text-sm" placeholder="Личные заметки, наблюдения, изменения..." />
+                  <textarea
+                    className="glass-input resize-none h-40 text-sm"
+                    placeholder="Личные заметки, наблюдения, изменения..."
+                    value={notes}
+                    onChange={e => setNotes(e.target.value)}
+                  />
                 </div>
               )}
             </div>
           </div>
 
           {/* Save */}
+          {errorMsg && (
+            <div className="glass-sm p-3 border border-red-500/30 bg-red-500/5 text-sm text-red-300">
+              {errorMsg}
+            </div>
+          )}
           <div className="flex gap-3">
-            <button className="btn-primary flex-1 justify-center py-3 text-base font-semibold">
-              Сохранить рецепт
+            <button
+              type="button"
+              className="btn-primary flex-1 justify-center py-3 text-base font-semibold disabled:opacity-50"
+              onClick={onSave}
+              disabled={isPending}
+            >
+              {isPending ? 'Сохранение...' : 'Сохранить рецепт'}
             </button>
-            <button className="btn-glass py-3 px-6">Отмена</button>
+            <button
+              type="button"
+              className="btn-glass py-3 px-6"
+              onClick={() => router.back()}
+              disabled={isPending}
+            >
+              Отмена
+            </button>
           </div>
         </div>
 
