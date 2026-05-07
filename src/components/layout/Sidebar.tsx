@@ -12,6 +12,8 @@ import {
   BarChart3,
   Settings,
   Beer,
+  Wrench,
+  LayoutGrid,
   ChevronRight,
 } from 'lucide-react'
 
@@ -21,6 +23,8 @@ const navItems = [
   { href: '/brews', label: 'Варки', icon: BookOpen },
   { href: '/fermentation', label: 'Ферментация', icon: Thermometer },
   { href: '/inventory', label: 'Склад', icon: Package },
+  { href: '/equipment', label: 'Оборудование', icon: Wrench },
+  { href: '/floor', label: 'План цеха', icon: LayoutGrid },
   { href: '/sales', label: 'Продажи', icon: ShoppingCart },
   { href: '/analytics', label: 'Аналитика', icon: BarChart3 },
   { href: '/settings', label: 'Настройки', icon: Settings },

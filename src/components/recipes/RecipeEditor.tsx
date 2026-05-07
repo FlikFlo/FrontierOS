@@ -513,7 +513,15 @@ export default function RecipeEditor() {
         {/* Right: Stats Panel */}
         <div className="xl:col-span-1">
           <div className="sticky top-20">
-            <RecipeStatsPanel stats={stats} category={category} />
+            <RecipeStatsPanel
+              stats={stats}
+              category={category}
+              style={style}
+              malts={malts}
+              hops={hops}
+              adjuncts={adjuncts}
+              yeastAttenuation={yeasts[0]?.attenuation}
+            />
           </div>
         </div>
       </div>

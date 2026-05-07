@@ -1,4 +1,4 @@
-import type { Recipe, BrewLog } from '@/types/database'
+import type { Recipe, BrewLog, Equipment } from '@/types/database'
 
 const now = new Date().toISOString()
 
@@ -114,4 +114,49 @@ export const mockBrews: BrewLog[] = [
     og_actual: null, fg_actual: null, abv_actual: null,
     efficiency_actual: null, total_cost: null, cost_per_liter: null,
   },
+]
+
+export const mockEquipment: Equipment[] = [
+  { id: 'mock-e1', created_at: now, updated_at: now,
+    name: 'Затирочный чан 50 л', type: 'mash_tun', capacity_l: 50,
+    status: 'clean', current_brew_id: null, position_x: 1, position_y: 1, notes: null },
+  { id: 'mock-e2', created_at: now, updated_at: now,
+    name: 'Сусловарочный котёл 60 л', type: 'brew_kettle', capacity_l: 60,
+    status: 'clean', current_brew_id: null, position_x: 3, position_y: 1, notes: null },
+  { id: 'mock-e3', created_at: now, updated_at: now,
+    name: 'HLT 60 л', type: 'hlt', capacity_l: 60,
+    status: 'clean', current_brew_id: null, position_x: 5, position_y: 1, notes: null },
+  { id: 'mock-e4', created_at: now, updated_at: now,
+    name: 'Ферментер #1', type: 'fermenter', capacity_l: 30,
+    status: 'in_use', current_brew_id: 'mock-b1', position_x: 1, position_y: 4, notes: 'West Coast IPA #042' },
+  { id: 'mock-e5', created_at: now, updated_at: now,
+    name: 'Ферментер #2', type: 'fermenter', capacity_l: 30,
+    status: 'in_use', current_brew_id: 'mock-b2', position_x: 3, position_y: 4, notes: 'Oatmeal Stout #041' },
+  { id: 'mock-e6', created_at: now, updated_at: now,
+    name: 'Ферментер #3', type: 'fermenter', capacity_l: 30,
+    status: 'cleaning', current_brew_id: null, position_x: 5, position_y: 4, notes: null },
+  { id: 'mock-e7', created_at: now, updated_at: now,
+    name: 'Танк дображивания 30 л', type: 'conditioning_tank', capacity_l: 30,
+    status: 'in_use', current_brew_id: 'mock-b3', position_x: 7, position_y: 4, notes: 'Belgian Tripel #040' },
+  { id: 'mock-e8', created_at: now, updated_at: now,
+    name: 'Форфас 50 л', type: 'bright_tank', capacity_l: 50,
+    status: 'clean', current_brew_id: null, position_x: 9, position_y: 4, notes: null },
+  { id: 'mock-e9', created_at: now, updated_at: now,
+    name: 'Кега A', type: 'keg', capacity_l: 30,
+    status: 'clean', current_brew_id: null, position_x: 1, position_y: 7, notes: null },
+  { id: 'mock-e10', created_at: now, updated_at: now,
+    name: 'Кега B', type: 'keg', capacity_l: 30,
+    status: 'in_use', current_brew_id: 'mock-b3', position_x: 2, position_y: 7, notes: 'Belgian Tripel' },
+  { id: 'mock-e11', created_at: now, updated_at: now,
+    name: 'Кега C', type: 'keg', capacity_l: 30,
+    status: 'dirty', current_brew_id: null, position_x: 3, position_y: 7, notes: null },
+  { id: 'mock-e12', created_at: now, updated_at: now,
+    name: 'Чиллер противоточный', type: 'chiller', capacity_l: null,
+    status: 'clean', current_brew_id: null, position_x: 7, position_y: 1, notes: null },
+  { id: 'mock-e13', created_at: now, updated_at: now,
+    name: 'Насос Riptide', type: 'pump', capacity_l: null,
+    status: 'clean', current_brew_id: null, position_x: 9, position_y: 1, notes: null },
+  { id: 'mock-e14', created_at: now, updated_at: now,
+    name: 'Баллон CO₂ 5 кг', type: 'co2_tank', capacity_l: null,
+    status: 'in_use', current_brew_id: null, position_x: 11, position_y: 1, notes: '60% заполнен' },
 ]

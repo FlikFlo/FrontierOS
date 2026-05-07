@@ -33,6 +33,20 @@ do $$ begin
   );
 exception when duplicate_object then null; end $$;
 
+do $$ begin
+  create type equipment_type as enum (
+    'mash_tun', 'brew_kettle', 'hlt', 'fermenter',
+    'conditioning_tank', 'bright_tank', 'keg', 'bottle',
+    'chiller', 'pump', 'co2_tank', 'other'
+  );
+exception when duplicate_object then null; end $$;
+
+do $$ begin
+  create type equipment_status as enum (
+    'clean', 'dirty', 'in_use', 'cleaning', 'maintenance', 'retired'
+  );
+exception when duplicate_object then null; end $$;
+
 -- =====================
 -- RECIPES
 -- =====================
@@ -119,6 +133,23 @@ create table if not exists inventory (
 );
 
 -- =====================
+-- EQUIPMENT
+-- =====================
+create table if not exists equipment (
+  id uuid primary key default uuid_generate_v4(),
+  created_at timestamptz default now(),
+  updated_at timestamptz default now(),
+  name text not null,
+  type equipment_type not null,
+  capacity_l numeric(8,2),
+  status equipment_status not null default 'clean',
+  current_brew_id uuid references brew_logs(id) on delete set null,
+  position_x integer,
+  position_y integer,
+  notes text
+);
+
+-- =====================
 -- INDEXES
 -- =====================
 create index if not exists recipes_category_idx     on recipes (category);
@@ -126,6 +157,8 @@ create index if not exists brew_logs_status_idx     on brew_logs (status);
 create index if not exists brew_logs_recipe_id_idx  on brew_logs (recipe_id);
 create index if not exists fermentation_brew_idx    on fermentation_logs (brew_log_id);
 create index if not exists inventory_type_idx       on inventory (type);
+create index if not exists equipment_type_idx       on equipment (type);
+create index if not exists equipment_status_idx     on equipment (status);
 
 -- =====================
 -- updated_at trigger
@@ -148,6 +181,10 @@ create trigger brew_logs_updated_at before update on brew_logs
 
 drop trigger if exists inventory_updated_at on inventory;
 create trigger inventory_updated_at before update on inventory
+  for each row execute function update_updated_at();
+
+drop trigger if exists equipment_updated_at on equipment;
+create trigger equipment_updated_at before update on equipment
   for each row execute function update_updated_at();
 
 -- =====================

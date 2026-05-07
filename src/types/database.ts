@@ -17,6 +17,66 @@ export type IngredientType = 'malt' | 'hop' | 'yeast' | 'adjunct' | 'chemical' |
 export type HopUse = 'bittering' | 'flavor' | 'aroma' | 'dry_hop' | 'whirlpool'
 export type FermentationStage = 'primary' | 'secondary' | 'conditioning'
 
+export type EquipmentType =
+  | 'mash_tun'
+  | 'brew_kettle'
+  | 'hlt'              // hot liquor tank
+  | 'fermenter'
+  | 'conditioning_tank'
+  | 'bright_tank'
+  | 'keg'
+  | 'bottle'
+  | 'chiller'
+  | 'pump'
+  | 'co2_tank'
+  | 'other'
+
+export type EquipmentStatus =
+  | 'clean'
+  | 'dirty'
+  | 'in_use'
+  | 'cleaning'
+  | 'maintenance'
+  | 'retired'
+
+export type Equipment = {
+  id: string
+  created_at: string
+  updated_at: string
+  name: string
+  type: EquipmentType
+  capacity_l: number | null
+  status: EquipmentStatus
+  current_brew_id: string | null
+  position_x: number | null
+  position_y: number | null
+  notes: string | null
+}
+
+export const EQUIPMENT_TYPES: { value: EquipmentType; label: string; emoji: string; defaultCapacity: number | null }[] = [
+  { value: 'mash_tun',          label: 'Затирочный чан',  emoji: '🥣', defaultCapacity: 50 },
+  { value: 'brew_kettle',       label: 'Сусловарочник',   emoji: '🍲', defaultCapacity: 50 },
+  { value: 'hlt',               label: 'HLT (горячая)',   emoji: '🫗', defaultCapacity: 50 },
+  { value: 'fermenter',         label: 'Ферментер',       emoji: '🛢️', defaultCapacity: 30 },
+  { value: 'conditioning_tank', label: 'Танк дображивания', emoji: '🛢️', defaultCapacity: 30 },
+  { value: 'bright_tank',       label: 'Форфас',          emoji: '⚗️', defaultCapacity: 50 },
+  { value: 'keg',               label: 'Кега',            emoji: '🛢️', defaultCapacity: 30 },
+  { value: 'bottle',            label: 'Бутылки',         emoji: '🍾', defaultCapacity: null },
+  { value: 'chiller',           label: 'Чиллер',          emoji: '❄️', defaultCapacity: null },
+  { value: 'pump',              label: 'Насос',           emoji: '🔧', defaultCapacity: null },
+  { value: 'co2_tank',          label: 'Баллон CO₂',      emoji: '🧯', defaultCapacity: null },
+  { value: 'other',             label: 'Другое',          emoji: '📦', defaultCapacity: null },
+]
+
+export const EQUIPMENT_STATUSES: { value: EquipmentStatus; label: string; badge: string }[] = [
+  { value: 'clean',       label: 'Чистый',          badge: 'badge-green'  },
+  { value: 'dirty',       label: 'Грязный',         badge: 'badge-orange' },
+  { value: 'in_use',      label: 'В работе',        badge: 'badge-blue'   },
+  { value: 'cleaning',    label: 'Мойка',           badge: 'badge-amber'  },
+  { value: 'maintenance', label: 'ТО',              badge: 'badge-purple' },
+  { value: 'retired',     label: 'Списано',         badge: 'badge-gray'   },
+]
+
 export type Recipe = {
   id: string
   created_at: string
@@ -155,6 +215,12 @@ export type Database = {
         Update: Partial<InventoryItem>
         Relationships: []
       }
+      equipment: {
+        Row: Equipment
+        Insert: Omit<Equipment, 'id'|'created_at'|'updated_at'>
+        Update: Partial<Equipment>
+        Relationships: []
+      }
     }
     Views: { [_ in never]: never }
     Functions: { [_ in never]: never }
@@ -163,6 +229,8 @@ export type Database = {
       brew_status: BrewStatus
       ingredient_type: IngredientType
       fermentation_stage: FermentationStage
+      equipment_type: EquipmentType
+      equipment_status: EquipmentStatus
     }
     CompositeTypes: { [_ in never]: never }
   }
