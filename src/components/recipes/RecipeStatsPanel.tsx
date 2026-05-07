@@ -2,13 +2,60 @@
 
 import type { BeverageCategory } from '@/types/database'
 import type { BeverageStats } from '@/lib/beverage-calc'
+import type { BeerStyle } from '@/lib/bjcp-styles'
 import { srmToColor } from '@/lib/utils'
-import { Eye, FlaskConical, Zap, Droplets, Thermometer } from 'lucide-react'
+import { Eye, FlaskConical, Zap, Droplets, Thermometer, Target, Check, X } from 'lucide-react'
 import { Card } from '@/components/ui/Card'
 
 interface Props {
   stats: BeverageStats
   category: BeverageCategory
+  bjcpStyle?: BeerStyle | null
+}
+
+// Shows a value vs [min,max] range with an inline indicator
+function StyleCheck({ label, value, range, fmt }: {
+  label: string; value: number | null | undefined; range: [number, number]; fmt: (v: number) => string
+}) {
+  if (value == null) return null
+  const inRange = value >= range[0] && value <= range[1]
+  const pct = Math.min(100, Math.max(0, ((value - range[0]) / (range[1] - range[0])) * 100))
+  return (
+    <div style={{ marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+        <span style={{ fontSize: 11, color: 'var(--t-3)' }}>{label}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+          <span className="t-mono" style={{ fontSize: 11.5, fontWeight: 600, color: inRange ? 'var(--ok)' : 'var(--bad)' }}>
+            {fmt(value)}
+          </span>
+          {inRange
+            ? <Check size={10} style={{ color: 'var(--ok)' }} />
+            : <X size={10} style={{ color: 'var(--bad)' }} />
+          }
+        </div>
+      </div>
+      <div style={{ position: 'relative', height: 4, background: 'var(--surface-3)', borderRadius: 2, overflow: 'visible' }}>
+        {/* Range zone */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'rgba(34,197,94,0.2)', borderRadius: 2,
+        }} />
+        {/* Current value marker */}
+        <div style={{
+          position: 'absolute', top: -2, width: 8, height: 8, borderRadius: '50%',
+          left: `calc(${Math.min(95, Math.max(2, ((value - range[0] * 0.8) / (range[1] * 1.2 - range[0] * 0.8)) * 100)}% - 4px)`,
+          background: inRange ? 'var(--ok)' : 'var(--bad)',
+          border: '2px solid var(--surface-1)',
+          boxShadow: `0 0 6px ${inRange ? 'var(--ok)' : 'var(--bad)'}`,
+          zIndex: 1,
+        }} />
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
+        <span className="t-mono" style={{ fontSize: 9, color: 'var(--t-5, var(--t-4))' }}>{fmt(range[0])}</span>
+        <span className="t-mono" style={{ fontSize: 9, color: 'var(--t-5, var(--t-4))' }}>{fmt(range[1])}</span>
+      </div>
+    </div>
+  )
 }
 
 function Row({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
@@ -55,7 +102,7 @@ function Gauge({ value, min, max }: { value: number; min: number; max: number })
   )
 }
 
-export default function RecipeStatsPanel({ stats, category }: Props) {
+export default function RecipeStatsPanel({ stats, category, bjcpStyle }: Props) {
   const srmColor = stats.srm ? srmToColor(stats.srm) : '#FFE699'
   const isBeer = category === 'beer'
   const isKombucha = category === 'kombucha'
@@ -143,6 +190,18 @@ export default function RecipeStatsPanel({ stats, category }: Props) {
           <Row label="До кипячения"   value={`${stats.preboilVolume} л`} />
           <Row label="Зерна всего"    value={`${stats.totalGrainKg.toFixed(2)} кг`} />
           {stats.totalHopG > 0 && <Row label="Хмель всего" value={`${stats.totalHopG} г`} />}
+        </Section>
+      )}
+
+      {/* BJCP style compliance */}
+      {bjcpStyle && isBeer && (
+        <Section title={`Стиль: ${bjcpStyle.name}`} icon={<Target size={11} />}>
+          <p style={{ fontSize: 10.5, color: 'var(--t-3)', marginBottom: 10 }}>{bjcpStyle.id}</p>
+          <StyleCheck label="OG" value={stats.og} range={bjcpStyle.og} fmt={v => v.toFixed(3)} />
+          <StyleCheck label="FG" value={stats.fg} range={bjcpStyle.fg} fmt={v => v.toFixed(3)} />
+          <StyleCheck label="ABV" value={stats.abv} range={bjcpStyle.abv} fmt={v => `${v.toFixed(1)}%`} />
+          <StyleCheck label="IBU" value={stats.ibu} range={bjcpStyle.ibu} fmt={v => v.toFixed(0)} />
+          <StyleCheck label="SRM" value={stats.srm} range={bjcpStyle.srm} fmt={v => v.toFixed(1)} />
         </Section>
       )}
 
