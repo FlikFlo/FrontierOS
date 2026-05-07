@@ -418,6 +418,68 @@ input[type=number] { -moz-appearance: textfield; }
 ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.16); }
 
 /* ─────────────────────────────────────────────────────────────────────────
+   FLOOR PLAN — equipment grid
+   ───────────────────────────────────────────────────────────────────────── */
+.floor-grid {
+  position: relative;
+  display: grid;
+  background-color: var(--surface-1);
+  background-image:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  overflow: auto;
+  user-select: none;
+}
+.floor-cell-hover {
+  background: rgba(251, 191, 36, 0.08) !important;
+  outline: 1px dashed rgba(251, 191, 36, 0.5);
+  outline-offset: -1px;
+}
+.equip-card {
+  position: absolute;
+  border-radius: var(--r-md);
+  padding: 10px 12px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline-strong);
+  cursor: grab;
+  transition: box-shadow .15s ease, transform .15s ease, border-color .15s ease;
+  display: flex; flex-direction: column;
+  overflow: hidden;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+.equip-card:hover {
+  border-color: var(--accent-edge);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3), 0 0 0 1px var(--accent-edge);
+  z-index: 10;
+}
+.equip-card.dragging {
+  cursor: grabbing;
+  opacity: 0.6;
+  z-index: 20;
+}
+.equip-card.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px var(--accent-edge), 0 8px 24px rgba(0,0,0,0.3);
+}
+.equip-card.in-use { border-color: rgba(96,165,250,0.35); }
+.equip-card.cip   { border-color: rgba(251,191,36,0.35); background: rgba(251,191,36,0.04); }
+.equip-card.maintenance { border-color: rgba(248,113,113,0.35); background: rgba(248,113,113,0.04); }
+
+.equip-fill-track {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--surface-2);
+}
+.equip-fill-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-2), var(--accent));
+}
+
+/* ─────────────────────────────────────────────────────────────────────────
    LEGACY COMPAT — keep old class names working until RecipeEditor migration
    ───────────────────────────────────────────────────────────────────────── */
 .glass {

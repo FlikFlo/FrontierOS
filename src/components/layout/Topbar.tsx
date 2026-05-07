@@ -7,6 +7,8 @@ const pageLabels: Record<string, string> = {
   '/': 'Дашборд',
   '/recipes': 'Рецепты',
   '/calculator': 'Калькулятор',
+  '/calendar': 'Календарь',
+  '/equipment': 'Оборудование',
   '/brews': 'Варки',
   '/fermentation': 'Ферментация',
   '/inventory': 'Склад',

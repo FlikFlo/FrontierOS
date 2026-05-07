@@ -13,14 +13,18 @@ import {
   Settings,
   Calculator,
   Beer,
+  Cylinder,
+  CalendarDays,
 } from 'lucide-react'
 
 const navItems = [
   { href: '/',            label: 'Дашборд',    icon: LayoutDashboard },
   { href: '/recipes',     label: 'Рецепты',    icon: FlaskConical },
   { href: '/calculator',  label: 'Калькулятор',icon: Calculator },
+  { href: '/calendar',    label: 'Календарь',  icon: CalendarDays },
   { href: '/brews',       label: 'Варки',      icon: BookOpen },
   { href: '/fermentation',label: 'Ферментация',icon: Thermometer },
+  { href: '/equipment',   label: 'Оборудование',icon: Cylinder },
   { href: '/inventory',   label: 'Склад',      icon: Package },
   { href: '/sales',       label: 'Продажи',    icon: ShoppingCart },
   { href: '/analytics',   label: 'Аналитика',  icon: BarChart3 },
