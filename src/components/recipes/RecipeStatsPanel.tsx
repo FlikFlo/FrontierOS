@@ -35,20 +35,22 @@ function StyleCheck({ label, value, range, fmt }: {
         </div>
       </div>
       <div style={{ position: 'relative', height: 4, background: 'var(--surface-3)', borderRadius: 2, overflow: 'visible' }}>
-        {/* Range zone */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'rgba(34,197,94,0.2)', borderRadius: 2,
-        }} />
-        {/* Current value marker */}
-        <div style={{
-          position: 'absolute', top: -2, width: 8, height: 8, borderRadius: '50%',
-          left: `calc(${Math.min(95, Math.max(2, ((value - range[0] * 0.8) / (range[1] * 1.2 - range[0] * 0.8)) * 100)}% - 4px)`,
-          background: inRange ? 'var(--ok)' : 'var(--bad)',
-          border: '2px solid var(--surface-1)',
-          boxShadow: `0 0 6px ${inRange ? 'var(--ok)' : 'var(--bad)'}`,
-          zIndex: 1,
-        }} />
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(34,197,94,0.2)', borderRadius: 2 }} />
+        {(() => {
+          const lo = range[0] * 0.8
+          const hi = range[1] * 1.2
+          const pctLeft = Math.min(95, Math.max(2, ((value - lo) / (hi - lo)) * 100))
+          return (
+            <div style={{
+              position: 'absolute', top: -2, width: 8, height: 8, borderRadius: '50%',
+              left: `${pctLeft}%`, marginLeft: -4,
+              background: inRange ? 'var(--ok)' : 'var(--bad)',
+              border: '2px solid var(--surface-1)',
+              boxShadow: `0 0 6px ${inRange ? 'var(--ok)' : 'var(--bad)'}`,
+              zIndex: 1,
+            }} />
+          )
+        })()}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 3 }}>
         <span className="t-mono" style={{ fontSize: 9, color: 'var(--t-5, var(--t-4))' }}>{fmt(range[0])}</span>
