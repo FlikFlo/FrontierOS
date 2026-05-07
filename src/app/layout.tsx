@@ -16,10 +16,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ru" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body className="bg-brewery min-h-screen">
-        <Sidebar />
-        <div className="ml-64 flex flex-col min-h-screen">
-          <Topbar />
-          <main className="flex-1 p-6">{children}</main>
+        <div style={{ display: 'grid', gridTemplateColumns: '16rem 1fr', minHeight: '100vh' }}>
+          <Sidebar />
+          <div className="flex flex-col min-w-0">
+            <Topbar />
+            <main className="flex-1 p-6 min-w-0">{children}</main>
+          </div>
         </div>
       </body>
     </html>

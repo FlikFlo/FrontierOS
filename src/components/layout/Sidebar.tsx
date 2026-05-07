@@ -32,7 +32,10 @@ export default function Sidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="glass-sidebar flex flex-col w-64 min-h-screen fixed left-0 top-0 z-40">
+    <aside
+      className="glass-sidebar flex flex-col w-64"
+      style={{ position: 'sticky', top: 0, height: '100vh', alignSelf: 'start', zIndex: 40 }}
+    >
       {/* Logo */}
       <div className="flex items-center gap-3 px-6 py-6 border-b border-white/10">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center glow-amber">
