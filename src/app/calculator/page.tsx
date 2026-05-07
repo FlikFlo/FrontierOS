@@ -2,9 +2,9 @@
 
 import { useState, useMemo, type ComponentType } from 'react'
 import {
-  Calculator, Droplets, Wind, FlaskConical, TestTube, Beaker, Sparkles,
+  Calculator, Droplets, Wind, FlaskConical, TestTube, Beaker,
   AlertTriangle, ArrowLeftRight, Gauge, Thermometer, Beer, Apple, Wheat,
-  Leaf, Citrus, Flame, ArrowRight,
+  Leaf, Citrus, Flame, Sparkles, ArrowDown,
 } from 'lucide-react'
 import {
   brixToSG, sgToBrix, calcABV, calcOGFromSugar,
@@ -74,31 +74,13 @@ const CATEGORIES: { key: CategoryKey; label: string; icon: ComponentType<{ size?
 
 // ─── accent colour helpers ─────────────────────────────────────────────────
 
-const ACCENT_GLOW: Record<Accent, string> = {
-  amber:   'rgba(251, 191, 36, 0.35)',
-  blue:    'rgba(96, 165, 250, 0.35)',
-  emerald: 'rgba(52, 211, 153, 0.35)',
-  violet:  'rgba(167, 139, 250, 0.35)',
-  rose:    'rgba(251, 113, 133, 0.35)',
-  cyan:    'rgba(34, 211, 238, 0.35)',
-}
-
-const ACCENT_GRAD: Record<Accent, string> = {
-  amber:   'linear-gradient(135deg, #fbbf24, #f97316)',
-  blue:    'linear-gradient(135deg, #60a5fa, #3b82f6)',
-  emerald: 'linear-gradient(135deg, #34d399, #10b981)',
-  violet:  'linear-gradient(135deg, #a78bfa, #8b5cf6)',
-  rose:    'linear-gradient(135deg, #fb7185, #e11d48)',
-  cyan:    'linear-gradient(135deg, #22d3ee, #0891b2)',
-}
-
-const ACCENT_BORDER: Record<Accent, string> = {
-  amber:   'rgba(251, 191, 36, 0.25)',
-  blue:    'rgba(96, 165, 250, 0.25)',
-  emerald: 'rgba(52, 211, 153, 0.25)',
-  violet:  'rgba(167, 139, 250, 0.25)',
-  rose:    'rgba(251, 113, 133, 0.25)',
-  cyan:    'rgba(34, 211, 238, 0.25)',
+const ACCENT: Record<Accent, { glow: string; grad: string; border: string; bg: string }> = {
+  amber:   { glow: 'rgba(251, 191, 36, 0.45)',  grad: 'linear-gradient(135deg, #fbbf24, #f97316)', border: 'rgba(251, 191, 36, 0.4)',  bg: 'rgba(251, 191, 36, 0.08)' },
+  blue:    { glow: 'rgba(96, 165, 250, 0.45)',  grad: 'linear-gradient(135deg, #60a5fa, #3b82f6)', border: 'rgba(96, 165, 250, 0.4)',  bg: 'rgba(96, 165, 250, 0.08)' },
+  emerald: { glow: 'rgba(52, 211, 153, 0.45)',  grad: 'linear-gradient(135deg, #34d399, #10b981)', border: 'rgba(52, 211, 153, 0.4)',  bg: 'rgba(52, 211, 153, 0.08)' },
+  violet:  { glow: 'rgba(167, 139, 250, 0.45)', grad: 'linear-gradient(135deg, #a78bfa, #8b5cf6)', border: 'rgba(167, 139, 250, 0.4)', bg: 'rgba(167, 139, 250, 0.08)' },
+  rose:    { glow: 'rgba(251, 113, 133, 0.45)', grad: 'linear-gradient(135deg, #fb7185, #e11d48)', border: 'rgba(251, 113, 133, 0.4)', bg: 'rgba(251, 113, 133, 0.08)' },
+  cyan:    { glow: 'rgba(34, 211, 238, 0.45)',  grad: 'linear-gradient(135deg, #22d3ee, #0891b2)', border: 'rgba(34, 211, 238, 0.4)',  bg: 'rgba(34, 211, 238, 0.08)' },
 }
 
 // ─── page ───────────────────────────────────────────────────────────────────
@@ -109,50 +91,62 @@ export default function CalculatorPage() {
   const subTools = TOOLS.filter(t => t.category === tool.category)
 
   return (
-    <div className="fade-in max-w-[1100px] mx-auto">
+    <div className="fade-in" style={{ width: '100%' }}>
       {/* Header */}
-      <header className="mb-10 text-center">
-        <span className="badge badge-amber inline-flex items-center gap-1.5 mb-4">
-          <Calculator size={11} /> Brewing Tools
-        </span>
-        <h1 className="text-4xl lg:text-5xl font-bold tracking-tight">
-          <span className="text-white">Калькулятор </span>
+      <header style={{ textAlign: 'center', marginBottom: 32 }}>
+        <div
+          style={{
+            display: 'inline-flex', alignItems: 'center', gap: 8,
+            padding: '6px 14px', borderRadius: 999,
+            background: 'linear-gradient(180deg, rgba(251,191,36,0.18), rgba(251,191,36,0.06))',
+            border: '1px solid rgba(251, 191, 36, 0.3)',
+            color: '#fbbf24', fontSize: 12, fontWeight: 600,
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 24px rgba(251,191,36,0.15)',
+            marginBottom: 16,
+          }}
+        >
+          <Calculator size={12} /> Brewing Tools
+        </div>
+        <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+          <span style={{ color: '#fff' }}>Калькулятор </span>
           <span className="text-gradient-amber">пивовара</span>
         </h1>
-        <p className="text-[14px] text-white/45 mt-3">
+        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10 }}>
           {TOOLS.length} инструментов для варки и контроля брожения
         </p>
       </header>
 
       {/* Primary nav: categories */}
-      <nav className="mb-5">
-        <div className="glass p-1.5 rounded-2xl flex gap-1 overflow-x-auto">
-          {CATEGORIES.map((c) => {
-            const isActive = c.key === tool.category
-            const firstTool = TOOLS.find(t => t.category === c.key)!
-            return (
-              <button
-                key={c.key}
-                onClick={() => setActive(firstTool.key)}
-                className={`
-                  flex items-center gap-2 px-5 py-3 rounded-xl text-[13.5px] font-semibold
-                  whitespace-nowrap transition-all duration-200 flex-1 justify-center min-w-fit
-                  ${isActive
-                    ? 'bg-gradient-to-br from-amber-500/20 to-orange-500/10 text-amber-200 shadow-lg shadow-amber-500/10 border border-amber-500/25'
-                    : 'text-white/55 hover:text-white hover:bg-white/[0.04] border border-transparent'}
-                `}
-              >
-                <c.icon size={15} />
-                {c.label}
-              </button>
-            )
-          })}
-        </div>
+      <nav
+        style={{
+          display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center',
+          marginBottom: 16,
+        }}
+      >
+        {CATEGORIES.map((c) => {
+          const isActive = c.key === tool.category
+          const firstTool = TOOLS.find(t => t.category === c.key)!
+          return (
+            <button
+              key={c.key}
+              onClick={() => setActive(firstTool.key)}
+              className={`lg-pill ${isActive ? 'lg-pill-active' : ''}`}
+            >
+              <c.icon size={14} />
+              {c.label}
+            </button>
+          )
+        })}
       </nav>
 
-      {/* Secondary nav: sub-tools (only if category has more than 1 tool) */}
+      {/* Secondary nav: sub-tools */}
       {subTools.length > 1 && (
-        <div className="flex gap-2 flex-wrap mb-8 justify-center">
+        <div
+          style={{
+            display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center',
+            marginBottom: 28,
+          }}
+        >
           {subTools.map((t) => {
             const isActive = t.key === active
             const Icon = t.icon
@@ -160,15 +154,21 @@ export default function CalculatorPage() {
               <button
                 key={t.key}
                 onClick={() => setActive(t.key)}
-                className={`
-                  flex items-center gap-1.5 px-4 py-2 rounded-full text-[12.5px] font-medium
-                  border transition-all duration-150
-                  ${isActive
-                    ? 'bg-white/[0.08] text-white border-white/20'
-                    : 'bg-transparent border-white/[0.08] text-white/55 hover:text-white hover:bg-white/[0.04] hover:border-white/15'}
-                `}
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                  padding: '7px 16px', borderRadius: 999,
+                  border: `1px solid ${isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
+                  background: isActive
+                    ? 'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))'
+                    : 'transparent',
+                  color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+                  fontSize: 12, fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: isActive ? 'inset 0 1px 0 rgba(255,255,255,0.15)' : 'none',
+                }}
               >
-                <Icon size={12} />
+                <Icon size={11} />
                 {t.label}
               </button>
             )
@@ -222,61 +222,94 @@ function ToolFrame({
 }) {
   const tool = TOOLS.find(t => t.key === toolKey)!
   const Icon = tool.icon
+  const a = ACCENT[tool.accent]
 
   return (
-    <article className="relative glass overflow-hidden">
+    <div className="lg-card" style={{ padding: 0 }}>
       {/* Top accent bar */}
-      <div className="h-[3px] w-full" style={{ background: ACCENT_GRAD[tool.accent] }} />
+      <div style={{ height: 3, width: '100%', background: a.grad }} />
 
-      <div className="p-8 lg:p-10">
+      <div style={{ padding: '36px 36px 32px' }}>
         {/* Header */}
-        <div className="flex items-start gap-4 mb-8">
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 28 }}>
           <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 border"
             style={{
-              background: 'rgba(255,255,255,0.04)',
-              borderColor: ACCENT_BORDER[tool.accent],
-              boxShadow: `inset 0 0 24px ${ACCENT_GLOW[tool.accent]}`,
+              width: 52, height: 52, borderRadius: 18,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              flexShrink: 0,
+              background: `linear-gradient(180deg, ${a.bg}, rgba(0,0,0,0.2))`,
+              border: `1px solid ${a.border}`,
+              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.15), 0 0 32px ${a.glow}, 0 4px 12px rgba(0,0,0,0.3)`,
             }}
           >
-            <Icon size={20} className="text-white" />
+            <Icon size={22} className="text-white" />
           </div>
-          <div className="flex-1 pt-0.5">
-            <h2 className="text-[19px] font-bold text-white leading-tight">{tool.label}</h2>
-            <p className="text-[13px] text-white/50 mt-1 leading-relaxed">{tool.description}</p>
+          <div style={{ flex: 1, paddingTop: 2 }}>
+            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
+              {tool.label}
+            </h2>
+            <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.5)', marginTop: 4, lineHeight: 1.5 }}>
+              {tool.description}
+            </p>
           </div>
         </div>
 
         {/* Inputs */}
-        <div className="mb-8">{inputs}</div>
+        <div style={{ marginBottom: 28 }}>
+          <SectionLabel>Параметры</SectionLabel>
+          {inputs}
+        </div>
 
         {/* Arrow divider */}
-        <div className="flex items-center justify-center mb-8">
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28, gap: 16 }}>
+          <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
           <div
-            className="mx-4 w-9 h-9 rounded-full flex items-center justify-center border"
             style={{
-              background: 'rgba(0,0,0,0.4)',
-              borderColor: ACCENT_BORDER[tool.accent],
-              boxShadow: `0 0 20px ${ACCENT_GLOW[tool.accent]}`,
+              width: 40, height: 40, borderRadius: 999,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: 'linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6))',
+              border: `1px solid ${a.border}`,
+              boxShadow: `0 0 24px ${a.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
             }}
           >
-            <ArrowRight size={14} className="text-white/70 -rotate-90" />
+            <ArrowDown size={14} style={{ color: 'rgba(255,255,255,0.7)' }} />
           </div>
-          <div className="h-px flex-1 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+          <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
         </div>
 
         {/* Result */}
-        {result}
+        <div style={{ marginBottom: hint ? 24 : 0 }}>
+          <SectionLabel>Результат</SectionLabel>
+          {result}
+        </div>
 
         {/* Hint */}
         {hint && (
-          <p className="text-[12px] text-white/40 leading-relaxed mt-8 pt-6 border-t border-white/[0.06]">
-            {hint}
-          </p>
+          <div
+            style={{
+              marginTop: 24, paddingTop: 20,
+              borderTop: '1px solid rgba(255,255,255,0.06)',
+              fontSize: 12.5, color: 'rgba(255,255,255,0.42)',
+              lineHeight: 1.6,
+            }}
+          >
+            💡 {hint}
+          </div>
         )}
       </div>
-    </article>
+    </div>
+  )
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <p style={{
+      fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
+      letterSpacing: '0.14em', textTransform: 'uppercase',
+      marginBottom: 14,
+    }}>
+      {children}
+    </p>
   )
 }
 
@@ -290,18 +323,30 @@ function Field({
   step?: number
 }) {
   return (
-    <label className="block">
-      <span className="text-[10.5px] text-white/55 uppercase tracking-[0.12em] font-bold">{label}</span>
-      <div className="relative mt-2">
+    <label style={{ display: 'block' }}>
+      <span style={{
+        display: 'block',
+        fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.55)',
+        letterSpacing: '0.12em', textTransform: 'uppercase',
+        marginBottom: 8,
+      }}>
+        {label}
+      </span>
+      <div style={{ position: 'relative' }}>
         <input
           type="number"
           step={step}
           value={value}
           onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className="w-full bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3.5 pr-14 text-[18px] font-semibold text-white outline-none focus:border-amber-500/50 focus:bg-white/[0.06] focus:shadow-[0_0_0_4px_rgba(251,191,36,0.08)] transition-all"
+          className="lg-input"
+          style={{ paddingRight: suffix ? 56 : 18 }}
         />
         {suffix && (
-          <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[12px] text-white/40 font-semibold pointer-events-none">
+          <span style={{
+            position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
+            fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600,
+            pointerEvents: 'none',
+          }}>
             {suffix}
           </span>
         )}
@@ -319,12 +364,20 @@ function SelectField<T extends string>({
   options: { value: T; label: string }[]
 }) {
   return (
-    <label className="block">
-      <span className="text-[10.5px] text-white/55 uppercase tracking-[0.12em] font-bold">{label}</span>
+    <label style={{ display: 'block' }}>
+      <span style={{
+        display: 'block',
+        fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.55)',
+        letterSpacing: '0.12em', textTransform: 'uppercase',
+        marginBottom: 8,
+      }}>
+        {label}
+      </span>
       <select
         value={value}
         onChange={(e) => onChange(e.target.value as T)}
-        className="w-full mt-2 bg-white/[0.04] border border-white/10 rounded-xl px-4 py-3.5 text-[15px] font-semibold text-white outline-none focus:border-amber-500/50 focus:bg-white/[0.06] focus:shadow-[0_0_0_4px_rgba(251,191,36,0.08)] transition-all cursor-pointer"
+        className="lg-input"
+        style={{ fontSize: 14 }}
       >
         {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -333,13 +386,17 @@ function SelectField<T extends string>({
 }
 
 function FieldGrid({ cols = 2, children }: { cols?: 1 | 2 | 3 | 4; children: React.ReactNode }) {
-  const cls = {
-    1: 'grid-cols-1',
-    2: 'grid-cols-1 sm:grid-cols-2',
-    3: 'grid-cols-1 sm:grid-cols-3',
-    4: 'grid-cols-2 lg:grid-cols-4',
-  }[cols]
-  return <div className={`grid ${cls} gap-4`}>{children}</div>
+  return (
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(auto-fit, minmax(${cols === 4 ? 140 : cols === 3 ? 180 : 200}px, 1fr))`,
+        gap: 16,
+      }}
+    >
+      {children}
+    </div>
+  )
 }
 
 function ResultPanel({
@@ -352,62 +409,104 @@ function ResultPanel({
   stats?: { label: string; value: string; sub?: string }[]
   accent?: Accent
 }) {
+  const a = ACCENT[accent]
   return (
-    <div className="space-y-5">
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      {/* Hero result */}
       <div
-        className="rounded-3xl px-8 py-10 text-center relative overflow-hidden border"
         style={{
-          background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-          borderColor: ACCENT_BORDER[accent],
+          position: 'relative',
+          padding: '40px 32px',
+          borderRadius: 22,
+          textAlign: 'center',
+          overflow: 'hidden',
+          background: `linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)), ${a.bg}`,
+          border: `1px solid ${a.border}`,
+          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 0 60px -20px ${a.glow}, 0 8px 32px -16px rgba(0,0,0,0.5)`,
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
         }}
       >
+        {/* Glow */}
         <div
           aria-hidden
-          className="absolute inset-0 opacity-50 pointer-events-none"
-          style={{ background: `radial-gradient(ellipse 80% 100% at center top, ${ACCENT_GLOW[accent]}, transparent 70%)` }}
+          style={{
+            position: 'absolute', inset: 0, opacity: 0.7, pointerEvents: 'none',
+            background: `radial-gradient(ellipse 70% 80% at center top, ${a.glow}, transparent 65%)`,
+            animation: 'lg-pulse 4s ease-in-out infinite',
+          }}
         />
-        <div className="relative">
+        <div style={{ position: 'relative' }}>
           {'dual' in primary ? (
-            <div className="grid grid-cols-2 gap-6 lg:gap-12">
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
               {primary.dual.map((p, i) => (
                 <div key={i}>
-                  <p className="text-[10.5px] uppercase tracking-[0.18em] text-white/45 font-bold">{p.label}</p>
-                  <div className="mt-3 flex items-baseline justify-center gap-2">
+                  <p style={{
+                    fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase',
+                    color: 'rgba(255,255,255,0.5)', fontWeight: 700,
+                  }}>{p.label}</p>
+                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
                     <span
-                      className="text-5xl lg:text-6xl font-bold leading-none tracking-tight"
-                      style={{ background: ACCENT_GRAD[accent], WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                      style={{
+                        fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em',
+                        background: a.grad,
+                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                      }}
                     >
                       {p.value}
                     </span>
-                    {p.unit && <span className="text-xl text-white/45 font-semibold">{p.unit}</span>}
+                    {p.unit && <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{p.unit}</span>}
                   </div>
                 </div>
               ))}
             </div>
           ) : (
             <>
-              <p className="text-[10.5px] uppercase tracking-[0.18em] text-white/45 font-bold">{primary.label}</p>
-              <div className="mt-3 flex items-baseline justify-center gap-3">
+              <p style={{
+                fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase',
+                color: 'rgba(255,255,255,0.5)', fontWeight: 700,
+              }}>{primary.label}</p>
+              <div style={{ marginTop: 14, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10 }}>
                 <span
-                  className="text-7xl lg:text-8xl font-bold leading-none tracking-tight"
-                  style={{ background: ACCENT_GRAD[accent], WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
+                  style={{
+                    fontSize: 'clamp(56px, 9vw, 96px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.03em',
+                    background: a.grad,
+                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                    filter: `drop-shadow(0 4px 24px ${a.glow})`,
+                  }}
                 >
                   {primary.value}
                 </span>
-                {primary.unit && <span className="text-3xl text-white/45 font-semibold">{primary.unit}</span>}
+                {primary.unit && <span style={{ fontSize: 28, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{primary.unit}</span>}
               </div>
             </>
           )}
         </div>
       </div>
 
+      {/* Stats */}
       {stats && stats.length > 0 && (
-        <div className={`grid gap-3 ${stats.length === 2 ? 'grid-cols-2' : stats.length === 3 ? 'grid-cols-3' : 'grid-cols-2 sm:grid-cols-4'}`}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: `repeat(auto-fit, minmax(${stats.length >= 4 ? 130 : 150}px, 1fr))`,
+            gap: 10,
+          }}
+        >
           {stats.map((s, i) => (
-            <div key={i} className="bg-white/[0.025] border border-white/[0.06] rounded-xl px-4 py-3.5">
-              <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">{s.label}</p>
-              <p className="text-lg font-bold mt-1 text-white leading-none">{s.value}</p>
-              {s.sub && <p className="text-[10.5px] text-white/35 mt-1.5">{s.sub}</p>}
+            <div key={i} className="lg-stat">
+              <p style={{
+                fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)',
+                letterSpacing: '0.1em', textTransform: 'uppercase',
+              }}>
+                {s.label}
+              </p>
+              <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginTop: 4, lineHeight: 1.1 }}>
+                {s.value}
+              </p>
+              {s.sub && (
+                <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{s.sub}</p>
+              )}
             </div>
           ))}
         </div>
@@ -607,17 +706,17 @@ function CO2StylesTool() {
     <ToolFrame
       toolKey="co2-styles"
       inputs={
-        <p className="text-[13px] text-white/50 leading-relaxed">
+        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
           Справочные диапазоны карбонизации (объёмы CO₂) для разных типов напитков.
           Используй как ориентир при выборе целевой карбонизации в калькуляторах прайминга и кеггинга.
         </p>
       }
       result={
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
           {TARGET_CO2_VOLUMES.map(({ style, min, max }) => (
-            <div key={style} className="bg-white/[0.025] border border-white/[0.06] rounded-xl px-5 py-3.5 flex items-center justify-between">
-              <span className="text-[14px] text-white/80 font-medium">{style}</span>
-              <span className="text-[15px] font-mono font-bold text-amber-300">{min}–{max}</span>
+            <div key={style} className="lg-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{style}</span>
+              <span style={{ fontSize: 15, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: '#fbbf24' }}>{min}–{max}</span>
             </div>
           ))}
         </div>
@@ -729,38 +828,38 @@ function WaterTool() {
   const updated  = useMemo(() => applySaltAddition(profile, saltKey, gPerL), [profile, saltKey, gPerL])
   const analysis = useMemo(() => analyzeWater(updated), [updated])
   const setKey = (k: keyof WaterProfile) => (v: number) => setProfile({ ...profile, [k]: v })
+  const a = ACCENT.cyan
 
   return (
     <ToolFrame
       toolKey="water"
       inputs={
-        <div className="space-y-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div>
-            <p className="text-[10.5px] text-white/55 uppercase tracking-[0.12em] font-bold mb-3">Пресет</p>
-            <div className="flex flex-wrap gap-2">
+            <SectionLabel>Пресет</SectionLabel>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {DEFAULT_WATER_PROFILES.map((p) => (
-                <button
-                  key={p.name}
-                  onClick={() => setProfile(p.profile)}
-                  className="px-4 py-2 rounded-full text-[12px] font-medium border border-white/10 bg-white/[0.03] text-white/65 hover:text-white hover:bg-white/[0.06] hover:border-white/20 transition-colors"
-                >
+                <button key={p.name} onClick={() => setProfile(p.profile)} className="lg-pill" style={{ padding: '8px 16px', fontSize: 12 }}>
                   {p.name}
                 </button>
               ))}
             </div>
           </div>
 
-          <FieldGrid cols={3}>
-            <Field label="Ca²⁺"   value={profile.ca}   onChange={setKey('ca')}   suffix="ppm" />
-            <Field label="Mg²⁺"   value={profile.mg}   onChange={setKey('mg')}   suffix="ppm" />
-            <Field label="Na⁺"    value={profile.na}   onChange={setKey('na')}   suffix="ppm" />
-            <Field label="Cl⁻"    value={profile.cl}   onChange={setKey('cl')}   suffix="ppm" />
-            <Field label="SO₄²⁻"  value={profile.so4}  onChange={setKey('so4')}  suffix="ppm" />
-            <Field label="HCO₃⁻"  value={profile.hco3} onChange={setKey('hco3')} suffix="ppm" />
-          </FieldGrid>
+          <div>
+            <SectionLabel>Профиль воды (ppm)</SectionLabel>
+            <FieldGrid cols={3}>
+              <Field label="Ca²⁺"   value={profile.ca}   onChange={setKey('ca')}   suffix="ppm" />
+              <Field label="Mg²⁺"   value={profile.mg}   onChange={setKey('mg')}   suffix="ppm" />
+              <Field label="Na⁺"    value={profile.na}   onChange={setKey('na')}   suffix="ppm" />
+              <Field label="Cl⁻"    value={profile.cl}   onChange={setKey('cl')}   suffix="ppm" />
+              <Field label="SO₄²⁻"  value={profile.so4}  onChange={setKey('so4')}  suffix="ppm" />
+              <Field label="HCO₃⁻"  value={profile.hco3} onChange={setKey('hco3')} suffix="ppm" />
+            </FieldGrid>
+          </div>
 
           <div>
-            <p className="text-[10.5px] text-white/55 uppercase tracking-[0.12em] font-bold mb-3">Добавка соли</p>
+            <SectionLabel>Добавка соли</SectionLabel>
             <FieldGrid cols={2}>
               <SelectField
                 label="Соль"
@@ -774,51 +873,50 @@ function WaterTool() {
         </div>
       }
       result={
-        <div className="space-y-5">
-          {/* Ratio hero */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div
-            className="rounded-3xl px-8 py-8 relative overflow-hidden border"
             style={{
-              background: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.01) 100%)',
-              borderColor: ACCENT_BORDER.cyan,
+              position: 'relative',
+              padding: '32px 28px',
+              borderRadius: 22,
+              overflow: 'hidden',
+              background: `linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)), ${a.bg}`,
+              border: `1px solid ${a.border}`,
+              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 0 60px -20px ${a.glow}`,
             }}
           >
-            <div
-              aria-hidden
-              className="absolute inset-0 opacity-50 pointer-events-none"
-              style={{ background: `radial-gradient(ellipse 80% 100% at center top, ${ACCENT_GLOW.cyan}, transparent 70%)` }}
-            />
-            <div className="relative flex items-center justify-between gap-4 flex-wrap">
+            <div aria-hidden style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none', background: `radial-gradient(ellipse 70% 80% at center top, ${a.glow}, transparent 65%)` }} />
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
               <div>
-                <p className="text-[10.5px] uppercase tracking-[0.18em] text-white/45 font-bold">SO₄ : Cl</p>
-                <span
-                  className="text-6xl font-bold leading-none tracking-tight mt-2 inline-block"
-                  style={{ background: ACCENT_GRAD.cyan, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}
-                >
+                <p style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>SO₄ : Cl</p>
+                <span style={{
+                  fontSize: 'clamp(48px, 7vw, 72px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em', marginTop: 8, display: 'inline-block',
+                  background: a.grad, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
+                  filter: `drop-shadow(0 4px 20px ${a.glow})`,
+                }}>
                   {analysis.sulfateChlorideRatio === 999 ? '∞' : analysis.sulfateChlorideRatio.toFixed(2)}
                 </span>
               </div>
-              <span className={`badge ${analysis.perception === 'balanced' ? 'badge-green' : 'badge-amber'} text-[12px]`}>
+              <span className={`badge ${analysis.perception === 'balanced' ? 'badge-green' : 'badge-amber'}`} style={{ fontSize: 12 }}>
                 {analysis.perceptionLabel}
               </span>
             </div>
           </div>
 
-          {/* Updated profile grid */}
           <div>
-            <p className="text-[10.5px] text-white/55 uppercase tracking-[0.12em] font-bold mb-3">Итоговый профиль</p>
-            <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+            <SectionLabel>Итоговый профиль</SectionLabel>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
               {(['ca','mg','na','cl','so4','hco3'] as const).map((k) => {
                 const before = profile[k]
                 const after = updated[k]
                 const diff = after - before
                 const labels: Record<typeof k, string> = { ca: 'Ca', mg: 'Mg', na: 'Na', cl: 'Cl', so4: 'SO₄', hco3: 'HCO₃' }
                 return (
-                  <div key={k} className="bg-white/[0.025] border border-white/[0.06] rounded-xl px-3 py-2.5 text-center">
-                    <p className="text-[10px] text-white/40 uppercase tracking-wider font-bold">{labels[k]}</p>
-                    <p className="text-[16px] font-bold text-white mt-1 leading-none">{after.toFixed(0)}</p>
+                  <div key={k} className="lg-stat" style={{ textAlign: 'center', padding: '10px 8px' }}>
+                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{labels[k]}</p>
+                    <p style={{ fontSize: 16, color: '#fff', fontWeight: 700, marginTop: 4, lineHeight: 1 }}>{after.toFixed(0)}</p>
                     {diff !== 0 && (
-                      <p className={`text-[10px] font-semibold mt-1 ${diff > 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                      <p style={{ fontSize: 10, fontWeight: 600, marginTop: 4, color: diff > 0 ? '#34d399' : '#f87171' }}>
                         {diff > 0 ? '+' : ''}{diff.toFixed(0)}
                       </p>
                     )}
@@ -828,26 +926,31 @@ function WaterTool() {
             </div>
           </div>
 
-          {/* Other stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="bg-white/[0.025] border border-white/[0.06] rounded-xl px-4 py-3.5">
-              <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Щёлочность</p>
-              <p className="text-lg font-bold mt-1 text-white leading-none">{analysis.alkalinityCaCO3} ppm</p>
-              <p className="text-[10.5px] text-white/35 mt-1.5">CaCO₃</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div className="lg-stat">
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Щёлочность</p>
+              <p style={{ fontSize: 18, color: '#fff', fontWeight: 700, marginTop: 4, lineHeight: 1.1 }}>{analysis.alkalinityCaCO3} ppm</p>
+              <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>CaCO₃</p>
             </div>
-            <div className="bg-white/[0.025] border border-white/[0.06] rounded-xl px-4 py-3.5">
-              <p className="text-[10px] uppercase tracking-wider text-white/40 font-bold">Общая жёсткость</p>
-              <p className="text-lg font-bold mt-1 text-white leading-none">{analysis.totalHardnessCaCO3} ppm</p>
-              <p className="text-[10.5px] text-white/35 mt-1.5">CaCO₃</p>
+            <div className="lg-stat">
+              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Общая жёсткость</p>
+              <p style={{ fontSize: 18, color: '#fff', fontWeight: 700, marginTop: 4, lineHeight: 1.1 }}>{analysis.totalHardnessCaCO3} ppm</p>
+              <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>CaCO₃</p>
             </div>
           </div>
 
           {analysis.warnings.length > 0 && (
-            <div className="space-y-2">
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {analysis.warnings.map((w, i) => (
-                <div key={i} className="flex items-start gap-2.5 text-[12.5px] text-amber-300/85 bg-amber-500/[0.05] border border-amber-500/15 rounded-xl px-4 py-3">
-                  <AlertTriangle size={13} className="mt-0.5 flex-shrink-0" />
-                  <span className="leading-relaxed">{w}</span>
+                <div key={i} style={{
+                  display: 'flex', alignItems: 'flex-start', gap: 10,
+                  padding: '12px 16px', borderRadius: 12,
+                  background: 'rgba(251, 191, 36, 0.05)',
+                  border: '1px solid rgba(251, 191, 36, 0.18)',
+                  fontSize: 12.5, color: 'rgba(252, 211, 77, 0.9)', lineHeight: 1.6,
+                }}>
+                  <AlertTriangle size={13} style={{ marginTop: 2, flexShrink: 0 }} />
+                  <span>{w}</span>
                 </div>
               ))}
             </div>
@@ -887,7 +990,7 @@ function KombuchaTool() {
           accent="emerald"
         />
       }
-      hint="Tip: внести SCOBY при 24-28°C. После 1-й ферментации (комбуча) можно перевести на 2-ю с фруктами/специями для газации."
+      hint="Внести SCOBY при 24-28°C. После 1-й ферментации можно перевести на 2-ю с фруктами/специями для газации."
     />
   )
 }
