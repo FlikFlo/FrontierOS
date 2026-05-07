@@ -3,44 +3,39 @@ import { notFound } from 'next/navigation'
 import { ArrowLeft, Droplets, Clock, Percent } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { srmToColor } from '@/lib/utils'
+import { mockRecipes } from '@/lib/mock-data'
+import type { Recipe } from '@/types/database'
 import { BEVERAGE_CATEGORIES } from '@/types/database'
 
 export default async function RecipeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
 
-  if (!supabase) {
-    return (
-      <div className="max-w-4xl mx-auto fade-in">
-        <Link href="/recipes" className="btn-glass px-3 py-2 text-sm inline-flex items-center gap-2 mb-6">
-          <ArrowLeft size={14} /> Назад
-        </Link>
-        <div className="glass p-8 text-center">
-          <p className="text-sm text-white/50">
-            Подключите Supabase (NEXT_PUBLIC_SUPABASE_URL и NEXT_PUBLIC_SUPABASE_ANON_KEY), чтобы открывать рецепты.
-          </p>
-          <p className="text-xs text-white/30 mt-2">id: {id}</p>
-        </div>
-      </div>
-    )
+  let recipe: Recipe | null = null
+
+  if (supabase) {
+    const { data } = await supabase.from('recipes').select('*').eq('id', id).single()
+    if (data) recipe = data as Recipe
   }
 
-  const { data: recipe, error } = await supabase
-    .from('recipes')
-    .select('*')
-    .eq('id', id)
-    .single()
+  if (!recipe) {
+    recipe = mockRecipes.find(r => r.id === id) ?? null
+  }
 
-  if (error || !recipe) notFound()
+  if (!recipe) notFound()
 
   const cat = BEVERAGE_CATEGORIES.find(c => c.value === recipe.category)
   const color = srmToColor(recipe.srm_target ?? 5)
+  const isMock = recipe.id.startsWith('mock-')
 
   return (
     <div className="max-w-5xl mx-auto fade-in space-y-6">
-      <Link href="/recipes" className="btn-glass px-3 py-2 text-sm inline-flex items-center gap-2">
-        <ArrowLeft size={14} /> Все рецепты
-      </Link>
+      <div className="flex items-center justify-between">
+        <Link href="/recipes" className="btn-glass px-3 py-2 text-sm inline-flex items-center gap-2">
+          <ArrowLeft size={14} /> Все рецепты
+        </Link>
+        {isMock && <span className="badge badge-gray">демо-данные</span>}
+      </div>
 
       <div className="glass p-6 flex items-start gap-4">
         <div

@@ -1,42 +1,34 @@
 import Link from 'next/link'
-import { Plus, Beer, Calendar, ArrowRight } from 'lucide-react'
+import { Plus, Calendar } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
+import { mockBrews } from '@/lib/mock-data'
 import { formatDate, getBrewStatusLabel, getBrewStatusBadge } from '@/lib/utils'
 import { BEVERAGE_CATEGORIES } from '@/types/database'
-import type { BrewStatus, BeverageCategory } from '@/types/database'
-
-interface MockBrew {
-  id: string
-  recipe_name: string
-  category: BeverageCategory
-  batch_number: string
-  status: BrewStatus
-  brew_date: string
-  batch_size_l: number
-  og_actual: number | null
-  fg_actual: number | null
-  abv_actual: number | null
-}
-
-const mockBrews: MockBrew[] = [
-  { id: '1', recipe_name: 'West Coast IPA',   category: 'beer',     batch_number: '#042', status: 'fermenting',   brew_date: '2026-04-28', batch_size_l: 25, og_actual: 1.068, fg_actual: null,  abv_actual: null },
-  { id: '2', recipe_name: 'Oatmeal Stout',    category: 'beer',     batch_number: '#041', status: 'conditioning', brew_date: '2026-04-15', batch_size_l: 20, og_actual: 1.072, fg_actual: null,  abv_actual: null },
-  { id: '3', recipe_name: 'Belgian Tripel',   category: 'beer',     batch_number: '#040', status: 'ready',        brew_date: '2026-04-01', batch_size_l: 25, og_actual: 1.082, fg_actual: 1.010, abv_actual: 9.4 },
-  { id: '4', recipe_name: 'Pilsner Classic',  category: 'beer',     batch_number: '#039', status: 'planned',      brew_date: '2026-05-12', batch_size_l: 30, og_actual: null,  fg_actual: null,  abv_actual: null },
-  { id: '5', recipe_name: 'Манго Комбуча',   category: 'kombucha', batch_number: '#K01', status: 'fermenting',   brew_date: '2026-05-01', batch_size_l: 10, og_actual: 1.030, fg_actual: null,  abv_actual: null },
-  { id: '6', recipe_name: 'Лимонад Citrus',  category: 'lemonade', batch_number: '#L01', status: 'ready',        brew_date: '2026-04-20', batch_size_l: 15, og_actual: null,  fg_actual: null,  abv_actual: null },
-]
+import type { BrewLog, BrewStatus } from '@/types/database'
 
 const statusProgress: Record<BrewStatus, number> = {
   planned: 5, mashing: 20, boiling: 40, fermenting: 65, conditioning: 85, ready: 100, archived: 100
 }
 
-export default function BrewsPage() {
-  const grouped = mockBrews.reduce((acc, brew) => {
+export default async function BrewsPage() {
+  const supabase = await createClient()
+  let brews: BrewLog[] = mockBrews
+  let isMock = true
+
+  if (supabase) {
+    const { data } = await supabase.from('brew_logs').select('*').order('brew_date', { ascending: false })
+    if (data && data.length) {
+      brews = data as BrewLog[]
+      isMock = false
+    }
+  }
+
+  const grouped = brews.reduce((acc, brew) => {
     const s = brew.status
     if (!acc[s]) acc[s] = []
     acc[s].push(brew)
     return acc
-  }, {} as Record<string, MockBrew[]>)
+  }, {} as Record<string, BrewLog[]>)
 
   const order: BrewStatus[] = ['fermenting', 'conditioning', 'mashing', 'boiling', 'ready', 'planned', 'archived']
 
@@ -46,7 +38,10 @@ export default function BrewsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold text-white">Варочный журнал</h1>
-          <p className="text-sm text-white/40 mt-0.5">{mockBrews.length} партий всего</p>
+          <p className="text-sm text-white/40 mt-0.5">
+            {brews.length} партий всего
+            {isMock && <span className="ml-2 badge badge-gray">демо-данные</span>}
+          </p>
         </div>
         <Link href="/brews/new" className="btn-primary">
           <Plus size={16} />
@@ -70,7 +65,7 @@ export default function BrewsPage() {
 
       {/* Brew cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        {mockBrews.map(brew => {
+        {brews.map(brew => {
           const cat = BEVERAGE_CATEGORIES.find(c => c.value === brew.category)
           const progress = statusProgress[brew.status]
           const badge = getBrewStatusBadge(brew.status)
