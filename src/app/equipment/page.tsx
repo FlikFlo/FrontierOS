@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Stat } from '@/components/ui/Stat'
 import { FloorPlan, getEquipmentIcon } from '@/components/equipment/FloorPlan'
+import { VesselGraphic, liquidColorForStage } from '@/components/equipment/VesselGraphic'
 import {
   MOCK_EQUIPMENT, EQUIPMENT_TYPE_META, STATUS_META,
   type Equipment, type EquipmentType,
@@ -94,38 +95,42 @@ export default function EquipmentPage() {
       />
 
       {view === 'plan' ? (
-        <div style={{ display: 'grid', gridTemplateColumns: selected ? 'minmax(0, 1fr) 360px' : 'minmax(0, 1fr)', gap: 16 }}>
-          <div>
-            <FloorPlan
-              equipment={items}
-              cols={18}
-              rows={10}
-              minCell={36}
-              maxCell={64}
-              editable={editable}
-              selectedId={selectedId}
-              onSelect={setSelectedId}
-              onMove={handleMove}
-            />
-            <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
-              <p className="t-meta">
-                {editable ? 'Перетаскивай блоки по сетке для расстановки' : 'Кликни на блок чтобы посмотреть детали'}
-              </p>
-              <div style={{ display: 'flex', gap: 14, marginLeft: 'auto' }}>
-                {(['idle','in_use','cip','maintenance'] as const).map(s => (
-                  <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
-                    <span style={{
-                      width: 7, height: 7, borderRadius: '50%',
-                      background: s === 'idle' ? 'var(--ok)' : s === 'in_use' ? 'var(--info)' : s === 'cip' ? 'var(--warn)' : 'var(--bad)',
-                    }} />
-                    <span className="t-meta">{STATUS_META[s].label}</span>
-                  </span>
-                ))}
-              </div>
+        <div>
+          <FloorPlan
+            equipment={items}
+            cols={18}
+            rows={10}
+            minCell={36}
+            maxCell={64}
+            editable={editable}
+            selectedId={selectedId}
+            onSelect={setSelectedId}
+            onMove={handleMove}
+          />
+          <div style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+            <p className="t-meta">
+              {editable ? 'Перетаскивай блоки по сетке для расстановки' : 'Кликни на блок чтобы посмотреть детали'}
+            </p>
+            <div style={{ display: 'flex', gap: 14, marginLeft: 'auto' }}>
+              {(['idle','in_use','cip','maintenance'] as const).map(s => (
+                <span key={s} style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
+                  <span style={{
+                    width: 7, height: 7, borderRadius: '50%',
+                    background: s === 'idle' ? 'var(--ok)' : s === 'in_use' ? 'var(--info)' : s === 'cip' ? 'var(--warn)' : 'var(--bad)',
+                  }} />
+                  <span className="t-meta">{STATUS_META[s].label}</span>
+                </span>
+              ))}
             </div>
           </div>
 
-          {selected && <DetailPanel equipment={selected} onClose={() => setSelectedId(null)} />}
+          {/* Floating overlay panel */}
+          {selected && (
+            <>
+              <div className="detail-backdrop" onClick={() => setSelectedId(null)} />
+              <DetailPanel equipment={selected} onClose={() => setSelectedId(null)} />
+            </>
+          )}
         </div>
       ) : (
         <RegistryView grouped={grouped} onSelect={setSelectedId} selectedId={selectedId} />
@@ -136,91 +141,111 @@ export default function EquipmentPage() {
 
 function DetailPanel({ equipment, onClose }: { equipment: Equipment; onClose: () => void }) {
   const meta = EQUIPMENT_TYPE_META[equipment.type]
-  const Icon = getEquipmentIcon(equipment.type)
   const status = STATUS_META[equipment.status]
+  const liquidColor = liquidColorForStage(equipment.contents?.stage)
+
   return (
-    <Card pad="lg" style={{ height: 'fit-content', position: 'sticky', top: 80 }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-        <div style={{
-          width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-          background: 'var(--surface-2)', border: '1px solid var(--hairline)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          <Icon size={20} strokeWidth={1.9} />
+    <div className="detail-panel">
+      {/* Vessel preview */}
+      <div style={{
+        background: 'var(--surface-2)', borderBottom: '1px solid var(--hairline)',
+        height: 200, display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '24px 32px', flexShrink: 0,
+        position: 'relative',
+      }}>
+        <button onClick={onClose} className="detail-close"><X size={16} /></button>
+        <div style={{ height: '100%', width: 'auto', aspectRatio: '1', maxWidth: 160 }}>
+          <VesselGraphic
+            type={equipment.type}
+            fillPct={equipment.contents?.fill_pct ?? 0}
+            liquidColor={liquidColor}
+            status={equipment.status}
+            animate
+          />
         </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ fontSize: 17, fontWeight: 600, color: 'var(--t-1)', letterSpacing: '-0.01em' }}>{equipment.name}</h3>
-          <p className="t-meta" style={{ marginTop: 2 }}>{meta.label}</p>
-        </div>
-        <button
-          onClick={onClose}
-          style={{
-            background: 'transparent', border: 'none', cursor: 'pointer',
-            color: 'var(--t-3)', padding: 4, borderRadius: 8,
-          }}
-        >
-          <X size={16} />
-        </button>
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14, marginBottom: 18 }}>
-        <Badge tone={status.tone}>{status.label}</Badge>
-        {equipment.volume_l > 0 && (
-          <span className="t-meta t-mono">{equipment.volume_l} л</span>
+      {/* Content */}
+      <div style={{ padding: '20px 22px', overflowY: 'auto', flex: 1 }}>
+        {/* Title row */}
+        <div style={{ marginBottom: 16 }}>
+          <h3 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t-1)', letterSpacing: '-0.02em', lineHeight: 1.2 }}>
+            {equipment.name}
+          </h3>
+          <p className="t-meta" style={{ marginTop: 3 }}>{meta.label}</p>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10 }}>
+            <Badge tone={status.tone}>{status.label}</Badge>
+            {equipment.volume_l > 0 && <span className="t-meta t-mono">{equipment.volume_l} л</span>}
+          </div>
+        </div>
+
+        {/* Fill bar */}
+        {equipment.contents?.fill_pct != null && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
+              <span className="t-eyebrow">Заполнение</span>
+              <span className="t-mono" style={{ fontSize: 12, color: 'var(--t-1)' }}>{equipment.contents.fill_pct}%</span>
+            </div>
+            <div className="progress" style={{ height: 6 }}>
+              <div className="progress-bar" style={{ width: `${equipment.contents.fill_pct}%` }} />
+            </div>
+          </div>
         )}
-      </div>
 
-      {equipment.contents ? (
-        <div style={{
-          padding: 14, borderRadius: 'var(--r-md)',
-          background: 'var(--surface-1)', border: '1px solid var(--hairline)',
-          marginBottom: 14,
-        }}>
-          <p className="t-eyebrow" style={{ marginBottom: 8 }}>Содержимое</p>
-          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--t-1)' }}>{equipment.contents.brew_name}</p>
-          <p className="t-meta" style={{ marginTop: 2 }}>{equipment.contents.batch_number} · {equipment.contents.stage}</p>
+        {/* Contents block */}
+        {equipment.contents ? (
+          <div style={{
+            padding: 14, borderRadius: 'var(--r-md)',
+            background: 'var(--surface-2)', border: '1px solid var(--hairline)',
+            marginBottom: 14,
+          }}>
+            <p className="t-eyebrow" style={{ marginBottom: 8 }}>Содержимое</p>
+            <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--t-1)' }}>{equipment.contents.brew_name}</p>
+            <p className="t-meta" style={{ marginTop: 3 }}>{equipment.contents.batch_number} · {equipment.contents.stage}</p>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 12 }}>
-            <Detail label="Дни" value={`${equipment.contents.days}`} icon={<Calendar size={11} />} />
-            {equipment.contents.temp_c != null && <Detail label="Темп." value={`${equipment.contents.temp_c}°C`} icon={<Thermometer size={11} />} />}
-            {equipment.contents.sg != null && <Detail label="SG" value={equipment.contents.sg.toFixed(3)} mono icon={<Activity size={11} />} />}
-            {equipment.contents.fill_pct != null && <Detail label="Заполнение" value={`${equipment.contents.fill_pct}%`} icon={<FileText size={11} />} />}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginTop: 12 }}>
+              <Detail label="Дни" value={`${equipment.contents.days}`} icon={<Calendar size={11} />} />
+              {equipment.contents.temp_c != null && (
+                <Detail label="Темп." value={`${equipment.contents.temp_c}°C`} icon={<Thermometer size={11} />} />
+              )}
+              {equipment.contents.sg != null && (
+                <Detail label="SG" value={equipment.contents.sg.toFixed(3)} mono icon={<Activity size={11} />} />
+              )}
+            </div>
+            <Button size="sm" variant="ghost" style={{ width: '100%', marginTop: 12 }}>Открыть варку →</Button>
           </div>
+        ) : (
+          <div style={{
+            padding: 18, borderRadius: 'var(--r-md)',
+            background: 'var(--surface-2)', border: '1px dashed var(--hairline)',
+            textAlign: 'center', marginBottom: 14,
+          }}>
+            <p className="t-meta">Емкость свободна</p>
+            <Button size="sm" variant="primary" style={{ marginTop: 10 }}>Назначить варку</Button>
+          </div>
+        )}
 
+        {/* Meta */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
+          {equipment.last_cip && <Detail label="Последний CIP" value={new Date(equipment.last_cip).toLocaleDateString('ru')} />}
+          {equipment.installed && <Detail label="Установлена" value={new Date(equipment.installed).toLocaleDateString('ru')} />}
+          {equipment.diameter_mm && <Detail label="Диаметр" value={`${equipment.diameter_mm} мм`} />}
+          {equipment.height_mm && <Detail label="Высота" value={`${equipment.height_mm} мм`} />}
+        </div>
+
+        {equipment.notes && (
           <div style={{ marginTop: 14 }}>
-            <Button size="sm" variant="ghost" style={{ width: '100%' }}>Открыть варку →</Button>
+            <p className="t-eyebrow" style={{ marginBottom: 6 }}>Заметки</p>
+            <p style={{ fontSize: 13, color: 'var(--t-2)', lineHeight: 1.5 }}>{equipment.notes}</p>
           </div>
-        </div>
-      ) : (
-        <div style={{
-          padding: 18, borderRadius: 'var(--r-md)',
-          background: 'var(--surface-1)', border: '1px dashed var(--hairline)',
-          textAlign: 'center', marginBottom: 14,
-        }}>
-          <p className="t-meta">Емкость свободна</p>
-          <Button size="sm" variant="primary" style={{ marginTop: 10 }}>Назначить варку</Button>
-        </div>
-      )}
+        )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8 }}>
-        {equipment.last_cip && <Detail label="Последний CIP" value={new Date(equipment.last_cip).toLocaleDateString('ru')} />}
-        {equipment.installed && <Detail label="Установлена" value={new Date(equipment.installed).toLocaleDateString('ru')} />}
-        {equipment.diameter_mm && <Detail label="Диаметр" value={`${equipment.diameter_mm} мм`} />}
-        {equipment.height_mm && <Detail label="Высота" value={`${equipment.height_mm} мм`} />}
+        <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
+          <Button size="sm" variant="ghost" style={{ flex: 1 }}><Save size={12} />Сохранить</Button>
+          <Button size="sm" variant="ghost" style={{ flex: 1 }}>CIP</Button>
+        </div>
       </div>
-
-      {equipment.notes && (
-        <div style={{ marginTop: 14 }}>
-          <p className="t-eyebrow" style={{ marginBottom: 6 }}>Заметки</p>
-          <p style={{ fontSize: 13, color: 'var(--t-2)', lineHeight: 1.5 }}>{equipment.notes}</p>
-        </div>
-      )}
-
-      <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-        <Button size="sm" variant="ghost" style={{ flex: 1 }}><Save size={12} />Сохранить</Button>
-        <Button size="sm" variant="ghost" style={{ flex: 1 }}>CIP</Button>
-      </div>
-    </Card>
+    </div>
   )
 }
 

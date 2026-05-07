@@ -460,6 +460,38 @@ input[type=number] { -moz-appearance: textfield; }
 .equip-card.cip   { border-color: rgba(251,191,36,0.45); }
 .equip-card.maintenance { border-color: rgba(248,113,113,0.45); }
 
+/* ─── Detail overlay panel ───────────────────────────────────────────────── */
+.detail-backdrop {
+  position: fixed; inset: 0; z-index: 50;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: fadeIn .18s ease;
+}
+.detail-panel {
+  position: fixed; right: 0; top: 0; bottom: 0;
+  width: 360px; z-index: 51;
+  background: var(--surface-1);
+  border-left: 1px solid var(--hairline-strong);
+  display: flex; flex-direction: column;
+  animation: slideInRight .22s cubic-bezier(.16,1,.3,1);
+  box-shadow: -16px 0 48px rgba(0,0,0,0.5);
+}
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.detail-close {
+  position: absolute; top: 14px; right: 14px;
+  background: var(--surface-3); border: 1px solid var(--hairline);
+  border-radius: var(--r-sm); cursor: pointer;
+  color: var(--t-3); width: 28px; height: 28px;
+  display: flex; align-items: center; justify-content: center;
+  transition: color .12s ease, background .12s ease;
+}
+.detail-close:hover { color: var(--t-1); background: var(--surface-2); }
+/* ─────────────────────────────────────────────────────────────────────────── */
+
 .equip-header {
   display: flex; align-items: center; justify-content: space-between;
   gap: 4px; flex-shrink: 0;
