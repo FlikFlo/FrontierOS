@@ -1,24 +1,25 @@
-import { ShoppingCart, TrendingUp, Package, Users } from 'lucide-react'
-import StatCard from '@/components/ui/StatCard'
+import { ShoppingCart } from 'lucide-react'
+import { Page, PageHeader } from '@/components/ui/Page'
+import { Card } from '@/components/ui/Card'
+import { Stat } from '@/components/ui/Stat'
 
 export default function SalesPage() {
   return (
-    <div className="max-w-7xl mx-auto space-y-6 fade-in">
-      <div>
-        <h1 className="text-xl font-bold text-white">Продажи</h1>
-        <p className="text-sm text-white/40 mt-0.5">Отгрузки, кеги, клиенты</p>
+    <Page>
+      <PageHeader title="Продажи" subtitle="Отгрузки, кеги, клиенты" />
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <Stat label="Продано (май)" value="320 л" />
+        <Stat label="Выручка"        value="96 000 ₽" />
+        <Stat label="Кеги в обороте" value="12" />
+        <Stat label="Клиентов"       value="8" />
       </div>
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Продано (май)"    value="320 л"  icon={ShoppingCart} color="amber" />
-        <StatCard label="Выручка"          value="96 000 ₽" icon={TrendingUp}  color="green" />
-        <StatCard label="Кеги в обороте"  value="12"     icon={Package}      color="blue"  />
-        <StatCard label="Клиентов"         value="8"      icon={Users}        color="purple"/>
-      </div>
-      <div className="glass p-8 text-center text-white/30">
-        <ShoppingCart size={40} className="mx-auto mb-3 opacity-30" />
-        <p>Модуль продаж в разработке</p>
-        <p className="text-sm mt-1">Здесь будут: отгрузки по клиентам, остатки кег, история заказов</p>
-      </div>
-    </div>
+
+      <Card pad="lg" style={{ textAlign: 'center', padding: 56 }}>
+        <ShoppingCart size={36} style={{ margin: '0 auto', color: 'var(--t-4)', opacity: 0.6 }} />
+        <p style={{ fontSize: 14, color: 'var(--t-2)', marginTop: 14, fontWeight: 500 }}>Модуль продаж в разработке</p>
+        <p className="t-meta" style={{ marginTop: 6 }}>Отгрузки по клиентам, остатки кег, история заказов</p>
+      </Card>
+    </Page>
   )
 }

@@ -7,6 +7,8 @@ import type { BeverageCategory, RecipeMalt, RecipeHop, RecipeYeast, RecipeAdjunc
 import { BEVERAGE_CATEGORIES } from '@/types/database'
 import { calcUniversalStats, COMMON_MALTS, COMMON_HOPS, COMMON_YEASTS, COMMON_ADJUNCTS } from '@/lib/beverage-calc'
 import RecipeStatsPanel from './RecipeStatsPanel'
+import { IngredientPicker } from './IngredientPicker'
+import type { InventoryItem } from '@/lib/inventory-mock'
 
 const uid = () => Math.random().toString(36).slice(2)
 
@@ -205,14 +207,24 @@ export default function RecipeEditor() {
                         {malts.map(malt => (
                           <div key={malt.id} className="glass-sm p-3 grid grid-cols-12 gap-2 items-center">
                             <div className="col-span-5">
-                              <select
-                                className="glass-input text-sm py-2"
+                              <IngredientPicker
+                                type="malt"
                                 value={malt.name}
-                                onChange={e => { updateMalt(malt.id, 'name', e.target.value); applyMaltPreset(malt.id, e.target.value) }}
-                              >
-                                <option value="">— выберите солод —</option>
-                                {COMMON_MALTS.map(m => <option key={m.name} value={m.name}>{m.name}</option>)}
-                              </select>
+                                popular={COMMON_MALTS}
+                                onPick={(src, choice) => {
+                                  if (!choice) { updateMalt(malt.id, 'name', ''); return }
+                                  if (src === 'popular') {
+                                    const p = choice as typeof COMMON_MALTS[number]
+                                    updateMalt(malt.id, 'name', p.name)
+                                    updateMalt(malt.id, 'color_ebc', p.color_ebc)
+                                    updateMalt(malt.id, 'extract_potential', p.extract_potential)
+                                  } else {
+                                    const i = choice as InventoryItem
+                                    updateMalt(malt.id, 'name', i.name)
+                                  }
+                                }}
+                                placeholder="— выберите солод —"
+                              />
                             </div>
                             <div className="col-span-2">
                               <input type="number" className="glass-input text-sm py-2" placeholder="кг" step="0.1" min="0"
@@ -259,15 +271,23 @@ export default function RecipeEditor() {
                         {hops.map(hop => (
                           <div key={hop.id} className="glass-sm p-3 grid grid-cols-12 gap-2 items-center">
                             <div className="col-span-3">
-                              <select className="glass-input text-sm py-2" value={hop.name}
-                                onChange={e => {
-                                  const preset = COMMON_HOPS.find(h => h.name === e.target.value)
-                                  updateHop(hop.id, 'name', e.target.value)
-                                  if (preset) updateHop(hop.id, 'alpha_acid', preset.alpha_acid)
-                                }}>
-                                <option value="">— хмель —</option>
-                                {COMMON_HOPS.map(h => <option key={h.name} value={h.name}>{h.name}</option>)}
-                              </select>
+                              <IngredientPicker
+                                type="hop"
+                                value={hop.name}
+                                popular={COMMON_HOPS}
+                                onPick={(src, choice) => {
+                                  if (!choice) { updateHop(hop.id, 'name', ''); return }
+                                  if (src === 'popular') {
+                                    const p = choice as typeof COMMON_HOPS[number]
+                                    updateHop(hop.id, 'name', p.name)
+                                    updateHop(hop.id, 'alpha_acid', p.alpha_acid)
+                                  } else {
+                                    const i = choice as InventoryItem
+                                    updateHop(hop.id, 'name', i.name)
+                                  }
+                                }}
+                                placeholder="— хмель —"
+                              />
                             </div>
                             <div className="col-span-2">
                               <input type="number" className="glass-input text-sm py-2" placeholder="г" step="5" min="0"
@@ -319,11 +339,22 @@ export default function RecipeEditor() {
                         {yeasts.map(yeast => (
                           <div key={yeast.id} className="glass-sm p-3 grid grid-cols-12 gap-2 items-center">
                             <div className="col-span-4">
-                              <select className="glass-input text-sm py-2" value={yeast.name}
-                                onChange={e => applyYeastPreset(yeast.id, e.target.value)}>
-                                <option value="">— дрожжи —</option>
-                                {COMMON_YEASTS.map(y => <option key={y.name} value={y.name}>{y.name} ({y.brand})</option>)}
-                              </select>
+                              <IngredientPicker
+                                type="yeast"
+                                value={yeast.name}
+                                popular={COMMON_YEASTS}
+                                onPick={(src, choice) => {
+                                  if (!choice) { updateYeast(yeast.id, 'name', ''); return }
+                                  if (src === 'popular') {
+                                    const p = choice as typeof COMMON_YEASTS[number]
+                                    setYeasts(prev => prev.map(y => y.id === yeast.id ? { ...y, ...p, id: yeast.id } : y))
+                                  } else {
+                                    const i = choice as InventoryItem
+                                    updateYeast(yeast.id, 'name', i.name)
+                                  }
+                                }}
+                                placeholder="— дрожжи —"
+                              />
                             </div>
                             <div className="col-span-2">
                               <input type="number" className="glass-input text-sm py-2" placeholder="Сбраживание %"

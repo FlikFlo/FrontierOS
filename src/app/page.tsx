@@ -1,157 +1,157 @@
 import {
   Beer, FlaskConical, Package, TrendingUp,
-  Clock, CheckCircle2, AlertTriangle, ArrowRight
+  Clock, AlertTriangle, ArrowRight, Plus,
 } from 'lucide-react'
-import StatCard from '@/components/ui/StatCard'
 import Link from 'next/link'
+import { Page, PageHeader } from '@/components/ui/Page'
+import { Card, CardHeader } from '@/components/ui/Card'
+import { Stat } from '@/components/ui/Stat'
+import { Badge } from '@/components/ui/Badge'
+import { LinkButton } from '@/components/ui/Button'
 
 const recentBrews = [
-  { name: 'West Coast IPA', batch: '#042', status: 'fermenting', date: '28 апр', og: '1.068', progress: 65 },
-  { name: 'Oatmeal Stout', batch: '#041', status: 'conditioning', date: '15 апр', og: '1.072', progress: 85 },
-  { name: 'Belgian Tripel', batch: '#040', status: 'ready', date: '1 апр', og: '1.082', progress: 100 },
-  { name: 'Pilsner Classic', batch: '#039', status: 'planned', date: '12 май', og: '—', progress: 0 },
+  { name: 'West Coast IPA',  batch: '#042', status: 'fermenting',   date: '28 апр', og: '1.068', progress: 65 },
+  { name: 'Oatmeal Stout',   batch: '#041', status: 'conditioning', date: '15 апр', og: '1.072', progress: 85 },
+  { name: 'Belgian Tripel',  batch: '#040', status: 'ready',        date: '1 апр',  og: '1.082', progress: 100 },
+  { name: 'Pilsner Classic', batch: '#039', status: 'planned',      date: '12 май', og: '—',     progress: 0 },
 ]
 
-const statusConfig: Record<string, { label: string; badge: string; barColor: string }> = {
-  planned:     { label: 'Запланировано', badge: 'badge-gray',   barColor: 'bg-slate-500' },
-  mashing:     { label: 'Затирание',     badge: 'badge-amber',  barColor: 'bg-amber-500' },
-  boiling:     { label: 'Кипячение',     badge: 'badge-orange', barColor: 'bg-orange-500' },
-  fermenting:  { label: 'Брожение',      badge: 'badge-blue',   barColor: 'bg-blue-500' },
-  conditioning:{ label: 'Дображивание',  badge: 'badge-purple', barColor: 'bg-purple-500' },
-  ready:       { label: 'Готово',        badge: 'badge-green',  barColor: 'bg-emerald-500' },
+type Status = 'planned' | 'mashing' | 'boiling' | 'fermenting' | 'conditioning' | 'ready'
+const statusConfig: Record<Status, { label: string; tone: 'neutral' | 'accent' | 'ok' | 'warn' | 'info' }> = {
+  planned:      { label: 'Запланирована',   tone: 'neutral' },
+  mashing:      { label: 'Затирание',       tone: 'warn' },
+  boiling:      { label: 'Кипячение',       tone: 'warn' },
+  fermenting:   { label: 'Брожение',        tone: 'info' },
+  conditioning: { label: 'Дображивание',    tone: 'accent' },
+  ready:        { label: 'Готово',          tone: 'ok' },
 }
 
 const lowStock = [
-  { name: 'Citra Hops', qty: '200g', min: '300g', type: 'hop' },
-  { name: 'S-04 English Ale', qty: '2 пак', min: '3 пак', type: 'yeast' },
+  { name: 'Citra Hops',        qty: '200 г',  min: '300 г' },
+  { name: 'S-04 English Ale',  qty: '2 пак',  min: '3 пак' },
 ]
 
 export default function Dashboard() {
   return (
-    <div className="space-y-6 fade-in max-w-7xl mx-auto">
+    <Page>
+      <PageHeader
+        title="Дашборд"
+        subtitle="Обзор пивоварни на сегодня"
+        actions={
+          <LinkButton href="/brews/new" variant="primary">
+            <Plus size={15} strokeWidth={2.5} />
+            Новая варка
+          </LinkButton>
+        }
+      />
 
-      {/* KPI Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Активных варок"  value="3"      sub="1 запланирована"         icon={Beer}        color="amber" glow />
-        <StatCard label="Рецептов"        value="18"     sub="5 в разработке"          icon={FlaskConical} color="blue" />
-        <StatCard label="Остаток сырья"   value="12 поз" sub="2 ниже минимума"         icon={Package}     color="green" />
-        <StatCard label="Выпущено (апр)"  value="420 л"  sub="+18% к прошлому месяцу" icon={TrendingUp}   color="purple" />
+      {/* KPI grid */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 16 }}>
+        <Stat label="Активных варок"  value="3"      sub="1 запланирована" />
+        <Stat label="Рецептов"        value="18"     sub="5 в разработке" />
+        <Stat label="Позиций склада"  value="12"     sub="2 ниже минимума" />
+        <Stat label="Выпущено в апр." value="420 л"  trend={{ value: '18%', direction: 'up' }} />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
+      {/* Two-column row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) minmax(0, 1fr)', gap: 20 }}>
         {/* Recent brews */}
-        <div className="lg:col-span-2 glass p-6">
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="font-semibold text-white text-sm flex items-center gap-2">
-              <Clock size={16} className="text-amber-400" />
-              Последние варки
-            </h2>
-            <Link href="/brews" className="text-xs text-amber-400/70 hover:text-amber-400 flex items-center gap-1">
-              Все варки <ArrowRight size={12} />
-            </Link>
-          </div>
-
-          <div className="space-y-3">
-            {recentBrews.map((brew) => {
-              const s = statusConfig[brew.status]
+        <Card pad="lg">
+          <CardHeader
+            title="Последние варки"
+            action={
+              <Link href="/brews" style={{ fontSize: 12.5, color: 'var(--accent)', display: 'inline-flex', alignItems: 'center', gap: 4, fontWeight: 600 }}>
+                Все варки <ArrowRight size={12} />
+              </Link>
+            }
+          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {recentBrews.map(brew => {
+              const s = statusConfig[brew.status as Status]
               return (
-                <div key={brew.batch} className="glass-sm p-4 flex items-center gap-4 glass-hover cursor-pointer">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-white text-sm">{brew.name}</span>
-                      <span className="text-white/30 text-xs">{brew.batch}</span>
+                <div
+                  key={brew.batch}
+                  style={{
+                    display: 'flex', alignItems: 'center', gap: 16,
+                    padding: '12px 14px',
+                    borderRadius: 'var(--r-md)',
+                    background: 'var(--surface-1)',
+                    border: '1px solid var(--hairline)',
+                  }}
+                >
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--t-1)' }}>{brew.name}</span>
+                      <span style={{ fontSize: 12, color: 'var(--t-4)' }}>{brew.batch}</span>
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className={`badge ${s.badge}`}>{s.label}</span>
-                      <span className="text-xs text-white/30">{brew.date}</span>
-                      {brew.og !== '—' && (
-                        <span className="text-xs text-white/30">OG {brew.og}</span>
-                      )}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <Badge tone={s.tone}>{s.label}</Badge>
+                      <span className="t-meta">{brew.date}</span>
+                      {brew.og !== '—' && <span className="t-meta t-mono">OG {brew.og}</span>}
                     </div>
                   </div>
-                  <div className="w-24 flex flex-col items-end gap-1.5">
-                    <span className="text-xs text-white/40">{brew.progress}%</span>
-                    <div className="progress-track w-full h-1.5">
-                      <div
-                        className={`progress-bar ${s.barColor === 'bg-blue-500' ? '' : ''}`}
-                        style={{ width: `${brew.progress}%`, background: brew.progress === 100 ? 'linear-gradient(90deg, #34d399, #10b981)' : undefined }}
-                      />
+                  <div style={{ width: 120, display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
+                    <span className="t-meta t-mono">{brew.progress}%</span>
+                    <div className="progress" style={{ width: '100%' }}>
+                      <div className={`progress-bar ${brew.progress === 100 ? 'progress-bar-ok' : brew.status === 'fermenting' ? 'progress-bar-info' : ''}`} style={{ width: `${brew.progress}%` }} />
                     </div>
                   </div>
                 </div>
               )
             })}
           </div>
-        </div>
+        </Card>
 
         {/* Right column */}
-        <div className="space-y-4">
-
-          {/* Low stock alert */}
-          <div className="glass p-5">
-            <h2 className="font-semibold text-white text-sm flex items-center gap-2 mb-4">
-              <AlertTriangle size={16} className="text-amber-400" />
-              Низкий остаток
-            </h2>
-            <div className="space-y-2.5">
-              {lowStock.map((item) => (
-                <div key={item.name} className="flex items-center justify-between">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <Card pad="md">
+            <CardHeader title="Низкий остаток" />
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {lowStock.map(it => (
+                <div key={it.name} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
                   <div>
-                    <p className="text-sm text-white/80">{item.name}</p>
-                    <p className="text-xs text-white/30">Мин: {item.min}</p>
+                    <p style={{ fontSize: 13.5, color: 'var(--t-1)' }}>{it.name}</p>
+                    <p className="t-meta" style={{ marginTop: 2 }}>Минимум: {it.min}</p>
                   </div>
-                  <span className="badge badge-red">{item.qty}</span>
+                  <Badge tone="bad">{it.qty}</Badge>
                 </div>
               ))}
-              <Link href="/inventory" className="mt-2 flex items-center gap-1 text-xs text-amber-400/70 hover:text-amber-400">
-                Управление складом <ArrowRight size={11} />
+              <Link href="/inventory" style={{ marginTop: 4, fontSize: 12.5, color: 'var(--accent)', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                Управление складом <ArrowRight size={12} />
               </Link>
             </div>
-          </div>
+          </Card>
 
-          {/* Quick actions */}
-          <div className="glass p-5">
-            <h2 className="font-semibold text-white text-sm mb-4">Быстрые действия</h2>
-            <div className="space-y-2">
-              <Link href="/recipes/new" className="btn-primary w-full justify-center py-2.5">
-                <FlaskConical size={15} />
-                Новый рецепт
-              </Link>
-              <Link href="/brews/new" className="btn-glass w-full justify-center py-2.5">
-                <Beer size={15} />
-                Начать варку
-              </Link>
-              <Link href="/inventory" className="btn-glass w-full justify-center py-2.5">
-                <Package size={15} />
-                Пополнить склад
-              </Link>
-            </div>
-          </div>
-
-          {/* Today */}
-          <div className="glass p-5">
-            <h2 className="font-semibold text-white text-sm flex items-center gap-2 mb-3">
-              <CheckCircle2 size={16} className="text-emerald-400" />
-              Сегодня
-            </h2>
-            <ul className="space-y-2 text-sm text-white/60">
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" />
+          <Card pad="md">
+            <CardHeader title="Сегодня" />
+            <ul style={{ display: 'flex', flexDirection: 'column', gap: 10, listStyle: 'none' }}>
+              <li style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t-2)' }}>
+                <span className="dot dot-info" />
                 Замер SG — West Coast IPA
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0" />
+              <li style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t-2)' }}>
+                <span className="dot dot-warn" />
                 Перелив — Oatmeal Stout
               </li>
-              <li className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 flex-shrink-0" />
+              <li style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, color: 'var(--t-2)' }}>
+                <span className="dot dot-ok" />
                 Розлив — Belgian Tripel
               </li>
             </ul>
-          </div>
+          </Card>
         </div>
       </div>
-    </div>
+
+      {/* Quick actions */}
+      <Card pad="lg">
+        <CardHeader title="Быстрые действия" />
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          <LinkButton href="/recipes/new" variant="primary"><FlaskConical size={14} strokeWidth={2.4} />Новый рецепт</LinkButton>
+          <LinkButton href="/brews/new" variant="ghost"><Beer size={14} strokeWidth={2.2} />Начать варку</LinkButton>
+          <LinkButton href="/inventory" variant="ghost"><Package size={14} strokeWidth={2.2} />Пополнить склад</LinkButton>
+          <LinkButton href="/calculator" variant="ghost"><TrendingUp size={14} strokeWidth={2.2} />Калькулятор</LinkButton>
+        </div>
+      </Card>
+    </Page>
   )
 }

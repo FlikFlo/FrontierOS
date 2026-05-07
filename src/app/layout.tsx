@@ -15,12 +15,12 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ru" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="bg-brewery min-h-screen">
-        <div style={{ display: 'grid', gridTemplateColumns: '16rem 1fr', minHeight: '100vh' }}>
+      <body className="bg-app">
+        <div style={{ display: 'grid', gridTemplateColumns: '248px 1fr', minHeight: '100vh' }}>
           <Sidebar />
-          <div className="flex flex-col min-w-0">
+          <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0 }}>
             <Topbar />
-            <main className="flex-1 p-6 min-w-0">{children}</main>
+            <main style={{ flex: 1, minWidth: 0 }}>{children}</main>
           </div>
         </div>
       </body>

@@ -1,8 +1,12 @@
 import Link from 'next/link'
-import { Plus, Beer, Calendar, ArrowRight } from 'lucide-react'
-import { formatDate, getBrewStatusLabel, getBrewStatusBadge } from '@/lib/utils'
+import { Plus, Calendar } from 'lucide-react'
+import { formatDate, getBrewStatusLabel } from '@/lib/utils'
 import { BEVERAGE_CATEGORIES } from '@/types/database'
 import type { BrewStatus, BeverageCategory } from '@/types/database'
+import { Page, PageHeader } from '@/components/ui/Page'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { LinkButton } from '@/components/ui/Button'
 
 interface MockBrew {
   id: string
@@ -22,117 +26,109 @@ const mockBrews: MockBrew[] = [
   { id: '2', recipe_name: 'Oatmeal Stout',    category: 'beer',     batch_number: '#041', status: 'conditioning', brew_date: '2026-04-15', batch_size_l: 20, og_actual: 1.072, fg_actual: null,  abv_actual: null },
   { id: '3', recipe_name: 'Belgian Tripel',   category: 'beer',     batch_number: '#040', status: 'ready',        brew_date: '2026-04-01', batch_size_l: 25, og_actual: 1.082, fg_actual: 1.010, abv_actual: 9.4 },
   { id: '4', recipe_name: 'Pilsner Classic',  category: 'beer',     batch_number: '#039', status: 'planned',      brew_date: '2026-05-12', batch_size_l: 30, og_actual: null,  fg_actual: null,  abv_actual: null },
-  { id: '5', recipe_name: 'Манго Комбуча',   category: 'kombucha', batch_number: '#K01', status: 'fermenting',   brew_date: '2026-05-01', batch_size_l: 10, og_actual: 1.030, fg_actual: null,  abv_actual: null },
-  { id: '6', recipe_name: 'Лимонад Citrus',  category: 'lemonade', batch_number: '#L01', status: 'ready',        brew_date: '2026-04-20', batch_size_l: 15, og_actual: null,  fg_actual: null,  abv_actual: null },
+  { id: '5', recipe_name: 'Манго Комбуча',    category: 'kombucha', batch_number: '#K01', status: 'fermenting',   brew_date: '2026-05-01', batch_size_l: 10, og_actual: 1.030, fg_actual: null,  abv_actual: null },
+  { id: '6', recipe_name: 'Лимонад Citrus',   category: 'lemonade', batch_number: '#L01', status: 'ready',        brew_date: '2026-04-20', batch_size_l: 15, og_actual: null,  fg_actual: null,  abv_actual: null },
 ]
 
 const statusProgress: Record<BrewStatus, number> = {
-  planned: 5, mashing: 20, boiling: 40, fermenting: 65, conditioning: 85, ready: 100, archived: 100
+  planned: 5, mashing: 20, boiling: 40, fermenting: 65, conditioning: 85, ready: 100, archived: 100,
+}
+
+const statusTone: Record<BrewStatus, 'neutral' | 'accent' | 'ok' | 'warn' | 'info'> = {
+  planned: 'neutral', mashing: 'warn', boiling: 'warn',
+  fermenting: 'info', conditioning: 'accent', ready: 'ok', archived: 'neutral',
 }
 
 export default function BrewsPage() {
-  const grouped = mockBrews.reduce((acc, brew) => {
-    const s = brew.status
-    if (!acc[s]) acc[s] = []
-    acc[s].push(brew)
+  const order: BrewStatus[] = ['fermenting', 'conditioning', 'mashing', 'boiling', 'ready', 'planned']
+  const grouped = mockBrews.reduce((acc, b) => {
+    if (!acc[b.status]) acc[b.status] = []
+    acc[b.status].push(b)
     return acc
   }, {} as Record<string, MockBrew[]>)
 
-  const order: BrewStatus[] = ['fermenting', 'conditioning', 'mashing', 'boiling', 'ready', 'planned', 'archived']
-
   return (
-    <div className="max-w-7xl mx-auto space-y-6 fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white">Варочный журнал</h1>
-          <p className="text-sm text-white/40 mt-0.5">{mockBrews.length} партий всего</p>
-        </div>
-        <Link href="/brews/new" className="btn-primary">
-          <Plus size={16} />
-          Новая партия
-        </Link>
-      </div>
+    <Page>
+      <PageHeader
+        title="Варки"
+        subtitle={`${mockBrews.length} партий всего`}
+        actions={
+          <LinkButton href="/brews/new" variant="primary">
+            <Plus size={15} strokeWidth={2.5} />Новая партия
+          </LinkButton>
+        }
+      />
 
       {/* Status overview */}
-      <div className="grid grid-cols-3 lg:grid-cols-6 gap-3">
-        {order.filter(s => s !== 'archived').map(status => {
-          const count = grouped[status]?.length ?? 0
-          const badge = getBrewStatusBadge(status)
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+        {order.map(s => {
+          const count = grouped[s]?.length ?? 0
           return (
-            <div key={status} className="glass-sm p-3 text-center">
-              <p className="text-2xl font-bold text-white">{count}</p>
-              <span className={`badge ${badge} mt-1 text-[10px]`}>{getBrewStatusLabel(status)}</span>
-            </div>
+            <Card key={s} pad="sm" style={{ textAlign: 'center', padding: '14px 12px' }}>
+              <p className="t-mono" style={{ fontSize: 22, fontWeight: 600, color: 'var(--t-1)', lineHeight: 1 }}>{count}</p>
+              <p style={{ fontSize: 11, color: 'var(--t-3)', marginTop: 6 }}>{getBrewStatusLabel(s)}</p>
+            </Card>
           )
         })}
       </div>
 
       {/* Brew cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: 16 }}>
         {mockBrews.map(brew => {
           const cat = BEVERAGE_CATEGORIES.find(c => c.value === brew.category)
           const progress = statusProgress[brew.status]
-          const badge = getBrewStatusBadge(brew.status)
-
           return (
             <Link key={brew.id} href={`/brews/${brew.id}`}>
-              <div className="glass p-5 cursor-pointer glass-hover h-full space-y-4">
-                {/* Top */}
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-lg">{cat?.emoji}</span>
-                      <h3 className="font-semibold text-white truncate">{brew.recipe_name}</h3>
+              <Card hover pad="md" style={{ cursor: 'pointer', height: '100%', display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontSize: 16 }}>{cat?.emoji}</span>
+                      <h3 style={{ fontSize: 14.5, fontWeight: 600, color: 'var(--t-1)' }}>{brew.recipe_name}</h3>
                     </div>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-white/40">{brew.batch_number}</span>
-                      <span className="text-white/20">·</span>
-                      <span className="text-xs text-white/40">{brew.batch_size_l} л</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 }}>
+                      <span className="t-meta">{brew.batch_number}</span>
+                      <span style={{ color: 'var(--t-4)' }}>·</span>
+                      <span className="t-meta">{brew.batch_size_l} л</span>
                     </div>
                   </div>
-                  <span className={`badge ${badge} flex-shrink-0`}>{getBrewStatusLabel(brew.status)}</span>
+                  <Badge tone={statusTone[brew.status]}>{getBrewStatusLabel(brew.status)}</Badge>
                 </div>
 
-                {/* Progress */}
-                <div>
-                  <div className="progress-track h-2">
-                    <div
-                      className="h-2 rounded-full transition-all duration-500"
-                      style={{
-                        width: `${progress}%`,
-                        background: brew.status === 'ready' ? 'linear-gradient(90deg, #34d399, #10b981)' :
-                                    brew.status === 'fermenting' ? 'linear-gradient(90deg, #60a5fa, #a78bfa)' :
-                                    'linear-gradient(90deg, #f59e0b, #f97316)'
-                      }}
-                    />
-                  </div>
+                <div className="progress">
+                  <div
+                    className={`progress-bar ${brew.status === 'ready' ? 'progress-bar-ok' : brew.status === 'fermenting' ? 'progress-bar-info' : ''}`}
+                    style={{ width: `${progress}%` }}
+                  />
                 </div>
 
-                {/* Metrics */}
-                <div className="grid grid-cols-3 gap-2">
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
                   {[
-                    { label: 'OG', value: brew.og_actual ? brew.og_actual.toFixed(3) : '—' },
-                    { label: 'FG', value: brew.fg_actual ? brew.fg_actual.toFixed(3) : '—' },
+                    { label: 'OG', value: brew.og_actual?.toFixed(3) ?? '—' },
+                    { label: 'FG', value: brew.fg_actual?.toFixed(3) ?? '—' },
                     { label: 'ABV', value: brew.abv_actual ? `${brew.abv_actual}%` : '—' },
-                  ].map(({ label, value }) => (
-                    <div key={label} className="glass-sm p-2 text-center">
-                      <p className="text-[10px] text-white/30 uppercase">{label}</p>
-                      <p className="text-sm font-semibold text-white">{value}</p>
+                  ].map(it => (
+                    <div key={it.label} style={{
+                      padding: '8px', textAlign: 'center',
+                      borderRadius: 'var(--r-sm)',
+                      background: 'var(--surface-1)',
+                      border: '1px solid var(--hairline)',
+                    }}>
+                      <p style={{ fontSize: 9.5, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--t-3)' }}>{it.label}</p>
+                      <p className="t-mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--t-1)', marginTop: 3 }}>{it.value}</p>
                     </div>
                   ))}
                 </div>
 
-                {/* Date */}
-                <div className="flex items-center gap-1 text-xs text-white/30">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--t-3)', fontSize: 11.5 }}>
                   <Calendar size={11} />
-                  {brew.status === 'planned' ? `Запланировано: ${formatDate(brew.brew_date)}` : `Начата: ${formatDate(brew.brew_date)}`}
+                  {brew.status === 'planned' ? `Запланирована ${formatDate(brew.brew_date)}` : formatDate(brew.brew_date)}
                 </div>
-              </div>
+              </Card>
             </Link>
           )
         })}
       </div>
-    </div>
+    </Page>
   )
 }

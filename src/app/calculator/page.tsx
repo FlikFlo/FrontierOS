@@ -2,9 +2,9 @@
 
 import { useState, useMemo, type ComponentType } from 'react'
 import {
-  Calculator, Droplets, Wind, FlaskConical, TestTube, Beaker,
+  Droplets, Wind, FlaskConical, TestTube, Beaker,
   AlertTriangle, ArrowLeftRight, Gauge, Thermometer, Beer, Apple, Wheat,
-  Leaf, Citrus, Flame, Sparkles, ArrowDown,
+  Leaf, Citrus, Flame, Sparkles,
 } from 'lucide-react'
 import {
   brixToSG, sgToBrix, calcABV, calcOGFromSugar,
@@ -16,6 +16,11 @@ import {
   calcKombucha, calcLemonade, calcMeadOG, calcCiderOG, calcKvassStats,
   calcFG,
 } from '@/lib/beverage-calc'
+import { Page, PageHeader } from '@/components/ui/Page'
+import { Card } from '@/components/ui/Card'
+import { Tabs } from '@/components/ui/Tabs'
+import { Field, Input, Select } from '@/components/ui/Field'
+import { Badge } from '@/components/ui/Badge'
 
 // ─── tools registry ─────────────────────────────────────────────────────────
 
@@ -28,60 +33,47 @@ type ToolKey =
   | 'kombucha' | 'lemonade' | 'cider' | 'mead' | 'kvass'
 
 type CategoryKey = 'density' | 'carb' | 'refrac' | 'mash' | 'water' | 'recipes'
-type Accent = 'amber' | 'blue' | 'emerald' | 'violet' | 'rose' | 'cyan'
 
 interface Tool {
   key: ToolKey
   category: CategoryKey
   label: string
-  icon: ComponentType<{ size?: number; className?: string }>
+  icon: ComponentType<{ size?: number; strokeWidth?: number }>
   description: string
-  accent: Accent
 }
 
 const TOOLS: Tool[] = [
-  { key: 'brix-sg',      category: 'density',  label: 'Brix ↔ SG',         icon: ArrowLeftRight, description: 'Перевод между шкалой Brix и удельной плотностью',         accent: 'amber'   },
-  { key: 'abv',          category: 'density',  label: 'ABV',                icon: Gauge,          description: 'Алкоголь по начальной и конечной плотности',              accent: 'violet'  },
-  { key: 'temp-correct', category: 'density',  label: 'Коррекция T',        icon: Thermometer,    description: 'Поправка ареометра на температуру измерения',             accent: 'emerald' },
-  { key: 'sugar-og',     category: 'density',  label: 'Сахар → OG',         icon: Sparkles,       description: 'Какую начальную плотность даст N грамм сахара в M литрах', accent: 'amber'   },
+  { key: 'brix-sg',      category: 'density',  label: 'Brix ↔ SG',         icon: ArrowLeftRight, description: 'Перевод между шкалой Brix и удельной плотностью' },
+  { key: 'abv',          category: 'density',  label: 'ABV',                icon: Gauge,          description: 'Алкоголь по начальной и конечной плотности' },
+  { key: 'temp-correct', category: 'density',  label: 'Коррекция T',        icon: Thermometer,    description: 'Поправка ареометра на температуру' },
+  { key: 'sugar-og',     category: 'density',  label: 'Сахар → OG',         icon: Sparkles,       description: 'Какую начальную плотность даст N грамм сахара' },
 
-  { key: 'priming',      category: 'carb',     label: 'Прайминг',           icon: Wind,           description: 'Сахар для естественной карбонизации в бутылках',          accent: 'cyan'    },
-  { key: 'keg',          category: 'carb',     label: 'Кеггинг',            icon: Gauge,          description: 'Давление CO₂ для кеггинга',                                accent: 'blue'    },
-  { key: 'co2-styles',   category: 'carb',     label: 'CO₂ по стилям',     icon: Sparkles,       description: 'Справочник целевых объёмов CO₂ для разных стилей',         accent: 'amber'   },
+  { key: 'priming',      category: 'carb',     label: 'Прайминг',           icon: Wind,           description: 'Сахар для естественной карбонизации в бутылках' },
+  { key: 'keg',          category: 'carb',     label: 'Кеггинг',            icon: Gauge,          description: 'Давление CO₂ для кеггинга' },
+  { key: 'co2-styles',   category: 'carb',     label: 'CO₂ по стилям',     icon: Sparkles,       description: 'Справочник целевых объёмов CO₂' },
 
-  { key: 'refrac',       category: 'refrac',   label: 'Коррекция FG',       icon: TestTube,       description: 'Реальная FG по показаниям рефрактометра при наличии алкоголя', accent: 'emerald' },
+  { key: 'refrac',       category: 'refrac',   label: 'Коррекция FG',       icon: TestTube,       description: 'Реальная FG по показаниям рефрактометра' },
 
-  { key: 'strike',       category: 'mash',     label: 'Заливочная вода',    icon: Thermometer,    description: 'Температура воды для затирания (формула Palmer)',         accent: 'rose'    },
-  { key: 'volumes',      category: 'mash',     label: 'Объёмы воды',        icon: Droplets,       description: 'Затирание + поглощение + испарение + промывка',           accent: 'blue'    },
+  { key: 'strike',       category: 'mash',     label: 'Заливочная вода',    icon: Thermometer,    description: 'Температура воды для затирания (Palmer)' },
+  { key: 'volumes',      category: 'mash',     label: 'Объёмы воды',        icon: Droplets,       description: 'Затирание + поглощение + испарение + промывка' },
 
-  { key: 'water',        category: 'water',    label: 'Профиль и соли',     icon: Beaker,         description: 'Состав воды, добавки солей, анализ восприятия',           accent: 'cyan'    },
+  { key: 'water',        category: 'water',    label: 'Профиль и соли',     icon: Beaker,         description: 'Состав воды, добавки солей, анализ' },
 
-  { key: 'kombucha',     category: 'recipes',  label: 'Комбуча',            icon: Leaf,           description: 'SCOBY-ферментация чая с сахаром',                          accent: 'emerald' },
-  { key: 'lemonade',     category: 'recipes',  label: 'Лимонад',            icon: Citrus,         description: 'Газировка с балансом сладости и кислотности',             accent: 'amber'   },
-  { key: 'cider',        category: 'recipes',  label: 'Сидр',               icon: Apple,          description: 'Сидр из яблочного сока с дрожжами',                       accent: 'rose'    },
-  { key: 'mead',         category: 'recipes',  label: 'Медовуха',           icon: Flame,          description: 'Ферментация мёда с дрожжами',                              accent: 'amber'   },
-  { key: 'kvass',        category: 'recipes',  label: 'Квас',               icon: Wheat,          description: 'Хлебная ферментация с минимальным алкоголем',             accent: 'amber'   },
+  { key: 'kombucha',     category: 'recipes',  label: 'Комбуча',            icon: Leaf,           description: 'SCOBY-ферментация чая с сахаром' },
+  { key: 'lemonade',     category: 'recipes',  label: 'Лимонад',            icon: Citrus,         description: 'Газировка с балансом сладости и кислотности' },
+  { key: 'cider',        category: 'recipes',  label: 'Сидр',               icon: Apple,          description: 'Сидр из яблочного сока' },
+  { key: 'mead',         category: 'recipes',  label: 'Медовуха',           icon: Flame,          description: 'Ферментация мёда с дрожжами' },
+  { key: 'kvass',        category: 'recipes',  label: 'Квас',               icon: Wheat,          description: 'Хлебная ферментация' },
 ]
 
-const CATEGORIES: { key: CategoryKey; label: string; icon: ComponentType<{ size?: number; className?: string }> }[] = [
-  { key: 'density',  label: 'Плотность',     icon: Droplets     },
-  { key: 'carb',     label: 'Карбонизация',   icon: Wind         },
-  { key: 'refrac',   label: 'Рефрактометр',   icon: TestTube     },
-  { key: 'mash',     label: 'Затирание',      icon: FlaskConical },
-  { key: 'water',    label: 'Вода',           icon: Beaker       },
-  { key: 'recipes',  label: 'Рецепты',        icon: Beer         },
+const CATEGORIES: { value: CategoryKey; label: string }[] = [
+  { value: 'density',  label: 'Плотность' },
+  { value: 'carb',     label: 'Карбонизация' },
+  { value: 'refrac',   label: 'Рефрактометр' },
+  { value: 'mash',     label: 'Затирание' },
+  { value: 'water',    label: 'Вода' },
+  { value: 'recipes',  label: 'Рецепты' },
 ]
-
-// ─── accent colour helpers ─────────────────────────────────────────────────
-
-const ACCENT: Record<Accent, { glow: string; grad: string; border: string; bg: string }> = {
-  amber:   { glow: 'rgba(251, 191, 36, 0.45)',  grad: 'linear-gradient(135deg, #fbbf24, #f97316)', border: 'rgba(251, 191, 36, 0.4)',  bg: 'rgba(251, 191, 36, 0.08)' },
-  blue:    { glow: 'rgba(96, 165, 250, 0.45)',  grad: 'linear-gradient(135deg, #60a5fa, #3b82f6)', border: 'rgba(96, 165, 250, 0.4)',  bg: 'rgba(96, 165, 250, 0.08)' },
-  emerald: { glow: 'rgba(52, 211, 153, 0.45)',  grad: 'linear-gradient(135deg, #34d399, #10b981)', border: 'rgba(52, 211, 153, 0.4)',  bg: 'rgba(52, 211, 153, 0.08)' },
-  violet:  { glow: 'rgba(167, 139, 250, 0.45)', grad: 'linear-gradient(135deg, #a78bfa, #8b5cf6)', border: 'rgba(167, 139, 250, 0.4)', bg: 'rgba(167, 139, 250, 0.08)' },
-  rose:    { glow: 'rgba(251, 113, 133, 0.45)', grad: 'linear-gradient(135deg, #fb7185, #e11d48)', border: 'rgba(251, 113, 133, 0.4)', bg: 'rgba(251, 113, 133, 0.08)' },
-  cyan:    { glow: 'rgba(34, 211, 238, 0.45)',  grad: 'linear-gradient(135deg, #22d3ee, #0891b2)', border: 'rgba(34, 211, 238, 0.4)',  bg: 'rgba(34, 211, 238, 0.08)' },
-}
 
 // ─── page ───────────────────────────────────────────────────────────────────
 
@@ -90,64 +82,32 @@ export default function CalculatorPage() {
   const tool = TOOLS.find(t => t.key === active)!
   const subTools = TOOLS.filter(t => t.category === tool.category)
 
+  const handleCategoryChange = (cat: CategoryKey) => {
+    const first = TOOLS.find(t => t.category === cat)!
+    setActive(first.key)
+  }
+
   return (
-    <div className="fade-in" style={{ width: '100%' }}>
-      {/* Header */}
-      <header style={{ textAlign: 'center', marginBottom: 32 }}>
-        <div
-          style={{
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '6px 14px', borderRadius: 999,
-            background: 'linear-gradient(180deg, rgba(251,191,36,0.18), rgba(251,191,36,0.06))',
-            border: '1px solid rgba(251, 191, 36, 0.3)',
-            color: '#fbbf24', fontSize: 12, fontWeight: 600,
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18), 0 0 24px rgba(251,191,36,0.15)',
-            marginBottom: 16,
-          }}
-        >
-          <Calculator size={12} /> Brewing Tools
-        </div>
-        <h1 style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 700, letterSpacing: '-0.02em', lineHeight: 1.1 }}>
-          <span style={{ color: '#fff' }}>Калькулятор </span>
-          <span className="text-gradient-amber">пивовара</span>
-        </h1>
-        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.45)', marginTop: 10 }}>
-          {TOOLS.length} инструментов для варки и контроля брожения
-        </p>
-      </header>
+    <Page>
+      <PageHeader
+        title="Калькулятор пивовара"
+        subtitle={`${TOOLS.length} инструментов для варки и контроля брожения`}
+      />
 
-      {/* Primary nav: categories */}
-      <nav
-        style={{
-          display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center',
-          marginBottom: 16,
-        }}
-      >
-        {CATEGORIES.map((c) => {
-          const isActive = c.key === tool.category
-          const firstTool = TOOLS.find(t => t.category === c.key)!
-          return (
-            <button
-              key={c.key}
-              onClick={() => setActive(firstTool.key)}
-              className={`lg-pill ${isActive ? 'lg-pill-active' : ''}`}
-            >
-              <c.icon size={14} />
-              {c.label}
-            </button>
-          )
-        })}
-      </nav>
+      {/* Category tabs */}
+      <div style={{ display: 'flex', justifyContent: 'flex-start' }}>
+        <Tabs<CategoryKey>
+          items={CATEGORIES}
+          value={tool.category}
+          onChange={handleCategoryChange}
+          size="lg"
+        />
+      </div>
 
-      {/* Secondary nav: sub-tools */}
+      {/* Sub-tools nav (when more than one) */}
       {subTools.length > 1 && (
-        <div
-          style={{
-            display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'center',
-            marginBottom: 28,
-          }}
-        >
-          {subTools.map((t) => {
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+          {subTools.map(t => {
             const isActive = t.key === active
             const Icon = t.icon
             return (
@@ -155,20 +115,17 @@ export default function CalculatorPage() {
                 key={t.key}
                 onClick={() => setActive(t.key)}
                 style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  padding: '7px 16px', borderRadius: 999,
-                  border: `1px solid ${isActive ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.08)'}`,
-                  background: isActive
-                    ? 'linear-gradient(180deg, rgba(255,255,255,0.1), rgba(255,255,255,0.02))'
-                    : 'transparent',
-                  color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
-                  fontSize: 12, fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isActive ? 'inset 0 1px 0 rgba(255,255,255,0.15)' : 'none',
+                  display: 'inline-flex', alignItems: 'center', gap: 7,
+                  padding: '8px 14px',
+                  borderRadius: 10,
+                  background: isActive ? 'var(--surface-2)' : 'transparent',
+                  border: `1px solid ${isActive ? 'var(--hairline-strong)' : 'var(--hairline)'}`,
+                  color: isActive ? 'var(--t-1)' : 'var(--t-3)',
+                  fontSize: 12.5, fontWeight: 600,
+                  cursor: 'pointer', transition: 'all .15s ease',
                 }}
               >
-                <Icon size={11} />
+                <Icon size={13} strokeWidth={isActive ? 2.4 : 1.8} />
                 {t.label}
               </button>
             )
@@ -180,6 +137,152 @@ export default function CalculatorPage() {
       <div key={active} className="fade-in">
         <ActiveTool toolKey={active} />
       </div>
+    </Page>
+  )
+}
+
+// ─── primitives ─────────────────────────────────────────────────────────────
+
+function ToolFrame({
+  toolKey,
+  inputs,
+  result,
+  hint,
+}: {
+  toolKey: ToolKey
+  inputs: React.ReactNode
+  result: React.ReactNode
+  hint?: string
+}) {
+  const tool = TOOLS.find(t => t.key === toolKey)!
+  const Icon = tool.icon
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 20 }}>
+      {/* Inputs */}
+      <Card pad="lg">
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 24 }}>
+          <div style={{
+            width: 38, height: 38, borderRadius: 10, flexShrink: 0,
+            background: 'var(--surface-2)', border: '1px solid var(--hairline)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <Icon size={17} strokeWidth={1.9} />
+          </div>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--t-1)', letterSpacing: '-0.01em' }}>{tool.label}</h2>
+            <p style={{ fontSize: 12.5, color: 'var(--t-3)', marginTop: 3, lineHeight: 1.5 }}>{tool.description}</p>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p className="t-eyebrow">Параметры</p>
+          {inputs}
+        </div>
+
+        {hint && (
+          <p style={{
+            marginTop: 24, paddingTop: 16,
+            borderTop: '1px solid var(--hairline)',
+            fontSize: 12, color: 'var(--t-3)', lineHeight: 1.6,
+          }}>
+            {hint}
+          </p>
+        )}
+      </Card>
+
+      {/* Result */}
+      <Card pad="lg">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <p className="t-eyebrow">Результат</p>
+          {result}
+        </div>
+      </Card>
+    </div>
+  )
+}
+
+function NumField({
+  label, value, onChange, suffix, step = 1,
+}: {
+  label: string
+  value: number
+  onChange: (v: number) => void
+  suffix?: string
+  step?: number
+}) {
+  return (
+    <Field label={label}>
+      <Input
+        type="number"
+        step={step}
+        suffix={suffix}
+        value={value}
+        onChange={e => onChange(parseFloat(e.target.value) || 0)}
+      />
+    </Field>
+  )
+}
+
+function FieldGrid({ cols = 2, children }: { cols?: 1 | 2 | 3; children: React.ReactNode }) {
+  return (
+    <div style={{
+      display: 'grid',
+      gridTemplateColumns: `repeat(auto-fit, minmax(${cols === 3 ? 140 : 160}px, 1fr))`,
+      gap: 12,
+    }}>
+      {children}
+    </div>
+  )
+}
+
+function HeroNumber({
+  label, value, unit, accent = false,
+}: {
+  label: string
+  value: string
+  unit?: string
+  accent?: boolean
+}) {
+  return (
+    <div style={{
+      padding: '24px 20px',
+      borderRadius: 'var(--r-md)',
+      background: 'var(--surface-1)',
+      border: '1px solid var(--hairline)',
+      textAlign: 'left',
+    }}>
+      <p className="t-eyebrow" style={{ marginBottom: 10 }}>{label}</p>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span
+          className="t-mono"
+          style={{
+            fontSize: 'clamp(40px, 5vw, 56px)', lineHeight: 1, fontWeight: 600, letterSpacing: '-0.03em',
+            color: accent ? 'var(--accent)' : 'var(--t-1)',
+          }}
+        >
+          {value}
+        </span>
+        {unit && <span style={{ fontSize: 17, color: 'var(--t-3)', fontWeight: 500 }}>{unit}</span>}
+      </div>
+    </div>
+  )
+}
+
+function StatRow({ items }: { items: { label: string; value: string; sub?: string }[] }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8 }}>
+      {items.map((s, i) => (
+        <div key={i} style={{
+          padding: '12px 14px',
+          borderRadius: 'var(--r-sm)',
+          background: 'var(--surface-1)',
+          border: '1px solid var(--hairline)',
+        }}>
+          <p className="t-eyebrow" style={{ fontSize: 9.5 }}>{s.label}</p>
+          <p className="t-mono" style={{ fontSize: 15, fontWeight: 600, color: 'var(--t-1)', marginTop: 5, lineHeight: 1.1 }}>{s.value}</p>
+          {s.sub && <p className="t-meta" style={{ fontSize: 11, marginTop: 3 }}>{s.sub}</p>}
+        </div>
+      ))}
     </div>
   )
 }
@@ -207,315 +310,7 @@ function ActiveTool({ toolKey }: { toolKey: ToolKey }) {
   }
 }
 
-// ─── PRIMITIVES ─────────────────────────────────────────────────────────────
-
-function ToolFrame({
-  toolKey,
-  inputs,
-  result,
-  hint,
-}: {
-  toolKey: ToolKey
-  inputs: React.ReactNode
-  result: React.ReactNode
-  hint?: string
-}) {
-  const tool = TOOLS.find(t => t.key === toolKey)!
-  const Icon = tool.icon
-  const a = ACCENT[tool.accent]
-
-  return (
-    <div className="lg-card" style={{ padding: 0 }}>
-      {/* Top accent bar */}
-      <div style={{ height: 3, width: '100%', background: a.grad }} />
-
-      <div style={{ padding: '36px 36px 32px' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 28 }}>
-          <div
-            style={{
-              width: 52, height: 52, borderRadius: 18,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              flexShrink: 0,
-              background: `linear-gradient(180deg, ${a.bg}, rgba(0,0,0,0.2))`,
-              border: `1px solid ${a.border}`,
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.15), 0 0 32px ${a.glow}, 0 4px 12px rgba(0,0,0,0.3)`,
-            }}
-          >
-            <Icon size={22} className="text-white" />
-          </div>
-          <div style={{ flex: 1, paddingTop: 2 }}>
-            <h2 style={{ fontSize: 22, fontWeight: 700, color: '#fff', lineHeight: 1.2, letterSpacing: '-0.01em' }}>
-              {tool.label}
-            </h2>
-            <p style={{ fontSize: 13.5, color: 'rgba(255,255,255,0.5)', marginTop: 4, lineHeight: 1.5 }}>
-              {tool.description}
-            </p>
-          </div>
-        </div>
-
-        {/* Inputs */}
-        <div style={{ marginBottom: 28 }}>
-          <SectionLabel>Параметры</SectionLabel>
-          {inputs}
-        </div>
-
-        {/* Arrow divider */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 28, gap: 16 }}>
-          <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
-          <div
-            style={{
-              width: 40, height: 40, borderRadius: 999,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              background: 'linear-gradient(180deg, rgba(0,0,0,0.4), rgba(0,0,0,0.6))',
-              border: `1px solid ${a.border}`,
-              boxShadow: `0 0 24px ${a.glow}, inset 0 1px 0 rgba(255,255,255,0.1)`,
-            }}
-          >
-            <ArrowDown size={14} style={{ color: 'rgba(255,255,255,0.7)' }} />
-          </div>
-          <div style={{ height: 1, flex: 1, background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent)' }} />
-        </div>
-
-        {/* Result */}
-        <div style={{ marginBottom: hint ? 24 : 0 }}>
-          <SectionLabel>Результат</SectionLabel>
-          {result}
-        </div>
-
-        {/* Hint */}
-        {hint && (
-          <div
-            style={{
-              marginTop: 24, paddingTop: 20,
-              borderTop: '1px solid rgba(255,255,255,0.06)',
-              fontSize: 12.5, color: 'rgba(255,255,255,0.42)',
-              lineHeight: 1.6,
-            }}
-          >
-            💡 {hint}
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p style={{
-      fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.45)',
-      letterSpacing: '0.14em', textTransform: 'uppercase',
-      marginBottom: 14,
-    }}>
-      {children}
-    </p>
-  )
-}
-
-function Field({
-  label, value, onChange, suffix, step = 1,
-}: {
-  label: string
-  value: number
-  onChange: (v: number) => void
-  suffix?: string
-  step?: number
-}) {
-  return (
-    <label style={{ display: 'block' }}>
-      <span style={{
-        display: 'block',
-        fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.55)',
-        letterSpacing: '0.12em', textTransform: 'uppercase',
-        marginBottom: 8,
-      }}>
-        {label}
-      </span>
-      <div style={{ position: 'relative' }}>
-        <input
-          type="number"
-          step={step}
-          value={value}
-          onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
-          className="lg-input"
-          style={{ paddingRight: suffix ? 56 : 18 }}
-        />
-        {suffix && (
-          <span style={{
-            position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)',
-            fontSize: 12, color: 'rgba(255,255,255,0.4)', fontWeight: 600,
-            pointerEvents: 'none',
-          }}>
-            {suffix}
-          </span>
-        )}
-      </div>
-    </label>
-  )
-}
-
-function SelectField<T extends string>({
-  label, value, onChange, options,
-}: {
-  label: string
-  value: T
-  onChange: (v: T) => void
-  options: { value: T; label: string }[]
-}) {
-  return (
-    <label style={{ display: 'block' }}>
-      <span style={{
-        display: 'block',
-        fontSize: 10.5, fontWeight: 700, color: 'rgba(255,255,255,0.55)',
-        letterSpacing: '0.12em', textTransform: 'uppercase',
-        marginBottom: 8,
-      }}>
-        {label}
-      </span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as T)}
-        className="lg-input"
-        style={{ fontSize: 14 }}
-      >
-        {options.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-    </label>
-  )
-}
-
-function FieldGrid({ cols = 2, children }: { cols?: 1 | 2 | 3 | 4; children: React.ReactNode }) {
-  return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(auto-fit, minmax(${cols === 4 ? 140 : cols === 3 ? 180 : 200}px, 1fr))`,
-        gap: 16,
-      }}
-    >
-      {children}
-    </div>
-  )
-}
-
-function ResultPanel({
-  primary, stats, accent = 'amber',
-}: {
-  primary: { label: string; value: string; unit?: string } | { dual: [
-    { label: string; value: string; unit?: string },
-    { label: string; value: string; unit?: string },
-  ] }
-  stats?: { label: string; value: string; sub?: string }[]
-  accent?: Accent
-}) {
-  const a = ACCENT[accent]
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-      {/* Hero result */}
-      <div
-        style={{
-          position: 'relative',
-          padding: '40px 32px',
-          borderRadius: 22,
-          textAlign: 'center',
-          overflow: 'hidden',
-          background: `linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)), ${a.bg}`,
-          border: `1px solid ${a.border}`,
-          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 0 60px -20px ${a.glow}, 0 8px 32px -16px rgba(0,0,0,0.5)`,
-          backdropFilter: 'blur(20px)',
-          WebkitBackdropFilter: 'blur(20px)',
-        }}
-      >
-        {/* Glow */}
-        <div
-          aria-hidden
-          style={{
-            position: 'absolute', inset: 0, opacity: 0.7, pointerEvents: 'none',
-            background: `radial-gradient(ellipse 70% 80% at center top, ${a.glow}, transparent 65%)`,
-            animation: 'lg-pulse 4s ease-in-out infinite',
-          }}
-        />
-        <div style={{ position: 'relative' }}>
-          {'dual' in primary ? (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
-              {primary.dual.map((p, i) => (
-                <div key={i}>
-                  <p style={{
-                    fontSize: 10.5, letterSpacing: '0.18em', textTransform: 'uppercase',
-                    color: 'rgba(255,255,255,0.5)', fontWeight: 700,
-                  }}>{p.label}</p>
-                  <div style={{ marginTop: 10, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 6 }}>
-                    <span
-                      style={{
-                        fontSize: 'clamp(36px, 5vw, 56px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em',
-                        background: a.grad,
-                        WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                      }}
-                    >
-                      {p.value}
-                    </span>
-                    {p.unit && <span style={{ fontSize: 18, color: 'rgba(255,255,255,0.45)', fontWeight: 600 }}>{p.unit}</span>}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <>
-              <p style={{
-                fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.5)', fontWeight: 700,
-              }}>{primary.label}</p>
-              <div style={{ marginTop: 14, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 10 }}>
-                <span
-                  style={{
-                    fontSize: 'clamp(56px, 9vw, 96px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.03em',
-                    background: a.grad,
-                    WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                    filter: `drop-shadow(0 4px 24px ${a.glow})`,
-                  }}
-                >
-                  {primary.value}
-                </span>
-                {primary.unit && <span style={{ fontSize: 28, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{primary.unit}</span>}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-
-      {/* Stats */}
-      {stats && stats.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: `repeat(auto-fit, minmax(${stats.length >= 4 ? 130 : 150}px, 1fr))`,
-            gap: 10,
-          }}
-        >
-          {stats.map((s, i) => (
-            <div key={i} className="lg-stat">
-              <p style={{
-                fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.4)',
-                letterSpacing: '0.1em', textTransform: 'uppercase',
-              }}>
-                {s.label}
-              </p>
-              <p style={{ fontSize: 18, fontWeight: 700, color: '#fff', marginTop: 4, lineHeight: 1.1 }}>
-                {s.value}
-              </p>
-              {s.sub && (
-                <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>{s.sub}</p>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ─── TOOLS ──────────────────────────────────────────────────────────────────
+// ─── tools ──────────────────────────────────────────────────────────────────
 
 function BrixSGTool() {
   const [brix, setBrix] = useState(12)
@@ -524,21 +319,18 @@ function BrixSGTool() {
     <ToolFrame
       toolKey="brix-sg"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="Brix" value={brix} onChange={setBrix} suffix="°Bx" step={0.1} />
-          <Field label="SG"   value={sg}   onChange={setSg}   step={0.001} />
+        <FieldGrid>
+          <NumField label="Brix" value={brix} onChange={setBrix} suffix="°Bx" step={0.1} />
+          <NumField label="SG" value={sg} onChange={setSg} step={0.001} />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ dual: [
-            { label: 'Brix → SG', value: brixToSG(brix).toFixed(4) },
-            { label: 'SG → Brix', value: sgToBrix(sg).toFixed(2), unit: '°Bx' },
-          ] }}
-          accent="amber"
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="Brix → SG" value={brixToSG(brix).toFixed(4)} accent />
+          <HeroNumber label="SG → Brix" value={sgToBrix(sg).toFixed(2)} unit="°Bx" />
+        </div>
       }
-      hint="Brix — массовая доля сахара в %, SG — отношение плотности раствора к воде. В пивоварении используются обе шкалы взаимозаменяемо."
+      hint="Brix — массовая доля сахара в %, SG — отношение плотности раствора к воде."
     />
   )
 }
@@ -552,20 +344,19 @@ function ABVTool() {
     <ToolFrame
       toolKey="abv"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="OG (начальная плотность)" value={og} onChange={setOg} step={0.001} />
-          <Field label="FG (конечная плотность)"   value={fg} onChange={setFg} step={0.001} />
+        <FieldGrid>
+          <NumField label="OG" value={og} onChange={setOg} step={0.001} />
+          <NumField label="FG" value={fg} onChange={setFg} step={0.001} />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'ABV', value: abv.toFixed(2), unit: '%' }}
-          stats={[
-            { label: 'Аттенюация',   value: `${att.toFixed(1)} %`,                 sub: 'процент сбраживания' },
-            { label: 'Точек ферм.',  value: `${Math.round((og - fg) * 1000)}`,     sub: 'разница SG points' },
-          ]}
-          accent="violet"
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="ABV" value={abv.toFixed(2)} unit="%" accent />
+          <StatRow items={[
+            { label: 'Аттенюация',  value: `${att.toFixed(1)} %`,                sub: 'процент сбраживания' },
+            { label: 'Точек ферм.', value: `${Math.round((og - fg) * 1000)}`,    sub: 'разница SG points' },
+          ]} />
+        </div>
       }
       hint="Формула Miller: ABV = (OG − FG) × 131.25. Точность ±0.3% при OG < 1.080."
     />
@@ -583,20 +374,19 @@ function TempCorrectTool() {
       toolKey="temp-correct"
       inputs={
         <FieldGrid cols={3}>
-          <Field label="SG измеренная" value={sgMeas}  onChange={setSgMeas}  step={0.001} />
-          <Field label="T образца"      value={tSample} onChange={setTSample} suffix="°C" />
-          <Field label="T калибровки"   value={tCalib}  onChange={setTCalib}  suffix="°C" />
+          <NumField label="SG измеренная" value={sgMeas} onChange={setSgMeas} step={0.001} />
+          <NumField label="T образца" value={tSample} onChange={setTSample} suffix="°C" />
+          <NumField label="T калибровки" value={tCalib} onChange={setTCalib} suffix="°C" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: `SG при ${tCalib}°C`, value: corrected.toFixed(4) }}
-          stats={[
-            { label: 'Поправка',    value: `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} pts` },
-            { label: 'Изм. при',    value: `${tSample}°C` },
-          ]}
-          accent="emerald"
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label={`SG при ${tCalib}°C`} value={corrected.toFixed(4)} accent />
+          <StatRow items={[
+            { label: 'Поправка', value: `${delta >= 0 ? '+' : ''}${delta.toFixed(1)} pts` },
+            { label: 'Изм. при', value: `${tSample}°C` },
+          ]} />
+        </div>
       }
       hint="Если измерял плотность горячим суслом — фактическая SG отличается. Используется полином NBS."
     />
@@ -613,23 +403,22 @@ function SugarOGTool() {
     <ToolFrame
       toolKey="sugar-og"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="Сахар" value={sugarG} onChange={setSugarG} suffix="г" />
-          <Field label="Объём" value={volL}   onChange={setVolL}   suffix="л" />
+        <FieldGrid>
+          <NumField label="Сахар" value={sugarG} onChange={setSugarG} suffix="г" />
+          <NumField label="Объём" value={volL} onChange={setVolL} suffix="л" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'OG', value: og.toFixed(4) }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="OG" value={og.toFixed(4)} accent />
+          <StatRow items={[
             { label: 'Brix',       value: `${sgToBrix(og).toFixed(1)} °Bx` },
             { label: 'Концентр.',  value: `${(sugarG / volL).toFixed(0)} г/л` },
             { label: 'ABV (75%)',  value: `${abv.toFixed(2)} %` },
-          ]}
-          accent="amber"
-        />
+          ]} />
+        </div>
       }
-      hint="≈ 0.00038 SG-points на г/л сахарозы. Применимо для медовухи, кваса, сидра, дополнительной сахаризации сусла."
+      hint="≈ 0.00038 SG-points на г/л сахарозы. Применимо для медовухи, кваса, сидра."
     />
   )
 }
@@ -644,30 +433,30 @@ function PrimingTool() {
     <ToolFrame
       toolKey="priming"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="Объём пива"        value={batchL}    onChange={setBatchL}    suffix="л" />
-          <Field label="Целевая CO₂"        value={targetCO2} onChange={setTargetCO2} suffix="vol" step={0.1} />
-          <Field label="Макс. T при ферм."  value={maxFermT}  onChange={setMaxFermT}  suffix="°C" />
-          <SelectField
-            label="Тип сахара"
-            value={sugar}
-            onChange={setSugar}
-            options={(Object.keys(PRIMING_SUGAR_LABELS) as PrimingSugarType[]).map(k => ({ value: k, label: PRIMING_SUGAR_LABELS[k] }))}
-          />
+        <FieldGrid>
+          <NumField label="Объём пива" value={batchL} onChange={setBatchL} suffix="л" />
+          <NumField label="Целевая CO₂" value={targetCO2} onChange={setTargetCO2} suffix="vol" step={0.1} />
+          <NumField label="Макс. T при ферм." value={maxFermT} onChange={setMaxFermT} suffix="°C" />
+          <Field label="Тип сахара">
+            <Select value={sugar} onChange={e => setSugar(e.target.value as PrimingSugarType)}>
+              {(Object.keys(PRIMING_SUGAR_LABELS) as PrimingSugarType[]).map(k => (
+                <option key={k} value={k}>{PRIMING_SUGAR_LABELS[k]}</option>
+              ))}
+            </Select>
+          </Field>
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'Сахар на партию', value: r.grams.toFixed(1), unit: 'г' }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="Сахар на партию" value={r.grams.toFixed(1)} unit="г" accent />
+          <StatRow items={[
             { label: 'На литр',         value: `${(r.grams / batchL).toFixed(1)} г/л` },
-            { label: 'Остаточный CO₂',  value: `${r.residualCO2}`,                      sub: 'vol после ферм.' },
+            { label: 'Остаточный CO₂',  value: `${r.residualCO2}`, sub: 'vol после ферм.' },
             { label: 'Δ нужно',          value: `${(targetCO2 - r.residualCO2).toFixed(2)} vol` },
-          ]}
-          accent="cyan"
-        />
+          ]} />
+        </div>
       }
-      hint="Растворить сахар в малом объёме кипятка, остудить, аккуратно влить в пиво при разливе. Карбонизация 2-3 недели при комнатной температуре."
+      hint="Растворить сахар в малом объёме кипятка, остудить, влить в пиво при разливе. Карбонизация 2-3 недели."
     />
   )
 }
@@ -680,48 +469,50 @@ function KegTool() {
     <ToolFrame
       toolKey="keg"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="T кега"        value={t}   onChange={setT}   suffix="°C" />
-          <Field label="Целевая CO₂"    value={co2} onChange={setCo2} suffix="vol" step={0.1} />
+        <FieldGrid>
+          <NumField label="T кега" value={t} onChange={setT} suffix="°C" />
+          <NumField label="Целевая CO₂" value={co2} onChange={setCo2} suffix="vol" step={0.1} />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'Давление', value: psi.toFixed(1), unit: 'PSI' }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="Давление" value={psi.toFixed(1)} unit="PSI" accent />
+          <StatRow items={[
             { label: 'Бар',  value: `${(psi * 0.0689476).toFixed(2)}` },
             { label: 'Атм.', value: `${(psi * 0.068046).toFixed(2)}` },
             { label: 'kPa',  value: `${(psi * 6.89476).toFixed(0)}` },
-          ]}
-          accent="blue"
-        />
+          ]} />
+        </div>
       }
-      hint="При повышении температуры нужно поднимать давление пропорционально. Хранить пиво холодным безопаснее и вкуснее."
+      hint="При повышении температуры нужно поднимать давление пропорционально."
     />
   )
 }
 
 function CO2StylesTool() {
   return (
-    <ToolFrame
-      toolKey="co2-styles"
-      inputs={
-        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.6 }}>
-          Справочные диапазоны карбонизации (объёмы CO₂) для разных типов напитков.
-          Используй как ориентир при выборе целевой карбонизации в калькуляторах прайминга и кеггинга.
-        </p>
-      }
-      result={
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 10 }}>
-          {TARGET_CO2_VOLUMES.map(({ style, min, max }) => (
-            <div key={style} className="lg-stat" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, color: 'rgba(255,255,255,0.8)', fontWeight: 500 }}>{style}</span>
-              <span style={{ fontSize: 15, fontFamily: 'var(--font-mono, monospace)', fontWeight: 700, color: '#fbbf24' }}>{min}–{max}</span>
-            </div>
-          ))}
-        </div>
-      }
-    />
+    <div className="card card-pad-lg">
+      <p className="t-eyebrow" style={{ marginBottom: 8 }}>Справочник</p>
+      <h2 style={{ fontSize: 17, fontWeight: 600, color: 'var(--t-1)', letterSpacing: '-0.01em' }}>Объёмы CO₂ по стилям</h2>
+      <p style={{ fontSize: 12.5, color: 'var(--t-3)', marginTop: 4, lineHeight: 1.5 }}>
+        Используй как ориентир при выборе целевой карбонизации в калькуляторах прайминга и кеггинга.
+      </p>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 8, marginTop: 20 }}>
+        {TARGET_CO2_VOLUMES.map(({ style, min, max }) => (
+          <div key={style} style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            padding: '12px 14px',
+            borderRadius: 'var(--r-sm)',
+            background: 'var(--surface-1)',
+            border: '1px solid var(--hairline)',
+          }}>
+            <span style={{ fontSize: 13.5, color: 'var(--t-1)' }}>{style}</span>
+            <span className="t-mono" style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)' }}>{min}–{max}</span>
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
@@ -735,25 +526,22 @@ function RefracTool() {
       toolKey="refrac"
       inputs={
         <FieldGrid cols={3}>
-          <Field label="Brix до (OB)"    value={ob}  onChange={setOb}  suffix="°Bx" step={0.1} />
-          <Field label="Brix после (FB)" value={fb}  onChange={setFb}  suffix="°Bx" step={0.1} />
-          <Field label="WCF"              value={wcf} onChange={setWcf} step={0.01} />
+          <NumField label="Brix до (OB)" value={ob} onChange={setOb} suffix="°Bx" step={0.1} />
+          <NumField label="Brix после (FB)" value={fb} onChange={setFb} suffix="°Bx" step={0.1} />
+          <NumField label="WCF" value={wcf} onChange={setWcf} step={0.01} />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ dual: [
-            { label: 'OG',          value: r.og.toFixed(4) },
-            { label: 'FG (true)',   value: r.fg.toFixed(4) },
-          ] }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="OG" value={r.og.toFixed(4)} />
+          <HeroNumber label="FG (true)" value={r.fg.toFixed(4)} accent />
+          <StatRow items={[
             { label: 'ABV',          value: `${r.abv.toFixed(2)} %` },
             { label: 'Аттенюация',   value: `${r.apparentAttenuation.toFixed(1)} %` },
-          ]}
-          accent="emerald"
-        />
+          ]} />
+        </div>
       }
-      hint="Рефрактометр показывает завышенно при наличии алкоголя — формула Sean Terrill восстанавливает реальную SG. WCF (поправка сусла) обычно 1.02–1.06."
+      hint="Рефрактометр показывает завышенно при наличии алкоголя — формула Sean Terrill восстанавливает реальную SG."
     />
   )
 }
@@ -768,18 +556,13 @@ function StrikeTool() {
       toolKey="strike"
       inputs={
         <FieldGrid cols={3}>
-          <Field label="T зерна"   value={grainT} onChange={setGrainT} suffix="°C" />
-          <Field label="T затора"  value={mashT}  onChange={setMashT}  suffix="°C" />
-          <Field label="Соотн. R"  value={ratio}  onChange={setRatio}  suffix="л/кг" step={0.1} />
+          <NumField label="T зерна" value={grainT} onChange={setGrainT} suffix="°C" />
+          <NumField label="T затора" value={mashT} onChange={setMashT} suffix="°C" />
+          <NumField label="Соотн." value={ratio} onChange={setRatio} suffix="л/кг" step={0.1} />
         </FieldGrid>
       }
-      result={
-        <ResultPanel
-          primary={{ label: 'T заливочной воды', value: t.toFixed(1), unit: '°C' }}
-          accent="rose"
-        />
-      }
-      hint="R — литры воды на кг зерна (стандарт 2.5–3.5). Учитывай теплопотери чана: лей на 1-2°C горячее расчётной T."
+      result={<HeroNumber label="T заливочной воды" value={t.toFixed(1)} unit="°C" accent />}
+      hint="R — литры воды на кг зерна (стандарт 2.5–3.5). Учитывай теплопотери чана: лей на 1-2°C горячее."
     />
   )
 }
@@ -799,24 +582,23 @@ function VolumesTool() {
       toolKey="volumes"
       inputs={
         <FieldGrid cols={3}>
-          <Field label="Зерно"      value={grainKg} onChange={setGrainKg} suffix="кг" step={0.1} />
-          <Field label="Партия"     value={batchL}  onChange={setBatchL}  suffix="л" />
-          <Field label="Кипячение"   value={boilMin} onChange={setBoilMin} suffix="мин" />
+          <NumField label="Зерно" value={grainKg} onChange={setGrainKg} suffix="кг" step={0.1} />
+          <NumField label="Партия" value={batchL} onChange={setBatchL} suffix="л" />
+          <NumField label="Кипячение" value={boilMin} onChange={setBoilMin} suffix="мин" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'Промывная вода', value: `${sparge}`, unit: 'л' }}
-          stats={[
-            { label: 'Затирание',   value: `${mashWater} л` },
-            { label: 'Поглощено',   value: `${grainAbs} л`,  sub: 'зерном' },
-            { label: 'Испарение',   value: `${evapL} л`,     sub: 'за варку' },
-            { label: 'Preboil',      value: `${preboil} л` },
-          ]}
-          accent="blue"
-        />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="Промывная вода" value={`${sparge}`} unit="л" accent />
+          <StatRow items={[
+            { label: 'Затирание',  value: `${mashWater} л` },
+            { label: 'Поглощено',  value: `${grainAbs} л`,  sub: 'зерном' },
+            { label: 'Испарение',  value: `${evapL} л`,     sub: 'за варку' },
+            { label: 'Preboil',    value: `${preboil} л` },
+          ]} />
+        </div>
       }
-      hint="Стандартные значения: 3 л/кг затирание, 0.96 л/кг поглощение зерном, 10%/час испарение."
+      hint="Стандартные значения: 3 л/кг затирание, 0.96 л/кг поглощение, 10%/час испарение."
     />
   )
 }
@@ -828,136 +610,112 @@ function WaterTool() {
   const updated  = useMemo(() => applySaltAddition(profile, saltKey, gPerL), [profile, saltKey, gPerL])
   const analysis = useMemo(() => analyzeWater(updated), [updated])
   const setKey = (k: keyof WaterProfile) => (v: number) => setProfile({ ...profile, [k]: v })
-  const a = ACCENT.cyan
+  const labels = { ca: 'Ca²⁺', mg: 'Mg²⁺', na: 'Na⁺', cl: 'Cl⁻', so4: 'SO₄²⁻', hco3: 'HCO₃⁻' } as const
 
   return (
-    <ToolFrame
-      toolKey="water"
-      inputs={
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-          <div>
-            <SectionLabel>Пресет</SectionLabel>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-              {DEFAULT_WATER_PROFILES.map((p) => (
-                <button key={p.name} onClick={() => setProfile(p.profile)} className="lg-pill" style={{ padding: '8px 16px', fontSize: 12 }}>
-                  {p.name}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <SectionLabel>Профиль воды (ppm)</SectionLabel>
-            <FieldGrid cols={3}>
-              <Field label="Ca²⁺"   value={profile.ca}   onChange={setKey('ca')}   suffix="ppm" />
-              <Field label="Mg²⁺"   value={profile.mg}   onChange={setKey('mg')}   suffix="ppm" />
-              <Field label="Na⁺"    value={profile.na}   onChange={setKey('na')}   suffix="ppm" />
-              <Field label="Cl⁻"    value={profile.cl}   onChange={setKey('cl')}   suffix="ppm" />
-              <Field label="SO₄²⁻"  value={profile.so4}  onChange={setKey('so4')}  suffix="ppm" />
-              <Field label="HCO₃⁻"  value={profile.hco3} onChange={setKey('hco3')} suffix="ppm" />
-            </FieldGrid>
-          </div>
-
-          <div>
-            <SectionLabel>Добавка соли</SectionLabel>
-            <FieldGrid cols={2}>
-              <SelectField
-                label="Соль"
-                value={saltKey}
-                onChange={setSaltKey}
-                options={BREWING_SALTS.map(s => ({ value: s.key, label: s.label }))}
-              />
-              <Field label="Доза" value={gPerL} onChange={setGPerL} suffix="г/л" step={0.1} />
-            </FieldGrid>
-          </div>
+    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 20 }}>
+      <Card pad="lg">
+        <p className="t-eyebrow" style={{ marginBottom: 10 }}>Пресет</p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 22 }}>
+          {DEFAULT_WATER_PROFILES.map(p => (
+            <button
+              key={p.name}
+              onClick={() => setProfile(p.profile)}
+              className="btn btn-ghost btn-sm"
+              style={{ height: 30, padding: '0 12px' }}
+            >
+              {p.name}
+            </button>
+          ))}
         </div>
-      }
-      result={
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div
-            style={{
-              position: 'relative',
-              padding: '32px 28px',
-              borderRadius: 22,
-              overflow: 'hidden',
-              background: `linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01)), ${a.bg}`,
-              border: `1px solid ${a.border}`,
-              boxShadow: `inset 0 1px 0 rgba(255,255,255,0.12), 0 0 60px -20px ${a.glow}`,
-            }}
-          >
-            <div aria-hidden style={{ position: 'absolute', inset: 0, opacity: 0.6, pointerEvents: 'none', background: `radial-gradient(ellipse 70% 80% at center top, ${a.glow}, transparent 65%)` }} />
-            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
-              <div>
-                <p style={{ fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.5)', fontWeight: 700 }}>SO₄ : Cl</p>
-                <span style={{
-                  fontSize: 'clamp(48px, 7vw, 72px)', fontWeight: 800, lineHeight: 1, letterSpacing: '-0.02em', marginTop: 8, display: 'inline-block',
-                  background: a.grad, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-                  filter: `drop-shadow(0 4px 20px ${a.glow})`,
-                }}>
-                  {analysis.sulfateChlorideRatio === 999 ? '∞' : analysis.sulfateChlorideRatio.toFixed(2)}
-                </span>
+
+        <p className="t-eyebrow" style={{ marginBottom: 10 }}>Профиль воды (ppm)</p>
+        <FieldGrid cols={3}>
+          {(Object.keys(labels) as (keyof WaterProfile)[]).map(k => (
+            <NumField key={k} label={labels[k]} value={profile[k]} onChange={setKey(k)} suffix="ppm" />
+          ))}
+        </FieldGrid>
+
+        <p className="t-eyebrow" style={{ marginTop: 22, marginBottom: 10 }}>Добавка соли</p>
+        <FieldGrid>
+          <Field label="Соль">
+            <Select value={saltKey} onChange={e => setSaltKey(e.target.value)}>
+              {BREWING_SALTS.map(s => <option key={s.key} value={s.key}>{s.label}</option>)}
+            </Select>
+          </Field>
+          <NumField label="Доза" value={gPerL} onChange={setGPerL} suffix="г/л" step={0.1} />
+        </FieldGrid>
+      </Card>
+
+      <Card pad="lg">
+        <p className="t-eyebrow" style={{ marginBottom: 10 }}>Анализ</p>
+
+        <div style={{
+          padding: '20px',
+          borderRadius: 'var(--r-md)',
+          background: 'var(--surface-1)',
+          border: '1px solid var(--hairline)',
+          marginBottom: 12,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap',
+        }}>
+          <div>
+            <p className="t-eyebrow" style={{ fontSize: 9.5 }}>SO₄ : Cl</p>
+            <span className="t-mono" style={{ fontSize: 'clamp(36px, 5vw, 48px)', fontWeight: 600, letterSpacing: '-0.03em', color: 'var(--accent)', lineHeight: 1, marginTop: 6, display: 'inline-block' }}>
+              {analysis.sulfateChlorideRatio === 999 ? '∞' : analysis.sulfateChlorideRatio.toFixed(2)}
+            </span>
+          </div>
+          <Badge tone={analysis.perception === 'balanced' ? 'ok' : 'warn'}>{analysis.perceptionLabel}</Badge>
+        </div>
+
+        <p className="t-eyebrow" style={{ marginBottom: 10 }}>Итоговый профиль</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 6, marginBottom: 12 }}>
+          {(Object.keys(labels) as (keyof WaterProfile)[]).map(k => {
+            const before = profile[k]
+            const after = updated[k]
+            const diff = after - before
+            const short = { ca: 'Ca', mg: 'Mg', na: 'Na', cl: 'Cl', so4: 'SO₄', hco3: 'HCO₃' }[k]
+            return (
+              <div key={k} style={{
+                padding: '10px 6px', textAlign: 'center',
+                borderRadius: 'var(--r-sm)',
+                background: 'var(--surface-1)',
+                border: '1px solid var(--hairline)',
+              }}>
+                <p className="t-eyebrow" style={{ fontSize: 9 }}>{short}</p>
+                <p className="t-mono" style={{ fontSize: 14, fontWeight: 600, color: 'var(--t-1)', marginTop: 4, lineHeight: 1 }}>{after.toFixed(0)}</p>
+                {diff !== 0 && (
+                  <p className="t-mono" style={{ fontSize: 10, fontWeight: 600, marginTop: 3, color: diff > 0 ? 'var(--ok)' : 'var(--bad)' }}>
+                    {diff > 0 ? '+' : ''}{diff.toFixed(0)}
+                  </p>
+                )}
               </div>
-              <span className={`badge ${analysis.perception === 'balanced' ? 'badge-green' : 'badge-amber'}`} style={{ fontSize: 12 }}>
-                {analysis.perceptionLabel}
-              </span>
-            </div>
-          </div>
-
-          <div>
-            <SectionLabel>Итоговый профиль</SectionLabel>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 8 }}>
-              {(['ca','mg','na','cl','so4','hco3'] as const).map((k) => {
-                const before = profile[k]
-                const after = updated[k]
-                const diff = after - before
-                const labels: Record<typeof k, string> = { ca: 'Ca', mg: 'Mg', na: 'Na', cl: 'Cl', so4: 'SO₄', hco3: 'HCO₃' }
-                return (
-                  <div key={k} className="lg-stat" style={{ textAlign: 'center', padding: '10px 8px' }}>
-                    <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>{labels[k]}</p>
-                    <p style={{ fontSize: 16, color: '#fff', fontWeight: 700, marginTop: 4, lineHeight: 1 }}>{after.toFixed(0)}</p>
-                    {diff !== 0 && (
-                      <p style={{ fontSize: 10, fontWeight: 600, marginTop: 4, color: diff > 0 ? '#34d399' : '#f87171' }}>
-                        {diff > 0 ? '+' : ''}{diff.toFixed(0)}
-                      </p>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-            <div className="lg-stat">
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Щёлочность</p>
-              <p style={{ fontSize: 18, color: '#fff', fontWeight: 700, marginTop: 4, lineHeight: 1.1 }}>{analysis.alkalinityCaCO3} ppm</p>
-              <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>CaCO₃</p>
-            </div>
-            <div className="lg-stat">
-              <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.4)', fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase' }}>Общая жёсткость</p>
-              <p style={{ fontSize: 18, color: '#fff', fontWeight: 700, marginTop: 4, lineHeight: 1.1 }}>{analysis.totalHardnessCaCO3} ppm</p>
-              <p style={{ fontSize: 10.5, color: 'rgba(255,255,255,0.35)', marginTop: 4 }}>CaCO₃</p>
-            </div>
-          </div>
-
-          {analysis.warnings.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {analysis.warnings.map((w, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'flex-start', gap: 10,
-                  padding: '12px 16px', borderRadius: 12,
-                  background: 'rgba(251, 191, 36, 0.05)',
-                  border: '1px solid rgba(251, 191, 36, 0.18)',
-                  fontSize: 12.5, color: 'rgba(252, 211, 77, 0.9)', lineHeight: 1.6,
-                }}>
-                  <AlertTriangle size={13} style={{ marginTop: 2, flexShrink: 0 }} />
-                  <span>{w}</span>
-                </div>
-              ))}
-            </div>
-          )}
+            )
+          })}
         </div>
-      }
-    />
+
+        <StatRow items={[
+          { label: 'Щёлочность',     value: `${analysis.alkalinityCaCO3} ppm`,    sub: 'CaCO₃' },
+          { label: 'Общая жёсткость', value: `${analysis.totalHardnessCaCO3} ppm`, sub: 'CaCO₃' },
+        ]} />
+
+        {analysis.warnings.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+            {analysis.warnings.map((w, i) => (
+              <div key={i} style={{
+                display: 'flex', alignItems: 'flex-start', gap: 8,
+                padding: '10px 12px', borderRadius: 'var(--r-sm)',
+                background: 'rgba(251, 146, 60, 0.05)',
+                border: '1px solid rgba(251, 146, 60, 0.18)',
+                fontSize: 12, color: '#fdba74', lineHeight: 1.5,
+              }}>
+                <AlertTriangle size={12} style={{ marginTop: 2, flexShrink: 0 }} />
+                <span>{w}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </Card>
+    </div>
   )
 }
 
@@ -971,26 +729,25 @@ function KombuchaTool() {
     <ToolFrame
       toolKey="kombucha"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="Объём"        value={vol}   onChange={setVol}   suffix="л" />
-          <Field label="Сахар"        value={sugar} onChange={setSugar} suffix="г" />
-          <Field label="Чай"          value={tea}   onChange={setTea}   suffix="г" />
-          <Field label="T ферментации" value={t}    onChange={setT}     suffix="°C" />
+        <FieldGrid>
+          <NumField label="Объём" value={vol} onChange={setVol} suffix="л" />
+          <NumField label="Сахар" value={sugar} onChange={setSugar} suffix="г" />
+          <NumField label="Чай" value={tea} onChange={setTea} suffix="г" />
+          <NumField label="T ферментации" value={t} onChange={setT} suffix="°C" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: '1-я ферментация', value: `~${r.firstFermentDays}`, unit: 'дней' }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="1-я ферментация" value={`~${r.firstFermentDays}`} unit="дней" accent />
+          <StatRow items={[
             { label: 'Сахар',     value: `${r.sugarPerLiter} г/л` },
             { label: 'Чай',       value: r.teaConcentration },
             { label: '2-я ферм.', value: `~${r.secondFermentDays} дн.` },
             { label: 'Алкоголь',  value: `< ${r.approxAlcohol.toFixed(2)} %` },
-          ]}
-          accent="emerald"
-        />
+          ]} />
+        </div>
       }
-      hint="Внести SCOBY при 24-28°C. После 1-й ферментации можно перевести на 2-ю с фруктами/специями для газации."
+      hint="Внести SCOBY при 24-28°C. После 1-й ферментации можно перевести на 2-ю с фруктами для газации."
     />
   )
 }
@@ -1008,25 +765,24 @@ function LemonadeTool() {
     <ToolFrame
       toolKey="lemonade"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="Объём"   value={vol}   onChange={setVol}   suffix="л" />
-          <Field label="Сахар"   value={sugar} onChange={setSugar} suffix="г" />
-          <Field label="Сок"     value={juice} onChange={setJuice} suffix="%" />
-          <Field label="Кислота" value={acid}  onChange={setAcid}  suffix="г" />
+        <FieldGrid>
+          <NumField label="Объём" value={vol} onChange={setVol} suffix="л" />
+          <NumField label="Сахар" value={sugar} onChange={setSugar} suffix="г" />
+          <NumField label="Сок" value={juice} onChange={setJuice} suffix="%" />
+          <NumField label="Кислота" value={acid} onChange={setAcid} suffix="г" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'Баланс вкуса', value: labels[r.sweetnessBitterness] }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="Баланс вкуса" value={labels[r.sweetnessBitterness]} accent={r.sweetnessBitterness === 'balanced'} />
+          <StatRow items={[
             { label: 'Сахар',        value: `${r.sugarPerLiter} г/л` },
             { label: 'Brix',         value: `${r.brix} °Bx` },
             { label: 'Кислотность',  value: `${r.acidityGramPerLiter} г/л` },
-          ]}
-          accent={r.sweetnessBitterness === 'balanced' ? 'emerald' : 'amber'}
-        />
+          ]} />
+        </div>
       }
-      hint="Идеальное соотношение Sugar : Acid (10×) около 6–10. Карбонизация 3.5 vol CO₂ — стандарт для газировки."
+      hint="Идеальное соотношение Sugar : Acid (10×) около 6–10. Карбонизация 3.5 vol CO₂ — стандарт."
     />
   )
 }
@@ -1043,24 +799,23 @@ function CiderTool() {
     <ToolFrame
       toolKey="cider"
       inputs={
-        <FieldGrid cols={2}>
-          <Field label="Сок"          value={juice} onChange={setJuice} suffix="л" />
-          <Field label="Объём"        value={vol}   onChange={setVol}   suffix="л" />
-          <Field label="Доп. сахар"   value={sugar} onChange={setSugar} suffix="г" />
-          <Field label="Аттенюация"   value={att}   onChange={setAtt}   suffix="%" />
+        <FieldGrid>
+          <NumField label="Сок" value={juice} onChange={setJuice} suffix="л" />
+          <NumField label="Объём" value={vol} onChange={setVol} suffix="л" />
+          <NumField label="Доп. сахар" value={sugar} onChange={setSugar} suffix="г" />
+          <NumField label="Аттенюация" value={att} onChange={setAtt} suffix="%" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'ABV', value: abv.toFixed(2), unit: '%' }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="ABV" value={abv.toFixed(2)} unit="%" accent />
+          <StatRow items={[
             { label: 'OG', value: og.toFixed(4) },
             { label: 'FG', value: fg.toFixed(4) },
-          ]}
-          accent="rose"
-        />
+          ]} />
+        </div>
       }
-      hint="Типичный яблочный сок ≈ 11°Bx (1.045 SG). Дрожжи для сидра атенюируют 75-90% — выбирай по желаемой сухости."
+      hint="Типичный яблочный сок ≈ 11°Bx (1.045 SG). Дрожжи для сидра атенюируют 75-90%."
     />
   )
 }
@@ -1077,22 +832,21 @@ function MeadTool() {
       toolKey="mead"
       inputs={
         <FieldGrid cols={3}>
-          <Field label="Мёд"        value={honey} onChange={setHoney} suffix="кг" step={0.1} />
-          <Field label="Объём"      value={vol}   onChange={setVol}   suffix="л" />
-          <Field label="Аттенюация" value={att}   onChange={setAtt}   suffix="%" />
+          <NumField label="Мёд" value={honey} onChange={setHoney} suffix="кг" step={0.1} />
+          <NumField label="Объём" value={vol} onChange={setVol} suffix="л" />
+          <NumField label="Аттенюация" value={att} onChange={setAtt} suffix="%" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'ABV', value: abv.toFixed(2), unit: '%' }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="ABV" value={abv.toFixed(2)} unit="%" accent />
+          <StatRow items={[
             { label: 'OG', value: og.toFixed(4) },
             { label: 'FG', value: fg.toFixed(4) },
-          ]}
-          accent="amber"
-        />
+          ]} />
+        </div>
       }
-      hint="Мёд ≈ 80% сбраживаемого сахара. Винные дрожжи дают 85-95% атенюации — медовуха получается сухая, можно добавить мёд после ферментации для сладости."
+      hint="Мёд ≈ 80% сбраживаемого сахара. Винные дрожжи дают 85-95% атенюации."
     />
   )
 }
@@ -1107,23 +861,22 @@ function KvassTool() {
       toolKey="kvass"
       inputs={
         <FieldGrid cols={3}>
-          <Field label="Хлеб"  value={bread} onChange={setBread} suffix="кг" step={0.1} />
-          <Field label="Сахар" value={sugar} onChange={setSugar} suffix="г" />
-          <Field label="Объём" value={vol}   onChange={setVol}   suffix="л" />
+          <NumField label="Хлеб" value={bread} onChange={setBread} suffix="кг" step={0.1} />
+          <NumField label="Сахар" value={sugar} onChange={setSugar} suffix="г" />
+          <NumField label="Объём" value={vol} onChange={setVol} suffix="л" />
         </FieldGrid>
       }
       result={
-        <ResultPanel
-          primary={{ label: 'ABV', value: r.abv.toFixed(2), unit: '%' }}
-          stats={[
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <HeroNumber label="ABV" value={r.abv.toFixed(2)} unit="%" accent />
+          <StatRow items={[
             { label: 'OG',          value: r.og.toFixed(4) },
             { label: 'FG',          value: r.fg.toFixed(4) },
             { label: 'Сахар всего', value: `${r.totalSugarG.toFixed(0)} г` },
-          ]}
-          accent="amber"
-        />
+          ]} />
+        </div>
       }
-      hint="Ржаной хлеб ≈ 200 г сбраживаемого сахара на кг. Атенюация низкая (~30%) — алкоголь обычно 0.5–1.5%."
+      hint="Ржаной хлеб ≈ 200 г сбраживаемого сахара на кг. Атенюация ~30%."
     />
   )
 }

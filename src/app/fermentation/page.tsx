@@ -1,10 +1,15 @@
 'use client'
 
 import { useState } from 'react'
-import { Thermometer, Plus, TrendingDown, Droplets, FlaskConical } from 'lucide-react'
+import { Thermometer, Plus, TrendingDown, FlaskConical } from 'lucide-react'
 import { formatDate } from '@/lib/utils'
 import { BEVERAGE_CATEGORIES } from '@/types/database'
 import type { BeverageCategory } from '@/types/database'
+import { Page, PageHeader } from '@/components/ui/Page'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Field, Input } from '@/components/ui/Field'
 
 interface FermBatch {
   id: string
@@ -32,7 +37,7 @@ const mockBatches: FermBatch[] = [
       { date: '2026-04-30', sg: 1.042, temp: 20.0, ph: null },
       { date: '2026-05-02', sg: 1.028, temp: 20.5, ph: 4.3 },
       { date: '2026-05-04', sg: 1.022, temp: 20.5, ph: 4.2 },
-    ]
+    ],
   },
   {
     id: '2', name: 'Oatmeal Stout', batch_number: '#041', category: 'beer',
@@ -44,7 +49,7 @@ const mockBatches: FermBatch[] = [
       { date: '2026-04-22', sg: 1.024, temp: 18.0, ph: 4.1 },
       { date: '2026-04-27', sg: 1.018, temp: 18.0, ph: 4.0 },
       { date: '2026-05-02', sg: 1.016, temp: 18.0, ph: 4.0 },
-    ]
+    ],
   },
   {
     id: '3', name: 'Манго Комбуча', batch_number: '#K01', category: 'kombucha',
@@ -54,17 +59,12 @@ const mockBatches: FermBatch[] = [
       { date: '2026-05-01', sg: 1.030, temp: 25.0, ph: 6.5 },
       { date: '2026-05-03', sg: 1.015, temp: 26.0, ph: 4.2 },
       { date: '2026-05-05', sg: 1.008, temp: 26.0, ph: 3.2 },
-    ]
+    ],
   },
 ]
 
-function calcAttenuation(og: number, current: number): number {
-  return Math.round(((og - current) / (og - 1)) * 100)
-}
-
-function calcABV(og: number, fg: number): number {
-  return Math.round((og - fg) * 131.25 * 10) / 10
-}
+const calcAttenuation = (og: number, c: number) => Math.round(((og - c) / (og - 1)) * 100)
+const calcABV = (og: number, fg: number) => Math.round((og - fg) * 131.25 * 10) / 10
 
 function MiniChart({ readings }: { readings: FermBatch['readings'] }) {
   if (readings.length < 2) return null
@@ -72,208 +72,172 @@ function MiniChart({ readings }: { readings: FermBatch['readings'] }) {
   const min = Math.min(...sgValues) - 0.002
   const max = Math.max(...sgValues) + 0.002
   const range = max - min
-  const w = 200
-  const h = 60
+  const w = 320, h = 80
   const points = readings.map((r, i) => {
     const x = (i / (readings.length - 1)) * w
     const y = h - ((r.sg - min) / range) * h
     return `${x},${y}`
   }).join(' ')
-
   return (
-    <svg width={w} height={h} className="opacity-80">
-      <defs>
-        <linearGradient id={`grad-${readings[0].date}`} x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
-          <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
-        </linearGradient>
-      </defs>
-      <polyline points={points} fill="none" stroke="#60a5fa" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg width="100%" viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="none" style={{ overflow: 'visible' }}>
+      <polyline points={points} fill="none" stroke="var(--info)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
       {readings.map((r, i) => {
         const x = (i / (readings.length - 1)) * w
         const y = h - ((r.sg - min) / range) * h
-        return <circle key={i} cx={x} cy={y} r="3" fill="#60a5fa" />
+        return <circle key={i} cx={x} cy={y} r="3" fill="var(--info)" />
       })}
     </svg>
   )
 }
 
 export default function FermentationPage() {
-  const [selectedBatch, setSelectedBatch] = useState<string | null>(mockBatches[0].id)
+  const [selectedId, setSelectedId] = useState<string>(mockBatches[0].id)
   const [logForm, setLogForm] = useState({ sg: '', temp: '', ph: '', notes: '' })
-
-  const selected = mockBatches.find(b => b.id === selectedBatch)
+  const selected = mockBatches.find(b => b.id === selectedId)!
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white">Ферментация</h1>
-          <p className="text-sm text-white/40 mt-0.5">{mockBatches.length} активных партий</p>
-        </div>
-        <button className="btn-glass">
-          <Plus size={15} />
-          Записать замер
-        </button>
-      </div>
+    <Page>
+      <PageHeader
+        title="Ферментация"
+        subtitle={`${mockBatches.length} активных партий`}
+        actions={<Button variant="primary"><Plus size={15} strokeWidth={2.5} />Записать замер</Button>}
+      />
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 320px) minmax(0, 1fr)', gap: 20 }}>
         {/* Batch list */}
-        <div className="space-y-3">
-          <h2 className="text-sm font-semibold text-white/50 uppercase tracking-wider">Партии</h2>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <p className="t-eyebrow">Партии</p>
           {mockBatches.map(batch => {
             const cat = BEVERAGE_CATEGORIES.find(c => c.value === batch.category)
             const att = calcAttenuation(batch.og, batch.current_sg)
-            const isSelected = selectedBatch === batch.id
+            const isSelected = selectedId === batch.id
             return (
               <button
                 key={batch.id}
-                onClick={() => setSelectedBatch(batch.id)}
-                className={`w-full text-left glass p-4 transition-all duration-200 ${
-                  isSelected
-                    ? 'border-amber-500/30 bg-amber-500/5'
-                    : 'hover:bg-white/5'
-                }`}
+                onClick={() => setSelectedId(batch.id)}
+                style={{
+                  textAlign: 'left',
+                  padding: 14,
+                  borderRadius: 'var(--r-md)',
+                  background: isSelected ? 'var(--surface-2)' : 'var(--surface-1)',
+                  border: `1px solid ${isSelected ? 'var(--accent-edge)' : 'var(--hairline)'}`,
+                  cursor: 'pointer', transition: 'all .15s ease',
+                  display: 'flex', flexDirection: 'column', gap: 8,
+                }}
               >
-                <div className="flex items-center gap-2 mb-2">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span>{cat?.emoji}</span>
-                  <span className="font-medium text-white text-sm">{batch.name}</span>
-                  <span className="text-white/30 text-xs">{batch.batch_number}</span>
+                  <span style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t-1)' }}>{batch.name}</span>
+                  <span className="t-meta" style={{ marginLeft: 'auto' }}>{batch.batch_number}</span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-white/40 mb-2">
-                  <span className="flex items-center gap-1"><Thermometer size={10} />{batch.temp_c}°C</span>
-                  <span>SG {batch.current_sg.toFixed(3)}</span>
-                  <span>{batch.days_in} дн.</span>
+                <div style={{ display: 'flex', gap: 12 }}>
+                  <span className="t-meta" style={{ display: 'inline-flex', alignItems: 'center', gap: 4 }}>
+                    <Thermometer size={11} />{batch.temp_c}°C
+                  </span>
+                  <span className="t-meta t-mono">SG {batch.current_sg.toFixed(3)}</span>
+                  <span className="t-meta">{batch.days_in} дн.</span>
                 </div>
-                <div className="progress-track h-1.5">
-                  <div className="h-1.5 rounded-full bg-gradient-to-r from-blue-400 to-purple-400" style={{ width: `${att}%` }} />
+                <div className="progress">
+                  <div className="progress-bar progress-bar-info" style={{ width: `${att}%` }} />
                 </div>
-                <p className="text-[10px] text-white/30 mt-1">Сбраживание {att}%</p>
+                <p className="t-meta">Сбраживание {att}%</p>
               </button>
             )
           })}
         </div>
 
-        {/* Detail panel */}
-        {selected && (
-          <div className="xl:col-span-2 space-y-4">
-            {/* Stats */}
-            <div className="glass p-6">
-              <div className="flex items-start justify-between mb-5">
-                <div>
-                  <h2 className="text-lg font-semibold text-white">{selected.name}</h2>
-                  <p className="text-sm text-white/40">{selected.batch_number} · {selected.days_in} дней в ферментере</p>
-                </div>
-                <span className="badge badge-blue">
-                  {selected.stage === 'primary' ? 'Первичная' : selected.stage === 'secondary' ? 'Вторичная' : 'Кондиционирование'}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
-                {[
-                  { label: 'OG', value: selected.og.toFixed(3), color: 'text-amber-300' },
-                  { label: 'Текущий SG', value: selected.current_sg.toFixed(3), color: 'text-blue-300' },
-                  { label: 'Цель FG', value: selected.target_fg.toFixed(3), color: 'text-white' },
-                  { label: 'ABV сейчас', value: `${calcABV(selected.og, selected.current_sg)}%`, color: 'text-purple-300' },
-                ].map(({ label, value, color }) => (
-                  <div key={label} className="glass-sm p-3 text-center">
-                    <p className="text-[10px] text-white/30 uppercase tracking-wider mb-1">{label}</p>
-                    <p className={`text-xl font-bold ${color}`}>{value}</p>
-                  </div>
-                ))}
-              </div>
-
-              <div className="grid grid-cols-3 gap-3 mb-6">
-                {[
-                  { label: 'Температура', value: `${selected.temp_c}°C`, icon: Thermometer, ok: selected.temp_c >= 16 && selected.temp_c <= 28 },
-                  { label: 'pH', value: selected.ph ? selected.ph.toFixed(1) : '—', icon: FlaskConical, ok: selected.ph ? selected.ph >= 3 && selected.ph <= 5 : true },
-                  { label: 'Сбраживание', value: `${calcAttenuation(selected.og, selected.current_sg)}%`, icon: TrendingDown, ok: true },
-                ].map(({ label, value, icon: Icon, ok }) => (
-                  <div key={label} className={`glass-sm p-3 flex items-center gap-3 ${ok ? '' : 'border-red-500/30 bg-red-500/5'}`}>
-                    <Icon size={16} className={ok ? 'text-emerald-400' : 'text-red-400'} />
-                    <div>
-                      <p className="text-[10px] text-white/30 uppercase">{label}</p>
-                      <p className="text-sm font-semibold text-white">{value}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* Gravity chart */}
+        {/* Detail */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Card pad="lg">
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 18 }}>
               <div>
-                <h3 className="text-xs text-white/40 uppercase tracking-wider mb-3">График плотности</h3>
-                <div className="overflow-x-auto">
-                  <MiniChart readings={selected.readings} />
+                <h2 style={{ fontSize: 18, fontWeight: 600, color: 'var(--t-1)' }}>{selected.name}</h2>
+                <p className="t-meta" style={{ marginTop: 4 }}>{selected.batch_number} · {selected.days_in} дней в ферментере</p>
+              </div>
+              <Badge tone="info">
+                {selected.stage === 'primary' ? 'Первичная' : selected.stage === 'secondary' ? 'Вторичная' : 'Кондиционирование'}
+              </Badge>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: 8, marginBottom: 18 }}>
+              {[
+                { label: 'OG',     value: selected.og.toFixed(3) },
+                { label: 'SG',     value: selected.current_sg.toFixed(3), accent: true },
+                { label: 'Цель FG', value: selected.target_fg.toFixed(3) },
+                { label: 'ABV',    value: `${calcABV(selected.og, selected.current_sg)}%` },
+              ].map(it => (
+                <div key={it.label} style={{
+                  padding: 14, borderRadius: 'var(--r-sm)',
+                  background: 'var(--surface-1)', border: '1px solid var(--hairline)',
+                }}>
+                  <p className="t-eyebrow" style={{ fontSize: 9.5 }}>{it.label}</p>
+                  <p className="t-mono" style={{ fontSize: 18, fontWeight: 600, color: it.accent ? 'var(--accent)' : 'var(--t-1)', marginTop: 6 }}>{it.value}</p>
                 </div>
-              </div>
+              ))}
             </div>
 
-            {/* Readings table */}
-            <div className="glass p-6">
-              <h3 className="text-sm font-semibold text-white mb-4">История замеров</h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/10">
-                      {['Дата', 'SG', 'Темп.', 'pH', 'Заметки'].map(h => (
-                        <th key={h} className="pb-2 text-left text-[11px] text-white/30 uppercase tracking-wider pr-4">{h}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {selected.readings.slice().reverse().map((r, i) => (
-                      <tr key={i}>
-                        <td className="py-2 pr-4 text-sm text-white/60">{formatDate(r.date)}</td>
-                        <td className="py-2 pr-4 text-sm font-medium text-white">{r.sg.toFixed(3)}</td>
-                        <td className="py-2 pr-4 text-sm text-white/60">{r.temp}°C</td>
-                        <td className="py-2 pr-4 text-sm text-white/60">{r.ph?.toFixed(1) ?? '—'}</td>
-                        <td className="py-2 pr-4 text-sm text-white/30">—</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Log new reading */}
-            <div className="glass p-6">
-              <h3 className="text-sm font-semibold text-white mb-4 flex items-center gap-2">
-                <Plus size={15} className="text-amber-400" />
-                Записать новый замер
-              </h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
-                {[
-                  { key: 'sg', label: 'SG', placeholder: '1.020' },
-                  { key: 'temp', label: 'Темп. °C', placeholder: '20.0' },
-                  { key: 'ph', label: 'pH', placeholder: '4.2' },
-                ].map(({ key, label, placeholder }) => (
-                  <div key={key}>
-                    <label className="block text-[10px] text-white/30 mb-1 uppercase tracking-wider">{label}</label>
-                    <input
-                      type="number"
-                      step="0.001"
-                      className="glass-input text-sm py-2"
-                      placeholder={placeholder}
-                      value={(logForm as Record<string, string>)[key]}
-                      onChange={e => setLogForm(prev => ({ ...prev, [key]: e.target.value }))}
-                    />
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8, marginBottom: 18 }}>
+              {[
+                { label: 'Температура',  value: `${selected.temp_c}°C`, icon: Thermometer, ok: selected.temp_c >= 16 && selected.temp_c <= 28 },
+                { label: 'pH',           value: selected.ph?.toFixed(1) ?? '—', icon: FlaskConical, ok: selected.ph ? selected.ph >= 3 && selected.ph <= 5 : true },
+                { label: 'Сбраживание',  value: `${calcAttenuation(selected.og, selected.current_sg)}%`, icon: TrendingDown, ok: true },
+              ].map(({ label, value, icon: Icon, ok }) => (
+                <div key={label} style={{
+                  padding: '12px 14px', borderRadius: 'var(--r-sm)',
+                  background: 'var(--surface-1)',
+                  border: `1px solid ${ok ? 'var(--hairline)' : 'rgba(248,113,113,0.25)'}`,
+                  display: 'flex', alignItems: 'center', gap: 10,
+                }}>
+                  <Icon size={15} style={{ color: ok ? 'var(--ok)' : 'var(--bad)' }} />
+                  <div>
+                    <p className="t-eyebrow" style={{ fontSize: 9.5 }}>{label}</p>
+                    <p className="t-mono" style={{ fontSize: 13.5, fontWeight: 600, color: 'var(--t-1)', marginTop: 3 }}>{value}</p>
                   </div>
-                ))}
-                <div className="md:col-span-1 flex items-end">
-                  <button className="btn-primary w-full py-2.5 justify-center">Сохранить</button>
                 </div>
-              </div>
-              <input
-                className="glass-input text-sm py-2"
-                placeholder="Заметки к замеру..."
-                value={logForm.notes}
-                onChange={e => setLogForm(prev => ({ ...prev, notes: e.target.value }))}
-              />
+              ))}
             </div>
-          </div>
-        )}
+
+            <p className="t-eyebrow" style={{ marginBottom: 10 }}>График плотности</p>
+            <MiniChart readings={selected.readings} />
+          </Card>
+
+          {/* History */}
+          <Card pad="md">
+            <p className="t-eyebrow" style={{ marginBottom: 10 }}>История замеров</p>
+            <table className="table">
+              <thead>
+                <tr><th>Дата</th><th>SG</th><th>T</th><th>pH</th></tr>
+              </thead>
+              <tbody>
+                {selected.readings.slice().reverse().map((r, i) => (
+                  <tr key={i}>
+                    <td>{formatDate(r.date)}</td>
+                    <td className="t-mono" style={{ fontWeight: 600 }}>{r.sg.toFixed(3)}</td>
+                    <td className="t-mono">{r.temp}°C</td>
+                    <td className="t-mono">{r.ph?.toFixed(1) ?? '—'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Card>
+
+          {/* Log */}
+          <Card pad="md">
+            <p className="t-eyebrow" style={{ marginBottom: 10 }}>Записать новый замер</p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+              <Field label="SG"><Input type="number" step="0.001" placeholder="1.020" value={logForm.sg} onChange={e => setLogForm({ ...logForm, sg: e.target.value })} /></Field>
+              <Field label="T °C"><Input type="number" step="0.1" placeholder="20.0" value={logForm.temp} onChange={e => setLogForm({ ...logForm, temp: e.target.value })} /></Field>
+              <Field label="pH"><Input type="number" step="0.1" placeholder="4.2" value={logForm.ph} onChange={e => setLogForm({ ...logForm, ph: e.target.value })} /></Field>
+              <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                <Button variant="primary" style={{ width: '100%' }}>Сохранить</Button>
+              </div>
+            </div>
+            <div style={{ marginTop: 10 }}>
+              <Input placeholder="Заметки к замеру..." value={logForm.notes} onChange={e => setLogForm({ ...logForm, notes: e.target.value })} />
+            </div>
+          </Card>
+        </div>
       </div>
-    </div>
+    </Page>
   )
 }

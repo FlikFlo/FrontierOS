@@ -1,45 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { Plus, Package, AlertTriangle, Search, Filter } from 'lucide-react'
+import { Plus, AlertTriangle, Search } from 'lucide-react'
 import { getIngredientTypeLabel } from '@/lib/utils'
 import type { IngredientType } from '@/types/database'
+import { Page, PageHeader } from '@/components/ui/Page'
+import { Card } from '@/components/ui/Card'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Input } from '@/components/ui/Field'
 
-interface InventoryItem {
-  id: string
-  name: string
-  type: IngredientType
-  quantity: number
-  unit: string
-  min_stock: number | null
-  cost_per_unit: number | null
-  supplier: string | null
-}
-
-const mockInventory: InventoryItem[] = [
-  { id: '1', name: 'Pale Ale Malt (Maris Otter)', type: 'malt',     quantity: 25.0, unit: 'кг', min_stock: 5,   cost_per_unit: 1.80,  supplier: 'Crisp Malting' },
-  { id: '2', name: 'Pilsner Malt',                type: 'malt',     quantity: 15.5, unit: 'кг', min_stock: 5,   cost_per_unit: 1.60,  supplier: 'Weyermann' },
-  { id: '3', name: 'Caramel 60L',                 type: 'malt',     quantity: 8.0,  unit: 'кг', min_stock: 2,   cost_per_unit: 2.20,  supplier: 'Briess' },
-  { id: '4', name: 'Roasted Barley',              type: 'malt',     quantity: 3.0,  unit: 'кг', min_stock: 1,   cost_per_unit: 2.50,  supplier: 'Crisp Malting' },
-  { id: '5', name: 'Centennial Hops',             type: 'hop',      quantity: 500,  unit: 'г',  min_stock: 100, cost_per_unit: 0.035, supplier: 'Yakima Chief' },
-  { id: '6', name: 'Cascade Hops',               type: 'hop',      quantity: 300,  unit: 'г',  min_stock: 100, cost_per_unit: 0.030, supplier: 'Yakima Chief' },
-  { id: '7', name: 'Citra Hops',                 type: 'hop',      quantity: 200,  unit: 'г',  min_stock: 300, cost_per_unit: 0.055, supplier: 'Hopunion' },
-  { id: '8', name: 'Saaz Hops',                  type: 'hop',      quantity: 400,  unit: 'г',  min_stock: 100, cost_per_unit: 0.028, supplier: 'Select Botanicals' },
-  { id: '9', name: 'US-05 American Ale',          type: 'yeast',    quantity: 10,   unit: 'пак',min_stock: 2,   cost_per_unit: 4.50,  supplier: 'Fermentis' },
-  { id: '10',name: 'S-04 English Ale',            type: 'yeast',    quantity: 2,    unit: 'пак',min_stock: 3,   cost_per_unit: 4.50,  supplier: 'Fermentis' },
-  { id: '11',name: 'Сахар тростниковый',          type: 'sugar',    quantity: 10.0, unit: 'кг', min_stock: 2,   cost_per_unit: 0.80,  supplier: 'Местный поставщик' },
-  { id: '12',name: 'Чай чёрный (для комбучи)',   type: 'tea',      quantity: 500,  unit: 'г',  min_stock: 100, cost_per_unit: 0.04,  supplier: 'Чайный мир' },
-  { id: '13',name: 'Имбирь свежий',              type: 'fruit',    quantity: 2.0,  unit: 'кг', min_stock: 0.5, cost_per_unit: 2.20,  supplier: 'Рынок' },
-  { id: '14',name: 'Gypsum (CaSO4)',             type: 'chemical', quantity: 500,  unit: 'г',  min_stock: 100, cost_per_unit: 0.008, supplier: 'BrewLab' },
-  { id: '15',name: 'Lactic Acid 88%',            type: 'chemical', quantity: 250,  unit: 'мл', min_stock: 50,  cost_per_unit: 0.012, supplier: 'BrewLab' },
-]
-
-const typeColors: Record<string, string> = {
-  malt: 'badge-amber', hop: 'badge-green', yeast: 'badge-blue',
-  adjunct: 'badge-gray', chemical: 'badge-purple', fruit: 'badge-orange',
-  sugar: 'badge-amber', spice: 'badge-orange', tea: 'badge-green',
-  juice: 'badge-blue', other: 'badge-gray',
-}
+import { MOCK_INVENTORY as mockInventory } from '@/lib/inventory-mock'
 
 const allTypes: IngredientType[] = ['malt', 'hop', 'yeast', 'sugar', 'fruit', 'tea', 'chemical', 'adjunct', 'spice', 'juice', 'other']
 
@@ -49,129 +20,113 @@ export default function InventoryPage() {
   const [showLowOnly, setShowLowOnly] = useState(false)
 
   const filtered = mockInventory.filter(item => {
-    const matchSearch = item.name.toLowerCase().includes(search.toLowerCase())
-    const matchType = filterType === 'all' || item.type === filterType
-    const matchLow = !showLowOnly || (item.min_stock != null && item.quantity < item.min_stock)
-    return matchSearch && matchType && matchLow
+    const ms = item.name.toLowerCase().includes(search.toLowerCase())
+    const mt = filterType === 'all' || item.type === filterType
+    const ml = !showLowOnly || (item.min_stock != null && item.quantity < item.min_stock)
+    return ms && mt && ml
   })
 
   const lowStockCount = mockInventory.filter(i => i.min_stock != null && i.quantity < i.min_stock).length
 
   return (
-    <div className="max-w-7xl mx-auto space-y-6 fade-in">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-white">Склад сырья</h1>
-          <p className="text-sm text-white/40 mt-0.5">{mockInventory.length} позиций · {lowStockCount} заканчивается</p>
-        </div>
-        <button className="btn-primary">
-          <Plus size={16} />
-          Добавить позицию
-        </button>
-      </div>
+    <Page>
+      <PageHeader
+        title="Склад"
+        subtitle={`${mockInventory.length} позиций · ${lowStockCount} заканчивается`}
+        actions={
+          <Button variant="primary"><Plus size={15} strokeWidth={2.5} />Добавить позицию</Button>
+        }
+      />
 
-      {/* Alert */}
       {lowStockCount > 0 && (
-        <div className="glass-sm p-4 flex items-center gap-3 border border-amber-500/20 bg-amber-500/5">
-          <AlertTriangle size={18} className="text-amber-400 flex-shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-amber-300">{lowStockCount} позиции ниже минимального остатка</p>
-            <p className="text-xs text-white/40 mt-0.5">Рекомендуется пополнить запасы перед следующей варкой</p>
+        <Card pad="md" style={{ display: 'flex', alignItems: 'center', gap: 14, borderColor: 'rgba(251,146,60,0.25)', background: 'rgba(251,146,60,0.04)' }}>
+          <AlertTriangle size={18} style={{ color: 'var(--warn)', flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <p style={{ fontSize: 13.5, fontWeight: 600, color: '#fdba74' }}>{lowStockCount} позиций ниже минимального остатка</p>
+            <p className="t-meta" style={{ marginTop: 2 }}>Рекомендуется пополнить запасы перед следующей варкой</p>
           </div>
-          <button
-            className="ml-auto badge badge-amber cursor-pointer"
-            onClick={() => setShowLowOnly(!showLowOnly)}
-          >
-            {showLowOnly ? 'Показать все' : 'Показать только'}
-          </button>
-        </div>
+          <Button size="sm" variant="ghost" onClick={() => setShowLowOnly(!showLowOnly)}>
+            {showLowOnly ? 'Показать все' : 'Только эти'}
+          </Button>
+        </Card>
       )}
 
       {/* Filters */}
-      <div className="flex flex-wrap gap-3">
-        <div className="relative flex-1 min-w-48">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
-          <input
-            className="glass-input pl-8 h-10"
-            placeholder="Поиск по названию..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', alignItems: 'center' }}>
+        <div style={{ position: 'relative', flex: '1 1 240px', minWidth: 200 }}>
+          <Search size={14} style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', color: 'var(--t-4)', zIndex: 1 }} />
+          <Input placeholder="Поиск по названию..." value={search} onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 38 }} />
         </div>
-        <div className="flex gap-2 flex-wrap">
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
           <button
             onClick={() => setFilterType('all')}
-            className={`badge cursor-pointer ${filterType === 'all' ? 'badge-amber' : 'badge-gray'}`}
-          >
-            Все
-          </button>
+            className="btn btn-sm"
+            style={{
+              background: filterType === 'all' ? 'var(--surface-3)' : 'var(--surface-1)',
+              border: `1px solid ${filterType === 'all' ? 'var(--hairline-strong)' : 'var(--hairline)'}`,
+              color: filterType === 'all' ? 'var(--t-1)' : 'var(--t-3)',
+            }}
+          >Все</button>
           {allTypes.filter(t => mockInventory.some(i => i.type === t)).map(t => (
             <button
               key={t}
               onClick={() => setFilterType(filterType === t ? 'all' : t)}
-              className={`badge cursor-pointer ${filterType === t ? typeColors[t] : 'badge-gray'}`}
-            >
-              {getIngredientTypeLabel(t)}
-            </button>
+              className="btn btn-sm"
+              style={{
+                background: filterType === t ? 'var(--surface-3)' : 'var(--surface-1)',
+                border: `1px solid ${filterType === t ? 'var(--hairline-strong)' : 'var(--hairline)'}`,
+                color: filterType === t ? 'var(--t-1)' : 'var(--t-3)',
+              }}
+            >{getIngredientTypeLabel(t)}</button>
           ))}
         </div>
       </div>
 
-      {/* Table */}
-      <div className="glass overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
+      <Card pad="none" style={{ overflow: 'hidden' }}>
+        <div style={{ overflowX: 'auto' }}>
+          <table className="table">
             <thead>
-              <tr className="border-b border-white/10">
-                {['Наименование', 'Тип', 'Остаток', 'Минимум', 'Цена/ед.', 'Поставщик', 'Статус', ''].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] font-medium text-white/30 uppercase tracking-wider">{h}</th>
-                ))}
+              <tr>
+                <th>Наименование</th>
+                <th>Тип</th>
+                <th>Остаток</th>
+                <th>Минимум</th>
+                <th>Цена</th>
+                <th>Поставщик</th>
+                <th>Статус</th>
+                <th></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-white/5">
+            <tbody>
               {filtered.map(item => {
                 const isLow = item.min_stock != null && item.quantity < item.min_stock
                 const pct = item.min_stock ? Math.min(100, (item.quantity / item.min_stock) * 100) : 100
                 return (
-                  <tr key={item.id} className={`hover:bg-white/3 transition-colors ${isLow ? 'bg-red-500/5' : ''}`}>
-                    <td className="px-4 py-3">
-                      <span className="text-sm text-white font-medium">{item.name}</span>
+                  <tr key={item.id}>
+                    <td>{item.name}</td>
+                    <td><Badge tone="neutral">{getIngredientTypeLabel(item.type)}</Badge></td>
+                    <td className="t-mono" style={{ color: isLow ? 'var(--bad)' : 'var(--t-1)', fontWeight: 600 }}>
+                      {item.quantity} {item.unit}
                     </td>
-                    <td className="px-4 py-3">
-                      <span className={`badge ${typeColors[item.type] ?? 'badge-gray'} text-[11px]`}>
-                        {getIngredientTypeLabel(item.type)}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3">
-                      <span className={`text-sm font-semibold ${isLow ? 'text-red-400' : 'text-white'}`}>
-                        {item.quantity} {item.unit}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-white/40">
+                    <td className="t-mono" style={{ color: 'var(--t-3)' }}>
                       {item.min_stock ? `${item.min_stock} ${item.unit}` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-white/60">
+                    <td className="t-mono" style={{ color: 'var(--t-2)' }}>
                       {item.cost_per_unit ? `${item.cost_per_unit.toFixed(3)} €` : '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-white/50">{item.supplier ?? '—'}</td>
-                    <td className="px-4 py-3">
-                      <div className="w-20">
-                        <div className="progress-track h-1.5">
-                          <div
-                            className="h-1.5 rounded-full"
-                            style={{
-                              width: `${pct}%`,
-                              background: pct < 50 ? '#ef4444' : pct < 80 ? '#f59e0b' : '#34d399'
-                            }}
-                          />
+                    <td style={{ color: 'var(--t-3)' }}>{item.supplier ?? '—'}</td>
+                    <td>
+                      <div style={{ width: 80 }}>
+                        <div className="progress">
+                          <div className="progress-bar" style={{
+                            width: `${pct}%`,
+                            background: pct < 50 ? 'var(--bad)' : pct < 80 ? 'var(--warn)' : 'var(--ok)',
+                          }} />
                         </div>
-                        <p className="text-[10px] text-white/30 mt-0.5">{Math.round(pct)}%</p>
+                        <p className="t-meta t-mono" style={{ marginTop: 4, fontSize: 10.5 }}>{Math.round(pct)}%</p>
                       </div>
                     </td>
-                    <td className="px-4 py-3">
-                      <button className="btn-glass py-1 px-3 text-xs">Ред.</button>
-                    </td>
+                    <td><Button size="sm" variant="ghost">Ред.</Button></td>
                   </tr>
                 )
               })}
@@ -179,9 +134,9 @@ export default function InventoryPage() {
           </table>
         </div>
         {filtered.length === 0 && (
-          <div className="py-12 text-center text-white/30">Ничего не найдено</div>
+          <div style={{ padding: 48, textAlign: 'center', color: 'var(--t-3)' }}>Ничего не найдено</div>
         )}
-      </div>
-    </div>
+      </Card>
+    </Page>
   )
 }
