@@ -83,71 +83,60 @@ export const STATUS_META: Record<EquipmentStatus, { label: string; tone: 'neutra
 
 // ─── Mock equipment park ────────────────────────────────────────────────────
 
+// Grid is 18 cols × 10 rows. Layout sections:
+//   y=0..2 : Hot side (HLT, MLT, BK, WP) + HEX
+//   y=3..6 : Fermenter row (5×FV)
+//   y=7..8 : Bright tanks + kegs
+//   x=15.. : Utility column (Glycol / CO₂ / CIP / Control / Pump)
+
 export const MOCK_EQUIPMENT: Equipment[] = [
-  // Hot side row
-  { id: 'hlt-01', name: 'HLT-01',  type: 'hlt',            volume_l: 500, position: { x: 1,  y: 1 }, size: { w: 2, h: 2 }, status: 'idle', last_cip: '2026-04-30' },
-  { id: 'mlt-01', name: 'MLT-01',  type: 'mlt',            volume_l: 350, position: { x: 4,  y: 1 }, size: { w: 2, h: 2 }, status: 'idle', last_cip: '2026-04-30' },
-  { id: 'bk-01',  name: 'BK-01',   type: 'bk',             volume_l: 350, position: { x: 7,  y: 1 }, size: { w: 2, h: 2 }, status: 'idle', last_cip: '2026-04-30' },
-  { id: 'wp-01',  name: 'WP-01',   type: 'whirlpool',      volume_l: 350, position: { x: 10, y: 1 }, size: { w: 2, h: 2 }, status: 'idle' },
-  { id: 'hex-01', name: 'HEX-01',  type: 'heat_exchanger', volume_l: 0,   position: { x: 13, y: 1 }, size: { w: 1, h: 1 }, status: 'idle' },
+  // Hot side
+  { id: 'hlt-01', name: 'HLT-01',  type: 'hlt',            volume_l: 500, position: { x: 0,  y: 0 }, size: { w: 3, h: 3 }, status: 'in_use',
+    contents: { brew_id: '4', brew_name: 'Hot Liquor', batch_number: '—', stage: 'Нагрев', start_date: '2026-05-07', days: 0, temp_c: 76, fill_pct: 80 },
+    last_cip: '2026-04-30' },
+  { id: 'mlt-01', name: 'MLT-01',  type: 'mlt',            volume_l: 350, position: { x: 3,  y: 0 }, size: { w: 3, h: 3 }, status: 'in_use',
+    contents: { brew_id: '4', brew_name: 'Hazy IPA #043', batch_number: '#043', stage: 'Затирание', start_date: '2026-05-07', days: 0, temp_c: 67, fill_pct: 70 },
+    last_cip: '2026-04-30' },
+  { id: 'bk-01',  name: 'BK-01',   type: 'bk',             volume_l: 350, position: { x: 6,  y: 0 }, size: { w: 3, h: 3 }, status: 'idle', last_cip: '2026-04-30' },
+  { id: 'wp-01',  name: 'WP-01',   type: 'whirlpool',      volume_l: 350, position: { x: 9,  y: 0 }, size: { w: 3, h: 3 }, status: 'idle' },
+  { id: 'hex-01', name: 'HEX-01',  type: 'heat_exchanger', volume_l: 0,   position: { x: 12, y: 0 }, size: { w: 2, h: 3 }, status: 'idle' },
 
   // Fermenter row
-  {
-    id: 'fv-01', name: 'FV-01', type: 'fv', volume_l: 300,
-    position: { x: 1, y: 4 }, size: { w: 2, h: 3 },
+  { id: 'fv-01', name: 'FV-01', type: 'fv', volume_l: 300, position: { x: 0,  y: 3 }, size: { w: 2, h: 4 },
     status: 'in_use',
-    contents: {
-      brew_id: '1', brew_name: 'West Coast IPA', batch_number: '#042',
-      stage: 'Первичная', start_date: '2026-04-28', days: 7,
-      temp_c: 20.5, sg: 1.022, fill_pct: 90,
-    },
-  },
-  {
-    id: 'fv-02', name: 'FV-02', type: 'fv', volume_l: 300,
-    position: { x: 4, y: 4 }, size: { w: 2, h: 3 },
+    contents: { brew_id: '1', brew_name: 'West Coast IPA', batch_number: '#042', stage: 'Первичная', start_date: '2026-04-28', days: 7, temp_c: 20.5, sg: 1.022, fill_pct: 90 } },
+  { id: 'fv-02', name: 'FV-02', type: 'fv', volume_l: 300, position: { x: 2,  y: 3 }, size: { w: 2, h: 4 },
     status: 'in_use',
-    contents: {
-      brew_id: '2', brew_name: 'Oatmeal Stout', batch_number: '#041',
-      stage: 'Вторичная', start_date: '2026-04-15', days: 20,
-      temp_c: 18.0, sg: 1.016, fill_pct: 85,
-    },
-  },
-  {
-    id: 'fv-03', name: 'FV-03', type: 'fv', volume_l: 300,
-    position: { x: 7, y: 4 }, size: { w: 2, h: 3 },
-    status: 'cip', last_cip: '2026-05-04',
-  },
-  {
-    id: 'fv-04', name: 'FV-04', type: 'fv', volume_l: 500,
-    position: { x: 10, y: 4 }, size: { w: 2, h: 3 },
-    status: 'idle',
-  },
-  {
-    id: 'fv-05', name: 'FV-05', type: 'fv', volume_l: 500,
-    position: { x: 13, y: 4 }, size: { w: 2, h: 3 },
-    status: 'idle',
-  },
+    contents: { brew_id: '2', brew_name: 'Oatmeal Stout', batch_number: '#041', stage: 'Вторичная', start_date: '2026-04-15', days: 20, temp_c: 18.0, sg: 1.016, fill_pct: 85 } },
+  { id: 'fv-03', name: 'FV-03', type: 'fv', volume_l: 300, position: { x: 4,  y: 3 }, size: { w: 2, h: 4 },
+    status: 'cip', last_cip: '2026-05-04' },
+  { id: 'fv-04', name: 'FV-04', type: 'fv', volume_l: 500, position: { x: 6,  y: 3 }, size: { w: 2, h: 4 }, status: 'idle' },
+  { id: 'fv-05', name: 'FV-05', type: 'fv', volume_l: 500, position: { x: 8,  y: 3 }, size: { w: 2, h: 4 }, status: 'idle' },
+  { id: 'fv-06', name: 'FV-06', type: 'fv', volume_l: 500, position: { x: 10, y: 3 }, size: { w: 2, h: 4 },
+    status: 'in_use',
+    contents: { brew_id: '5', brew_name: 'Pilsner', batch_number: '#039', stage: 'Первичная', start_date: '2026-05-02', days: 5, temp_c: 12.5, sg: 1.030, fill_pct: 95 } },
+  { id: 'fv-07', name: 'FV-07', type: 'fv', volume_l: 500, position: { x: 12, y: 3 }, size: { w: 2, h: 4 }, status: 'idle' },
 
-  // Bright tank row
-  {
-    id: 'bbt-01', name: 'BBT-01', type: 'bbt', volume_l: 300,
-    position: { x: 1, y: 8 }, size: { w: 2, h: 2 },
+  // Bright + kegs
+  { id: 'bbt-01', name: 'BBT-01', type: 'bbt', volume_l: 300, position: { x: 0, y: 7 }, size: { w: 3, h: 3 },
     status: 'in_use',
-    contents: {
-      brew_id: '3', brew_name: 'Belgian Tripel', batch_number: '#040',
-      stage: 'Карбонизация', start_date: '2026-05-01', days: 4,
-      temp_c: 4.0, fill_pct: 70,
-    },
-  },
-  {
-    id: 'bbt-02', name: 'BBT-02', type: 'bbt', volume_l: 300,
-    position: { x: 4, y: 8 }, size: { w: 2, h: 2 },
-    status: 'idle',
-  },
+    contents: { brew_id: '3', brew_name: 'Belgian Tripel', batch_number: '#040', stage: 'Карбонизация', start_date: '2026-05-01', days: 4, temp_c: 4.0, fill_pct: 70 } },
+  { id: 'bbt-02', name: 'BBT-02', type: 'bbt', volume_l: 300, position: { x: 3, y: 7 }, size: { w: 3, h: 3 }, status: 'idle' },
+  { id: 'keg-01', name: 'KEG-01', type: 'keg', volume_l: 50, position: { x: 6,  y: 7 }, size: { w: 1, h: 2 },
+    status: 'in_use',
+    contents: { brew_id: '3', brew_name: 'Tripel', batch_number: '#040', stage: 'Готов', start_date: '2026-05-05', days: 2, fill_pct: 100 } },
+  { id: 'keg-02', name: 'KEG-02', type: 'keg', volume_l: 50, position: { x: 7,  y: 7 }, size: { w: 1, h: 2 },
+    status: 'in_use',
+    contents: { brew_id: '3', brew_name: 'Tripel', batch_number: '#040', stage: 'Готов', start_date: '2026-05-05', days: 2, fill_pct: 100 } },
+  { id: 'keg-03', name: 'KEG-03', type: 'keg', volume_l: 50, position: { x: 8,  y: 7 }, size: { w: 1, h: 2 }, status: 'idle' },
+  { id: 'keg-04', name: 'KEG-04', type: 'keg', volume_l: 50, position: { x: 9,  y: 7 }, size: { w: 1, h: 2 }, status: 'idle' },
+  { id: 'pmp-01', name: 'PMP-01', type: 'pump', volume_l: 0, position: { x: 10, y: 7 }, size: { w: 1, h: 2 }, status: 'in_use' },
+  { id: 'pmp-02', name: 'PMP-02', type: 'pump', volume_l: 0, position: { x: 11, y: 7 }, size: { w: 1, h: 2 }, status: 'idle' },
+  { id: 'str-01', name: 'Склад', type: 'storage', volume_l: 0, position: { x: 12, y: 7 }, size: { w: 2, h: 3 }, status: 'idle' },
 
   // Utility column
-  { id: 'gly-01', name: 'Glycol',    type: 'glycol',  volume_l: 0, position: { x: 16, y: 1 }, size: { w: 2, h: 2 }, status: 'in_use' },
-  { id: 'co2-01', name: 'CO₂',       type: 'co2',     volume_l: 0, position: { x: 16, y: 4 }, size: { w: 1, h: 2 }, status: 'in_use' },
-  { id: 'cip-01', name: 'CIP',       type: 'cip',     volume_l: 200, position: { x: 17, y: 4 }, size: { w: 1, h: 2 }, status: 'idle' },
-  { id: 'ctl-01', name: 'Контроль', type: 'control', volume_l: 0, position: { x: 16, y: 7 }, size: { w: 2, h: 2 }, status: 'in_use' },
+  { id: 'gly-01', name: 'Glycol', type: 'glycol',  volume_l: 0,   position: { x: 14, y: 0 }, size: { w: 2, h: 3 }, status: 'in_use' },
+  { id: 'co2-01', name: 'CO₂',    type: 'co2',     volume_l: 0,   position: { x: 14, y: 3 }, size: { w: 1, h: 4 }, status: 'in_use' },
+  { id: 'cip-01', name: 'CIP',    type: 'cip',     volume_l: 200, position: { x: 15, y: 3 }, size: { w: 1, h: 4 }, status: 'idle' },
+  { id: 'ctl-01', name: 'CTRL',   type: 'control', volume_l: 0,   position: { x: 14, y: 7 }, size: { w: 2, h: 3 }, status: 'in_use' },
 ]

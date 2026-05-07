@@ -98,9 +98,10 @@ export default function EquipmentPage() {
           <div>
             <FloorPlan
               equipment={items}
-              cellSize={56}
-              cols={20}
-              rows={12}
+              cols={18}
+              rows={10}
+              minCell={36}
+              maxCell={64}
               editable={editable}
               selectedId={selectedId}
               onSelect={setSelectedId}
