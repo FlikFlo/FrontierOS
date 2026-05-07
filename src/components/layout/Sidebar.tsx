@@ -11,6 +11,7 @@ import {
   ShoppingCart,
   BarChart3,
   Settings,
+  Calculator,
   Beer,
   ChevronRight,
 } from 'lucide-react'
@@ -18,6 +19,7 @@ import {
 const navItems = [
   { href: '/', label: 'Дашборд', icon: LayoutDashboard },
   { href: '/recipes', label: 'Рецепты', icon: FlaskConical },
+  { href: '/calculator', label: 'Калькулятор', icon: Calculator },
   { href: '/brews', label: 'Варки', icon: BookOpen },
   { href: '/fermentation', label: 'Ферментация', icon: Thermometer },
   { href: '/inventory', label: 'Склад', icon: Package },

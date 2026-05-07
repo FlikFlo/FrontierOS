@@ -5,9 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Plus, Trash2, FlaskConical, Droplets, Clock, Percent, ChevronDown } from 'lucide-react'
 import type { BeverageCategory, RecipeMalt, RecipeHop, RecipeYeast, RecipeAdjunct } from '@/types/database'
 import { BEVERAGE_CATEGORIES } from '@/types/database'
-import { calcUniversalStats } from '@/lib/beverage-calc'
-import { COMMON_MALTS, COMMON_HOPS, COMMON_YEASTS } from '@/lib/beer-calc'
-import { COMMON_ADJUNCTS } from '@/lib/beverage-calc'
+import { calcUniversalStats, COMMON_MALTS, COMMON_HOPS, COMMON_YEASTS, COMMON_ADJUNCTS } from '@/lib/beverage-calc'
 import RecipeStatsPanel from './RecipeStatsPanel'
 
 const uid = () => Math.random().toString(36).slice(2)
