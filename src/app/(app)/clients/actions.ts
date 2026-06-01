@@ -7,9 +7,12 @@ import type { ClientStatus } from '@/types/database'
 export type ClientInput = {
   name: string
   industry: string | null
+  website: string | null
   email: string | null
   phone: string | null
+  address: string | null
   status: ClientStatus
+  notes: string | null
 }
 
 type ActionResult = { error: string | null }

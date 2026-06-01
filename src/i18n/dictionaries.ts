@@ -46,6 +46,7 @@ const en = {
     whatsapp: 'WhatsApp',
     search: 'Search…',
     noResults: 'No matches',
+    all: 'All',
   },
   calendar: {
     subtitle: 'Reminders & follow-ups',
@@ -63,7 +64,16 @@ const en = {
   },
   clients: {
     total: '{count} total',
-    columns: { name: 'Name', industry: 'Industry', email: 'Email', phone: 'Phone', status: 'Status' },
+    columns: {
+      name: 'Name',
+      industry: 'Industry',
+      website: 'Website',
+      email: 'Email',
+      phone: 'Phone',
+      address: 'Address',
+      status: 'Status',
+      notes: 'Notes',
+    },
     status: { lead: 'Lead', active: 'Active', inactive: 'Inactive' },
     form: { newTitle: 'New client', editTitle: 'Edit client' },
     delete: { title: 'Delete client?', body: 'This permanently removes “{name}”.' },
@@ -195,6 +205,7 @@ const fr: Dictionary = {
     whatsapp: 'WhatsApp',
     search: 'Rechercher…',
     noResults: 'Aucun résultat',
+    all: 'Tous',
   },
   calendar: {
     subtitle: 'Rappels et relances',
@@ -212,7 +223,16 @@ const fr: Dictionary = {
   },
   clients: {
     total: '{count} au total',
-    columns: { name: 'Nom', industry: 'Secteur', email: 'E-mail', phone: 'Téléphone', status: 'Statut' },
+    columns: {
+      name: 'Nom',
+      industry: 'Secteur',
+      website: 'Site web',
+      email: 'E-mail',
+      phone: 'Téléphone',
+      address: 'Adresse',
+      status: 'Statut',
+      notes: 'Notes',
+    },
     status: { lead: 'Prospect', active: 'Actif', inactive: 'Inactif' },
     form: { newTitle: 'Nouveau client', editTitle: 'Modifier le client' },
     delete: { title: 'Supprimer le client ?', body: 'Cela supprime définitivement « {name} ».' },

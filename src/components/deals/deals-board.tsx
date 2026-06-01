@@ -96,7 +96,7 @@ export function DealsBoard({
                   >
                     <div className="flex items-start justify-between gap-2">
                       <p className="text-[13px] font-medium leading-snug text-white">{deal.title}</p>
-                      <div className="flex flex-shrink-0 items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex flex-shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
                         <button
                           onClick={() => onEdit(deal)}
                           aria-label={t('common.edit')}
@@ -122,6 +122,19 @@ export function DealsBoard({
                       </span>
                       <span className="text-[10px] text-white/40">{deal.probability}%</span>
                     </div>
+                    {/* Touch-friendly stage move (drag is desktop-only). */}
+                    <select
+                      value={deal.stage}
+                      onChange={(e) => onMove(deal.id, e.target.value as DealStage)}
+                      aria-label={t('deals.columns.stage')}
+                      className="mt-2 w-full rounded-lg border border-white/[0.10] bg-white/[0.06] px-2 py-1.5 text-[11px] text-white/80 focus:outline-none focus:border-primary/50 lg:hidden"
+                    >
+                      {STAGES.map((s) => (
+                        <option key={s} value={s}>
+                          {t(`deals.stage.${s}`)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
                 ))}
               </div>

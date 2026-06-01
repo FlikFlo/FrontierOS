@@ -11,7 +11,7 @@ import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { DealsBoard } from './deals-board'
 import { DealFormModal, type ClientOption } from './deal-form-modal'
-import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { moveDeal, removeDeal } from '@/app/(app)/deals/actions'
@@ -35,6 +35,7 @@ const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'dang
   lost: 'danger',
 }
 
+const DEAL_STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']
 const dealSearch = (d: DealRow) => `${d.title} ${d.clientName ?? ''}`
 const DEAL_SORTS: Record<string, (d: DealRow) => string | number> = {
   title: (d) => d.title.toLowerCase(),
@@ -51,11 +52,17 @@ export function DealsView(props: DealsViewProps) {
 
   const [deals, setDeals] = useState<DealRow[]>(props.status === 'ok' ? props.rows : [])
   const [view, setView] = useState<'board' | 'table'>('board')
+  const [stageFilter, setStageFilter] = useState('all')
   const [form, setForm] = useState<{ open: boolean; deal: Deal | null }>({ open: false, deal: null })
   const [toDelete, setToDelete] = useState<DealRow | null>(null)
   const [deleting, setDeleting] = useState(false)
 
-  const ctrl = useListControls(deals, dealSearch, DEAL_SORTS, 'amount', 'desc')
+  // Stage filter applies in the table view only (the board is already split by stage).
+  const visible = useMemo(
+    () => (view === 'table' && stageFilter !== 'all' ? deals.filter((d) => d.stage === stageFilter) : deals),
+    [deals, view, stageFilter],
+  )
+  const ctrl = useListControls(visible, dealSearch, DEAL_SORTS, 'amount', 'desc')
 
   const nameById = useMemo(() => new Map(clients.map((c) => [c.id, c.name])), [clients])
   const enrich = (d: Deal): DealRow => ({
@@ -115,7 +122,21 @@ export function DealsView(props: DealsViewProps) {
                 { value: 'table', label: t('deals.view.table'), count: deals.length },
               ]}
             />
-            {deals.length > 0 && <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />}
+            {deals.length > 0 && (
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+                {view === 'table' && (
+                  <FilterSelect
+                    value={stageFilter}
+                    onChange={setStageFilter}
+                    options={[
+                      { value: 'all', label: t('common.all') },
+                      ...DEAL_STAGES.map((s) => ({ value: s, label: t(`deals.stage.${s}`) })),
+                    ]}
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {deals.length === 0 ? (

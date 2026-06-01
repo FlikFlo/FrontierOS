@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
-import { Input } from './ui/input'
+import { Input, Select } from './ui/input'
 import { useI18n } from '@/i18n/provider'
 import { cn } from '@/lib/utils'
 
@@ -123,6 +123,26 @@ export function SearchInput({ value, onChange }: { value: string; onChange: (v: 
         </button>
       )}
     </div>
+  )
+}
+
+export function FilterSelect({
+  value,
+  onChange,
+  options,
+}: {
+  value: string
+  onChange: (v: string) => void
+  options: { value: string; label: string }[]
+}) {
+  return (
+    <Select value={value} onChange={(e) => onChange(e.target.value)} className="sm:w-48">
+      {options.map((o) => (
+        <option key={o.value} value={o.value}>
+          {o.label}
+        </option>
+      ))}
+    </Select>
   )
 }
 

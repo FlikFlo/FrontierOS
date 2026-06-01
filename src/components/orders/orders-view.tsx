@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '../ui/card'
@@ -10,7 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
-import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { removeOrder } from '@/app/(app)/orders/actions'
@@ -51,6 +51,8 @@ const STATUS_VARIANT: Record<OrderStatus, 'default' | 'warning' | 'success' | 'd
 }
 
 const NO_OPTS: never[] = []
+const ORDER_STATUSES: OrderStatus[] = ['draft', 'confirmed', 'shipped', 'delivered', 'cancelled']
+const NO_ROWS: OrderRow[] = []
 
 const orderSearch = (o: OrderRow) => `${o.order_number} ${o.clientName ?? ''}`
 const ORDER_SORTS: Record<string, (o: OrderRow) => string | number> = {
@@ -65,8 +67,13 @@ const ORDER_SORTS: Record<string, (o: OrderRow) => string | number> = {
 export function OrdersView(props: OrdersViewProps) {
   const { t, locale } = useI18n()
   const router = useRouter()
-  const rows = props.status === 'ok' ? props.rows : []
-  const ctrl = useListControls(rows, orderSearch, ORDER_SORTS, 'date', 'desc')
+  const rows = props.status === 'ok' ? props.rows : NO_ROWS
+  const [statusFilter, setStatusFilter] = useState('all')
+  const visible = useMemo(
+    () => (statusFilter === 'all' ? rows : rows.filter((o) => o.status === statusFilter)),
+    [rows, statusFilter],
+  )
+  const ctrl = useListControls(visible, orderSearch, ORDER_SORTS, 'date', 'desc')
   const clients = props.status === 'ok' ? props.clients : (NO_OPTS as ClientOpt[])
   const products = props.status === 'ok' ? props.products : (NO_OPTS as ProductOpt[])
   const today = new Date().toISOString().slice(0, 10)
@@ -110,7 +117,17 @@ export function OrdersView(props: OrdersViewProps) {
 
       {props.status === 'ok' && rows.length > 0 && (
         <>
-          <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+            <FilterSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'all', label: t('common.all') },
+                ...ORDER_STATUSES.map((s) => ({ value: s, label: t(`orders.status.${s}`) })),
+              ]}
+            />
+          </div>
           {ctrl.rows.length === 0 ? (
             <Card>
               <p className="text-[13px] text-white/45">{t('common.noResults')}</p>

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '../ui/card'
@@ -10,7 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ProductFormModal } from './product-form-modal'
-import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatMoney } from '@/lib/utils'
 import { removeProduct } from '@/app/(app)/products/actions'
@@ -22,6 +22,7 @@ type ProductsViewProps =
   | { status: 'ok'; rows: Product[] }
 
 const productSearch = (p: Product) => `${p.name} ${p.sku ?? ''}`
+const NO_ROWS: Product[] = []
 const PRODUCT_SORTS: Record<string, (p: Product) => string | number> = {
   sku: (p) => (p.sku ?? '').toLowerCase(),
   name: (p) => p.name.toLowerCase(),
@@ -33,8 +34,14 @@ const PRODUCT_SORTS: Record<string, (p: Product) => string | number> = {
 export function ProductsView(props: ProductsViewProps) {
   const { t, locale } = useI18n()
   const router = useRouter()
-  const rows = props.status === 'ok' ? props.rows : []
-  const ctrl = useListControls(rows, productSearch, PRODUCT_SORTS, 'name')
+  const rows = props.status === 'ok' ? props.rows : NO_ROWS
+  const [stateFilter, setStateFilter] = useState('all')
+  const visible = useMemo(
+    () =>
+      stateFilter === 'all' ? rows : rows.filter((p) => p.active === (stateFilter === 'active')),
+    [rows, stateFilter],
+  )
+  const ctrl = useListControls(visible, productSearch, PRODUCT_SORTS, 'name')
 
   const [form, setForm] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null })
   const [toDelete, setToDelete] = useState<Product | null>(null)
@@ -75,7 +82,18 @@ export function ProductsView(props: ProductsViewProps) {
 
       {props.status === 'ok' && rows.length > 0 && (
         <>
-          <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+            <FilterSelect
+              value={stateFilter}
+              onChange={setStateFilter}
+              options={[
+                { value: 'all', label: t('common.all') },
+                { value: 'active', label: t('products.state.active') },
+                { value: 'inactive', label: t('products.state.inactive') },
+              ]}
+            />
+          </div>
           {ctrl.rows.length === 0 ? (
             <Card>
               <p className="text-[13px] text-white/45">{t('common.noResults')}</p>

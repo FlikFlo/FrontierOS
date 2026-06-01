@@ -1,8 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, MessageCircle } from 'lucide-react'
+import { Plus, Pencil, Trash2, MessageCircle, Globe } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -10,7 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ClientFormModal } from './client-form-modal'
-import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { removeClient } from '@/app/(app)/clients/actions'
 import { waLink } from '@/lib/utils'
@@ -27,7 +27,16 @@ const STATUS_VARIANT: Record<ClientStatus, 'success' | 'warning' | 'default'> = 
   inactive: 'default',
 }
 
-const clientSearch = (c: Client) => `${c.name} ${c.industry ?? ''} ${c.email ?? ''} ${c.phone ?? ''}`
+const CLIENT_STATUSES: ClientStatus[] = ['lead', 'active', 'inactive']
+const NO_ROWS: Client[] = []
+
+const clientSearch = (c: Client) =>
+  `${c.name} ${c.industry ?? ''} ${c.website ?? ''} ${c.email ?? ''} ${c.phone ?? ''} ${c.address ?? ''}`
+
+function siteUrl(website: string | null): string | null {
+  if (!website) return null
+  return /^https?:\/\//i.test(website) ? website : `https://${website}`
+}
 const CLIENT_SORTS: Record<string, (c: Client) => string | number> = {
   name: (c) => c.name.toLowerCase(),
   industry: (c) => (c.industry ?? '').toLowerCase(),
@@ -37,8 +46,13 @@ const CLIENT_SORTS: Record<string, (c: Client) => string | number> = {
 export function ClientsView(props: ClientsViewProps) {
   const { t } = useI18n()
   const router = useRouter()
-  const rows = props.status === 'ok' ? props.rows : []
-  const ctrl = useListControls(rows, clientSearch, CLIENT_SORTS, 'name')
+  const rows = props.status === 'ok' ? props.rows : NO_ROWS
+  const [statusFilter, setStatusFilter] = useState('all')
+  const visible = useMemo(
+    () => (statusFilter === 'all' ? rows : rows.filter((c) => c.status === statusFilter)),
+    [rows, statusFilter],
+  )
+  const ctrl = useListControls(visible, clientSearch, CLIENT_SORTS, 'name')
 
   const [form, setForm] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null })
   const [toDelete, setToDelete] = useState<Client | null>(null)
@@ -79,7 +93,17 @@ export function ClientsView(props: ClientsViewProps) {
 
       {props.status === 'ok' && rows.length > 0 && (
         <>
-          <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+            <FilterSelect
+              value={statusFilter}
+              onChange={setStatusFilter}
+              options={[
+                { value: 'all', label: t('common.all') },
+                ...CLIENT_STATUSES.map((s) => ({ value: s, label: t(`clients.status.${s}`) })),
+              ]}
+            />
+          </div>
           {ctrl.rows.length === 0 ? (
             <Card>
               <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
@@ -116,6 +140,18 @@ export function ClientsView(props: ClientsViewProps) {
                     </TD>
                     <TD className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {siteUrl(c.website) && (
+                          <a
+                            href={siteUrl(c.website)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t('clients.columns.website')}
+                            title={c.website ?? ''}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white transition-colors"
+                          >
+                            <Globe size={14} />
+                          </a>
+                        )}
                         {waLink(c.phone) && (
                           <a
                             href={waLink(c.phone)!}
