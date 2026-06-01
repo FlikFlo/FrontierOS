@@ -2,11 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { DM_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
-import { CrmShell } from '@/components/layout/crm-shell'
 import { I18nProvider } from '@/i18n/provider'
 import { getLocale } from '@/i18n/server'
-import { RoleProvider } from '@/rbac/provider'
-import { getRole } from '@/rbac/server'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -32,17 +29,13 @@ export const viewport: Viewport = {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [locale, role] = await Promise.all([getLocale(), getRole()])
+  const locale = await getLocale()
 
   return (
     <html lang={locale} className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}>
       <body className="min-h-full">
         <I18nProvider initialLocale={locale}>
-          <RoleProvider initialRole={role}>
-            <ToastProvider>
-              <CrmShell>{children}</CrmShell>
-            </ToastProvider>
-          </RoleProvider>
+          <ToastProvider>{children}</ToastProvider>
         </I18nProvider>
       </body>
     </html>

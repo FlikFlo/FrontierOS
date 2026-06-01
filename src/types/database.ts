@@ -4,6 +4,7 @@
 
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
+export type UserRole = 'owner' | 'sales_manager' | 'brewer'
 export type ClientStatus = 'lead' | 'active' | 'inactive'
 export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
 export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
@@ -11,6 +12,26 @@ export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'can
 export interface Database {
   public: {
     Tables: {
+      profiles: {
+        Row: {
+          id: string
+          email: string | null
+          full_name: string | null
+          role: UserRole
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id: string
+          email?: string | null
+          full_name?: string | null
+          role?: UserRole
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
+        Relationships: []
+      }
       clients: {
         Row: {
           id: string
@@ -224,6 +245,7 @@ export interface Database {
 }
 
 /** Convenience row aliases. */
+export type Profile = Database['public']['Tables']['profiles']['Row']
 export type Client = Database['public']['Tables']['clients']['Row']
 export type Contact = Database['public']['Tables']['contacts']['Row']
 export type Product = Database['public']['Tables']['products']['Row']

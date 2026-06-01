@@ -13,9 +13,8 @@ import {
 } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { BottomNav } from "./bottom-nav";
-import { Avatar } from "../ui/avatar";
 import { LangSwitcher } from "../ui/lang-switcher";
-import { RoleSwitcher } from "../ui/role-switcher";
+import { UserMenu } from "../ui/user-menu";
 import { useI18n } from "@/i18n/provider";
 import { useRole } from "@/rbac/provider";
 import { canAccess, moduleForPath, type ModuleKey } from "@/rbac/config";
@@ -31,7 +30,13 @@ import type { NavItem, NavSection } from "./types";
  * mobile BottomNav. Role-aware: nav is filtered and unauthorized routes redirect
  * to the dashboard.
  */
-export function CrmShell({ children }: { children: ReactNode }) {
+export function CrmShell({
+  children,
+  userEmail = null,
+}: {
+  children: ReactNode
+  userEmail?: string | null
+}) {
   const { t } = useI18n();
   const { role } = useRole();
   const pathname = usePathname();
@@ -101,7 +106,6 @@ export function CrmShell({ children }: { children: ReactNode }) {
         }
         topbarActions={
           <>
-            <RoleSwitcher />
             <LangSwitcher />
             <button
               className="flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
@@ -109,7 +113,7 @@ export function CrmShell({ children }: { children: ReactNode }) {
             >
               <Bell size={18} />
             </button>
-            <Avatar initials="FO" size={28} bg="rgba(21,96,189,0.35)" />
+            <UserMenu email={userEmail} />
           </>
         }
         pinned={pinned}

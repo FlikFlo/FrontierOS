@@ -40,9 +40,6 @@ export function moduleForPath(pathname: string): ModuleKey | null {
   return null
 }
 
-/** Cookie holding the active role (dev-selectable until auth provides it). */
-export const ROLE_COOKIE = 'fos_role'
-
 export function isRole(value: string | undefined | null): value is Role {
   return value === 'owner' || value === 'sales_manager' || value === 'brewer'
 }
