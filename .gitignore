@@ -24,6 +24,12 @@
 .DS_Store
 *.pem
 
+# claude code local tooling (sessions, worktrees) — never commit
+/.claude/
+
+# design kit reference drop (source material, not app code)
+/design-export/
+
 # debug
 npm-debug.log*
 yarn-debug.log*
