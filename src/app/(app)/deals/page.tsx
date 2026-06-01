@@ -12,11 +12,12 @@ export default async function DealsPage() {
 
   if (dealsRes.error) return <DealsView status="error" />
 
-  const nameById = new Map((clientsRes.data ?? []).map((c) => [c.id, c.name]))
+  const clients = (clientsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }))
+  const nameById = new Map(clients.map((c) => [c.id, c.name]))
   const rows: DealRow[] = (dealsRes.data ?? []).map((d) => ({
     ...d,
     clientName: d.client_id ? nameById.get(d.client_id) ?? null : null,
   }))
 
-  return <DealsView status="ok" rows={rows} />
+  return <DealsView status="ok" rows={rows} clients={clients} />
 }

@@ -54,6 +54,9 @@ const en = {
     total: '{count} total',
     columns: { title: 'Deal', client: 'Client', stage: 'Stage', amount: 'Amount', probability: 'Prob.', close: 'Expected close' },
     stage: { lead: 'Lead', qualified: 'Qualified', proposal: 'Proposal', negotiation: 'Negotiation', won: 'Won', lost: 'Lost' },
+    view: { board: 'Kanban', table: 'Table' },
+    form: { newTitle: 'New deal', editTitle: 'Edit deal', noClient: '— No client —' },
+    delete: { title: 'Delete deal?', body: 'This permanently removes “{title}”.' },
   },
   orders: {
     total: '{count} total',
@@ -143,6 +146,9 @@ const fr: Dictionary = {
     total: '{count} au total',
     columns: { title: 'Affaire', client: 'Client', stage: 'Étape', amount: 'Montant', probability: 'Prob.', close: 'Clôture prévue' },
     stage: { lead: 'Piste', qualified: 'Qualifié', proposal: 'Proposition', negotiation: 'Négociation', won: 'Gagné', lost: 'Perdu' },
+    view: { board: 'Kanban', table: 'Liste' },
+    form: { newTitle: 'Nouvelle affaire', editTitle: 'Modifier l’affaire', noClient: '— Aucun client —' },
+    delete: { title: 'Supprimer l’affaire ?', body: 'Cela supprime définitivement « {title} ».' },
   },
   orders: {
     total: '{count} au total',
