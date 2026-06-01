@@ -22,24 +22,24 @@ on conflict (id) do nothing;
 
 -- ── products ───────────────────────────────────────────────────────────────
 insert into public.products (id, sku, name, description, price, currency, unit) values
-  ('33333333-3333-3333-3333-333333333301', 'FOS-CORE',  'FrontierOS Core',      'Base platform license, per seat / month', 49.00,  'EUR', 'seat'),
-  ('33333333-3333-3333-3333-333333333302', 'FOS-PRO',   'FrontierOS Pro',       'Pro tier with automation, per seat / month', 99.00, 'EUR', 'seat'),
-  ('33333333-3333-3333-3333-333333333303', 'FOS-ONB',   'Onboarding package',   'One-time guided onboarding', 1500.00, 'EUR', 'pcs'),
-  ('33333333-3333-3333-3333-333333333304', 'FOS-SUP',   'Priority support',     'Annual priority support', 1200.00, 'EUR', 'year')
+  ('33333333-3333-3333-3333-333333333301', 'FOS-CORE',  'FrontierOS Core',      'Base platform license, per seat / month', 49.00,  'MAD', 'seat'),
+  ('33333333-3333-3333-3333-333333333302', 'FOS-PRO',   'FrontierOS Pro',       'Pro tier with automation, per seat / month', 99.00, 'MAD', 'seat'),
+  ('33333333-3333-3333-3333-333333333303', 'FOS-ONB',   'Onboarding package',   'One-time guided onboarding', 1500.00, 'MAD', 'pcs'),
+  ('33333333-3333-3333-3333-333333333304', 'FOS-SUP',   'Priority support',     'Annual priority support', 1200.00, 'MAD', 'year')
 on conflict (id) do nothing;
 
 -- ── deals ──────────────────────────────────────────────────────────────────
 insert into public.deals (id, title, client_id, contact_id, stage, amount, currency, probability, expected_close_date) values
-  ('44444444-4444-4444-4444-444444444401', 'Nordwind — 40 seats Pro', '11111111-1111-1111-1111-111111111101', '22222222-2222-2222-2222-222222222201', 'negotiation', 47520.00, 'EUR', 70, current_date + 21),
-  ('44444444-4444-4444-4444-444444444402', 'Atlas — platform rollout', '11111111-1111-1111-1111-111111111102', '22222222-2222-2222-2222-222222222202', 'proposal',    62000.00, 'EUR', 50, current_date + 35),
-  ('44444444-4444-4444-4444-444444444403', 'Verde — pilot',            '11111111-1111-1111-1111-111111111103', '22222222-2222-2222-2222-222222222203', 'qualified',    8800.00, 'EUR', 30, current_date + 14),
-  ('44444444-4444-4444-4444-444444444404', 'Helios — renewal',         '11111111-1111-1111-1111-111111111104', null,                                   'won',         14400.00, 'EUR', 100, current_date - 3)
+  ('44444444-4444-4444-4444-444444444401', 'Nordwind — 40 seats Pro', '11111111-1111-1111-1111-111111111101', '22222222-2222-2222-2222-222222222201', 'negotiation', 47520.00, 'MAD', 70, current_date + 21),
+  ('44444444-4444-4444-4444-444444444402', 'Atlas — platform rollout', '11111111-1111-1111-1111-111111111102', '22222222-2222-2222-2222-222222222202', 'proposal',    62000.00, 'MAD', 50, current_date + 35),
+  ('44444444-4444-4444-4444-444444444403', 'Verde — pilot',            '11111111-1111-1111-1111-111111111103', '22222222-2222-2222-2222-222222222203', 'qualified',    8800.00, 'MAD', 30, current_date + 14),
+  ('44444444-4444-4444-4444-444444444404', 'Helios — renewal',         '11111111-1111-1111-1111-111111111104', null,                                   'won',         14400.00, 'MAD', 100, current_date - 3)
 on conflict (id) do nothing;
 
 -- ── orders ─────────────────────────────────────────────────────────────────
 insert into public.orders (id, order_number, client_id, status, order_date, currency, notes) values
-  ('55555555-5555-5555-5555-555555555501', 'FOS-2026-0001', '11111111-1111-1111-1111-111111111101', 'confirmed', current_date - 10, 'EUR', 'Annual contract'),
-  ('55555555-5555-5555-5555-555555555502', 'FOS-2026-0002', '11111111-1111-1111-1111-111111111104', 'delivered', current_date - 30, 'EUR', 'Renewal + support')
+  ('55555555-5555-5555-5555-555555555501', 'FOS-2026-0001', '11111111-1111-1111-1111-111111111101', 'confirmed', current_date - 10, 'MAD', 'Annual contract'),
+  ('55555555-5555-5555-5555-555555555502', 'FOS-2026-0002', '11111111-1111-1111-1111-111111111104', 'delivered', current_date - 30, 'MAD', 'Renewal + support')
 on conflict (id) do nothing;
 
 -- ── order_items ────────────────────────────────────────────────────────────

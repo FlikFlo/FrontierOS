@@ -55,7 +55,7 @@ create table if not exists public.products (
   name        text not null,
   description text,
   price       numeric(12, 2) not null default 0,
-  currency    text not null default 'EUR',
+  currency    text not null default 'MAD',
   unit        text not null default 'pcs',
   active      boolean not null default true,
   created_at  timestamptz not null default now(),
@@ -71,7 +71,7 @@ create table if not exists public.deals (
   stage               text not null default 'lead'
                         check (stage in ('lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost')),
   amount              numeric(12, 2) not null default 0,
-  currency            text not null default 'EUR',
+  currency            text not null default 'MAD',
   probability         int not null default 0 check (probability between 0 and 100),
   expected_close_date date,
   created_at          timestamptz not null default now(),
@@ -86,7 +86,7 @@ create table if not exists public.orders (
   status        text not null default 'draft'
                   check (status in ('draft', 'confirmed', 'shipped', 'delivered', 'cancelled')),
   order_date    date not null default current_date,
-  currency      text not null default 'EUR',
+  currency      text not null default 'MAD',
   notes         text,
   created_at    timestamptz not null default now(),
   updated_at    timestamptz not null default now()

@@ -10,7 +10,8 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-const LOCALE_TAG: Record<string, string> = { en: 'en-US', fr: 'fr-FR' }
+// Morocco: French formatting uses the fr-MA locale; MAD is the currency.
+const LOCALE_TAG: Record<string, string> = { en: 'en-US', fr: 'fr-MA' }
 
 /** Currency amount formatted for the active UI locale. */
 export function formatMoney(amount: number, currency: string, locale: string): string {
