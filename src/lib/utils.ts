@@ -10,18 +10,22 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
-/** Locale-aware formatters (domain-neutral, reused across the CRM). */
-export function formatDate(date: string | null): string {
-  if (!date) return '—'
-  return new Date(date).toLocaleDateString('ru-RU', { day: '2-digit', month: 'short', year: 'numeric' })
+const LOCALE_TAG: Record<string, string> = { en: 'en-US', fr: 'fr-FR' }
+
+/** Currency amount formatted for the active UI locale. */
+export function formatMoney(amount: number, currency: string, locale: string): string {
+  return new Intl.NumberFormat(LOCALE_TAG[locale] ?? 'en-US', {
+    style: 'currency',
+    currency,
+  }).format(amount)
 }
 
-export function formatNumber(n: number | null | undefined, decimals = 2): string {
-  if (n == null) return '—'
-  return n.toFixed(decimals)
-}
-
-export function formatCurrency(n: number | null | undefined): string {
-  if (n == null) return '—'
-  return new Intl.NumberFormat('ru-RU', { style: 'currency', currency: 'RUB' }).format(n)
+/** Short date (e.g. 12 Jun 2026) for the active UI locale; null → em dash. */
+export function formatDate(value: string | null, locale: string): string {
+  if (!value) return '—'
+  return new Date(value).toLocaleDateString(LOCALE_TAG[locale] ?? 'en-US', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
 }
