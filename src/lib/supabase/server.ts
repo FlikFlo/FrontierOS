@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
-import type { Database } from '@/types/database'
+// NOTE: typed client (`createServerClient<Database>`) returns once the CRM
+// schema + generated types land. Untyped for now during the rebuild.
 
 export function isSupabaseConfigured() {
   return Boolean(
@@ -12,7 +13,7 @@ export function isSupabaseConfigured() {
 export async function createClient() {
   if (!isSupabaseConfigured()) return null
   const cookieStore = await cookies()
-  return createServerClient<Database>(
+  return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {

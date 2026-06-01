@@ -1,26 +1,39 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import type { Metadata, Viewport } from 'next'
+import { DM_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
-import Sidebar from '@/components/layout/Sidebar'
-import Topbar from '@/components/layout/Topbar'
+import { ToastProvider } from '@/components/ui/toast'
+import { CrmShell } from '@/components/layout/crm-shell'
 
-const geistSans = Geist({ variable: '--font-geist-sans', subsets: ['latin'] })
-const geistMono = Geist_Mono({ variable: '--font-geist-mono', subsets: ['latin'] })
+const dmSans = DM_Sans({
+  variable: '--font-dm-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
+})
+
+const dmMono = DM_Mono({
+  variable: '--font-dm-mono',
+  subsets: ['latin'],
+  weight: ['400', '500'],
+})
 
 export const metadata: Metadata = {
-  title: 'BrewMaster — Craft Brewery OS',
-  description: 'Система управления крафтовой пивоварней',
+  title: 'FrontierOS',
+  description: 'CRM на дизайн-ките Croat',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+}
+
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="ru" className={`${geistSans.variable} ${geistMono.variable}`}>
-      <body className="bg-brewery min-h-screen">
-        <Sidebar />
-        <div className="ml-64 flex flex-col min-h-screen">
-          <Topbar />
-          <main className="flex-1 p-6">{children}</main>
-        </div>
+    <html lang="ru" className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}>
+      <body className="min-h-full">
+        <ToastProvider>
+          <CrmShell>{children}</CrmShell>
+        </ToastProvider>
       </body>
     </html>
   )
