@@ -47,7 +47,7 @@ export function AppShell({
         onClose={() => setOpen(false)}
       />
       <main className="pt-12 lg:pl-64 min-h-svh">
-        <div className="mx-auto max-w-6xl p-4 sm:p-6 animate-fade-up">{children}</div>
+        <div className="w-full p-4 sm:p-6 animate-fade-up">{children}</div>
       </main>
     </>
   );
