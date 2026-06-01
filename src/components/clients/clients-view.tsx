@@ -10,6 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ClientFormModal } from './client-form-modal'
+import { SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { removeClient } from '@/app/(app)/clients/actions'
 import { waLink } from '@/lib/utils'
@@ -26,10 +27,18 @@ const STATUS_VARIANT: Record<ClientStatus, 'success' | 'warning' | 'default'> = 
   inactive: 'default',
 }
 
+const clientSearch = (c: Client) => `${c.name} ${c.industry ?? ''} ${c.email ?? ''} ${c.phone ?? ''}`
+const CLIENT_SORTS: Record<string, (c: Client) => string | number> = {
+  name: (c) => c.name.toLowerCase(),
+  industry: (c) => (c.industry ?? '').toLowerCase(),
+  status: (c) => c.status,
+}
+
 export function ClientsView(props: ClientsViewProps) {
   const { t } = useI18n()
   const router = useRouter()
   const rows = props.status === 'ok' ? props.rows : []
+  const ctrl = useListControls(rows, clientSearch, CLIENT_SORTS, 'name')
 
   const [form, setForm] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null })
   const [toDelete, setToDelete] = useState<Client | null>(null)
@@ -69,21 +78,34 @@ export function ClientsView(props: ClientsViewProps) {
       {props.status === 'ok' && rows.length === 0 && <DataState state="empty" />}
 
       {props.status === 'ok' && rows.length > 0 && (
-        <Card className="p-0 overflow-hidden">
-          <div className="overflow-x-auto no-scrollbar">
-            <Table>
-              <THead>
-                <TR className="hover:bg-transparent">
-                  <TH>{t('clients.columns.name')}</TH>
-                  <TH>{t('clients.columns.industry')}</TH>
-                  <TH>{t('clients.columns.email')}</TH>
-                  <TH>{t('clients.columns.phone')}</TH>
-                  <TH>{t('clients.columns.status')}</TH>
-                  <TH className="text-right">{t('common.actions')}</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {rows.map((c) => (
+        <>
+          <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+          {ctrl.rows.length === 0 ? (
+            <Card>
+              <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
+            </Card>
+          ) : (
+            <Card className="p-0 overflow-hidden">
+              <div className="overflow-x-auto no-scrollbar">
+                <Table>
+                  <THead>
+                    <TR className="hover:bg-transparent">
+                      <TH>
+                        <SortHeader label={t('clients.columns.name')} sortKey="name" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('clients.columns.industry')} sortKey="industry" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>{t('clients.columns.email')}</TH>
+                      <TH>{t('clients.columns.phone')}</TH>
+                      <TH>
+                        <SortHeader label={t('clients.columns.status')} sortKey="status" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH className="text-right">{t('common.actions')}</TH>
+                    </TR>
+                  </THead>
+                  <TBody>
+                    {ctrl.rows.map((c) => (
                   <TR key={c.id}>
                     <TD className="font-medium text-white">{c.name}</TD>
                     <TD>{c.industry ?? '—'}</TD>
@@ -123,11 +145,13 @@ export function ClientsView(props: ClientsViewProps) {
                       </div>
                     </TD>
                   </TR>
-                ))}
-              </TBody>
-            </Table>
-          </div>
-        </Card>
+                    ))}
+                  </TBody>
+                </Table>
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {form.open && (

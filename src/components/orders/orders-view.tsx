@@ -10,6 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
+import { SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { removeOrder } from '@/app/(app)/orders/actions'
@@ -51,10 +52,21 @@ const STATUS_VARIANT: Record<OrderStatus, 'default' | 'warning' | 'success' | 'd
 
 const NO_OPTS: never[] = []
 
+const orderSearch = (o: OrderRow) => `${o.order_number} ${o.clientName ?? ''}`
+const ORDER_SORTS: Record<string, (o: OrderRow) => string | number> = {
+  number: (o) => o.order_number.toLowerCase(),
+  client: (o) => (o.clientName ?? '').toLowerCase(),
+  status: (o) => o.status,
+  date: (o) => o.order_date,
+  items: (o) => o.itemCount,
+  total: (o) => o.total,
+}
+
 export function OrdersView(props: OrdersViewProps) {
   const { t, locale } = useI18n()
   const router = useRouter()
   const rows = props.status === 'ok' ? props.rows : []
+  const ctrl = useListControls(rows, orderSearch, ORDER_SORTS, 'date', 'desc')
   const clients = props.status === 'ok' ? props.clients : (NO_OPTS as ClientOpt[])
   const products = props.status === 'ok' ? props.products : (NO_OPTS as ProductOpt[])
   const today = new Date().toISOString().slice(0, 10)
@@ -97,22 +109,41 @@ export function OrdersView(props: OrdersViewProps) {
       {props.status === 'ok' && rows.length === 0 && <DataState state="empty" />}
 
       {props.status === 'ok' && rows.length > 0 && (
-        <Card className="p-0 overflow-hidden">
-          <div className="overflow-x-auto no-scrollbar">
-            <Table>
-              <THead>
-                <TR className="hover:bg-transparent">
-                  <TH>{t('orders.columns.number')}</TH>
-                  <TH>{t('orders.columns.client')}</TH>
-                  <TH>{t('orders.columns.status')}</TH>
-                  <TH>{t('orders.columns.date')}</TH>
-                  <TH className="text-right">{t('orders.columns.items')}</TH>
-                  <TH className="text-right">{t('orders.columns.total')}</TH>
-                  <TH className="text-right">{t('common.actions')}</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {rows.map((o) => (
+        <>
+          <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+          {ctrl.rows.length === 0 ? (
+            <Card>
+              <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
+            </Card>
+          ) : (
+            <Card className="p-0 overflow-hidden">
+              <div className="overflow-x-auto no-scrollbar">
+                <Table>
+                  <THead>
+                    <TR className="hover:bg-transparent">
+                      <TH>
+                        <SortHeader label={t('orders.columns.number')} sortKey="number" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('orders.columns.client')} sortKey="client" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('orders.columns.status')} sortKey="status" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('orders.columns.date')} sortKey="date" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH className="text-right">
+                        <SortHeader label={t('orders.columns.items')} sortKey="items" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} align="right" />
+                      </TH>
+                      <TH className="text-right">
+                        <SortHeader label={t('orders.columns.total')} sortKey="total" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} align="right" />
+                      </TH>
+                      <TH className="text-right">{t('common.actions')}</TH>
+                    </TR>
+                  </THead>
+                  <TBody>
+                    {ctrl.rows.map((o) => (
                   <TR key={o.id}>
                     <TD className="font-mono text-[13px] font-medium text-white">{o.order_number}</TD>
                     <TD>{o.clientName ?? '—'}</TD>
@@ -143,11 +174,13 @@ export function OrdersView(props: OrdersViewProps) {
                       </div>
                     </TD>
                   </TR>
-                ))}
-              </TBody>
-            </Table>
-          </div>
-        </Card>
+                    ))}
+                  </TBody>
+                </Table>
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {form.open && (

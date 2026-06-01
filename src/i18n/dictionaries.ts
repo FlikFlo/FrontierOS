@@ -44,6 +44,8 @@ const en = {
     saving: 'Saving…',
     actions: 'Actions',
     whatsapp: 'WhatsApp',
+    search: 'Search…',
+    noResults: 'No matches',
   },
   calendar: {
     subtitle: 'Reminders & follow-ups',
@@ -181,6 +183,8 @@ const fr: Dictionary = {
     saving: 'Enregistrement…',
     actions: 'Actions',
     whatsapp: 'WhatsApp',
+    search: 'Rechercher…',
+    noResults: 'Aucun résultat',
   },
   calendar: {
     subtitle: 'Rappels et relances',

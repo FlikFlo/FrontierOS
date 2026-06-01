@@ -11,6 +11,7 @@ import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { DealsBoard } from './deals-board'
 import { DealFormModal, type ClientOption } from './deal-form-modal'
+import { SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { moveDeal, removeDeal } from '@/app/(app)/deals/actions'
@@ -34,6 +35,16 @@ const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'dang
   lost: 'danger',
 }
 
+const dealSearch = (d: DealRow) => `${d.title} ${d.clientName ?? ''}`
+const DEAL_SORTS: Record<string, (d: DealRow) => string | number> = {
+  title: (d) => d.title.toLowerCase(),
+  client: (d) => (d.clientName ?? '').toLowerCase(),
+  stage: (d) => d.stage,
+  amount: (d) => d.amount,
+  probability: (d) => d.probability,
+  close: (d) => d.expected_close_date ?? '',
+}
+
 export function DealsView(props: DealsViewProps) {
   const { t, locale } = useI18n()
   const clients = props.status === 'ok' ? props.clients : NO_CLIENTS
@@ -43,6 +54,8 @@ export function DealsView(props: DealsViewProps) {
   const [form, setForm] = useState<{ open: boolean; deal: Deal | null }>({ open: false, deal: null })
   const [toDelete, setToDelete] = useState<DealRow | null>(null)
   const [deleting, setDeleting] = useState(false)
+
+  const ctrl = useListControls(deals, dealSearch, DEAL_SORTS, 'amount', 'desc')
 
   const nameById = useMemo(() => new Map(clients.map((c) => [c.id, c.name])), [clients])
   const enrich = (d: Deal): DealRow => ({
@@ -92,21 +105,28 @@ export function DealsView(props: DealsViewProps) {
 
       {props.status === 'ok' && (
         <>
-          <Tabs
-            value={view}
-            onChange={(v) => setView(v as 'board' | 'table')}
-            variant="segmented"
-            items={[
-              { value: 'board', label: t('deals.view.board') },
-              { value: 'table', label: t('deals.view.table'), count: deals.length },
-            ]}
-          />
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <Tabs
+              value={view}
+              onChange={(v) => setView(v as 'board' | 'table')}
+              variant="segmented"
+              items={[
+                { value: 'board', label: t('deals.view.board') },
+                { value: 'table', label: t('deals.view.table'), count: deals.length },
+              ]}
+            />
+            {deals.length > 0 && <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />}
+          </div>
 
           {deals.length === 0 ? (
             <DataState state="empty" />
+          ) : ctrl.rows.length === 0 ? (
+            <Card>
+              <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
+            </Card>
           ) : view === 'board' ? (
             <DealsBoard
-              deals={deals}
+              deals={ctrl.rows}
               onMove={handleMove}
               onEdit={(d) => setForm({ open: true, deal: d })}
               onDelete={(d) => setToDelete(d)}
@@ -117,17 +137,29 @@ export function DealsView(props: DealsViewProps) {
                 <Table>
                   <THead>
                     <TR className="hover:bg-transparent">
-                      <TH>{t('deals.columns.title')}</TH>
-                      <TH>{t('deals.columns.client')}</TH>
-                      <TH>{t('deals.columns.stage')}</TH>
-                      <TH className="text-right">{t('deals.columns.amount')}</TH>
-                      <TH className="text-right">{t('deals.columns.probability')}</TH>
-                      <TH>{t('deals.columns.close')}</TH>
+                      <TH>
+                        <SortHeader label={t('deals.columns.title')} sortKey="title" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('deals.columns.client')} sortKey="client" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('deals.columns.stage')} sortKey="stage" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH className="text-right">
+                        <SortHeader label={t('deals.columns.amount')} sortKey="amount" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} align="right" />
+                      </TH>
+                      <TH className="text-right">
+                        <SortHeader label={t('deals.columns.probability')} sortKey="probability" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} align="right" />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('deals.columns.close')} sortKey="close" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
                       <TH className="text-right">{t('common.actions')}</TH>
                     </TR>
                   </THead>
                   <TBody>
-                    {deals.map((d) => (
+                    {ctrl.rows.map((d) => (
                       <TR key={d.id}>
                         <TD className="font-medium text-white">{d.title}</TD>
                         <TD>{d.clientName ?? '—'}</TD>

@@ -10,6 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ProductFormModal } from './product-form-modal'
+import { SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatMoney } from '@/lib/utils'
 import { removeProduct } from '@/app/(app)/products/actions'
@@ -20,10 +21,20 @@ type ProductsViewProps =
   | { status: 'error' }
   | { status: 'ok'; rows: Product[] }
 
+const productSearch = (p: Product) => `${p.name} ${p.sku ?? ''}`
+const PRODUCT_SORTS: Record<string, (p: Product) => string | number> = {
+  sku: (p) => (p.sku ?? '').toLowerCase(),
+  name: (p) => p.name.toLowerCase(),
+  price: (p) => p.price,
+  unit: (p) => p.unit,
+  state: (p) => (p.active ? 1 : 0),
+}
+
 export function ProductsView(props: ProductsViewProps) {
   const { t, locale } = useI18n()
   const router = useRouter()
   const rows = props.status === 'ok' ? props.rows : []
+  const ctrl = useListControls(rows, productSearch, PRODUCT_SORTS, 'name')
 
   const [form, setForm] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null })
   const [toDelete, setToDelete] = useState<Product | null>(null)
@@ -63,21 +74,38 @@ export function ProductsView(props: ProductsViewProps) {
       {props.status === 'ok' && rows.length === 0 && <DataState state="empty" />}
 
       {props.status === 'ok' && rows.length > 0 && (
-        <Card className="p-0 overflow-hidden">
-          <div className="overflow-x-auto no-scrollbar">
-            <Table>
-              <THead>
-                <TR className="hover:bg-transparent">
-                  <TH>{t('products.columns.sku')}</TH>
-                  <TH>{t('products.columns.name')}</TH>
-                  <TH className="text-right">{t('products.columns.price')}</TH>
-                  <TH>{t('products.columns.unit')}</TH>
-                  <TH>{t('products.columns.state')}</TH>
-                  <TH className="text-right">{t('common.actions')}</TH>
-                </TR>
-              </THead>
-              <TBody>
-                {rows.map((p) => (
+        <>
+          <SearchInput value={ctrl.query} onChange={ctrl.setQuery} />
+          {ctrl.rows.length === 0 ? (
+            <Card>
+              <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
+            </Card>
+          ) : (
+            <Card className="p-0 overflow-hidden">
+              <div className="overflow-x-auto no-scrollbar">
+                <Table>
+                  <THead>
+                    <TR className="hover:bg-transparent">
+                      <TH>
+                        <SortHeader label={t('products.columns.sku')} sortKey="sku" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('products.columns.name')} sortKey="name" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH className="text-right">
+                        <SortHeader label={t('products.columns.price')} sortKey="price" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} align="right" />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('products.columns.unit')} sortKey="unit" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH>
+                        <SortHeader label={t('products.columns.state')} sortKey="state" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
+                      </TH>
+                      <TH className="text-right">{t('common.actions')}</TH>
+                    </TR>
+                  </THead>
+                  <TBody>
+                    {ctrl.rows.map((p) => (
                   <TR key={p.id}>
                     <TD className="font-mono text-[13px] text-white/60">{p.sku ?? '—'}</TD>
                     <TD className="font-medium text-white">{p.name}</TD>
@@ -109,11 +137,13 @@ export function ProductsView(props: ProductsViewProps) {
                       </div>
                     </TD>
                   </TR>
-                ))}
-              </TBody>
-            </Table>
-          </div>
-        </Card>
+                    ))}
+                  </TBody>
+                </Table>
+              </div>
+            </Card>
+          )}
+        </>
       )}
 
       {form.open && (
