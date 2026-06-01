@@ -12,13 +12,14 @@ export const ROLES: Role[] = ['owner', 'sales_manager', 'brewer']
 export const DEFAULT_ROLE: Role = 'owner'
 
 /** Functional areas of the app. Nav sections + routes belong to one. */
-export type ModuleKey = 'overview' | 'crm' | 'production' | 'admin'
+export type ModuleKey = 'overview' | 'calendar' | 'crm' | 'production' | 'admin'
 
-/** Which modules each role may access. Owner sees everything. */
+/** Which modules each role may access. Owner sees everything. Calendar is
+    cross-cutting and available to every role. */
 export const ROLE_MODULES: Record<Role, ModuleKey[]> = {
-  owner: ['overview', 'crm', 'production', 'admin'],
-  sales_manager: ['overview', 'crm'],
-  brewer: ['overview', 'production'],
+  owner: ['overview', 'calendar', 'crm', 'production', 'admin'],
+  sales_manager: ['overview', 'calendar', 'crm'],
+  brewer: ['overview', 'calendar', 'production'],
 }
 
 export function canAccess(role: Role, mod: ModuleKey): boolean {
@@ -28,6 +29,7 @@ export function canAccess(role: Role, mod: ModuleKey): boolean {
 /** Map a pathname to the module that guards it (null = unguarded). */
 export function moduleForPath(pathname: string): ModuleKey | null {
   if (pathname.startsWith('/dashboard')) return 'overview'
+  if (pathname.startsWith('/calendar')) return 'calendar'
   if (
     pathname.startsWith('/clients') ||
     pathname.startsWith('/deals') ||

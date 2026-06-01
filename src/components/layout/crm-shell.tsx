@@ -4,6 +4,7 @@ import { useEffect, type ReactNode } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  CalendarDays,
   Users,
   Handshake,
   ShoppingCart,
@@ -53,6 +54,15 @@ export function CrmShell({
     : undefined;
 
   const sectionDefs: { module: ModuleKey; section: NavSection }[] = [
+    {
+      module: "calendar",
+      section: {
+        id: "planning",
+        label: t("nav.sections.planning"),
+        icon: CalendarDays,
+        items: [{ href: "/calendar", label: t("nav.calendar"), icon: CalendarDays }],
+      },
+    },
     {
       module: "crm",
       section: {

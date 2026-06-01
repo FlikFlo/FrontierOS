@@ -201,6 +201,35 @@ export interface Database {
           },
         ]
       }
+      reminders: {
+        Row: {
+          id: string
+          title: string
+          due_date: string
+          client_id: string | null
+          done: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          due_date: string
+          client_id?: string | null
+          done?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['reminders']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'reminders_client_id_fkey'
+            columns: ['client_id']
+            referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       order_items: {
         Row: {
           id: string
@@ -252,3 +281,4 @@ export type Product = Database['public']['Tables']['products']['Row']
 export type Deal = Database['public']['Tables']['deals']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 export type OrderItem = Database['public']['Tables']['order_items']['Row']
+export type Reminder = Database['public']['Tables']['reminders']['Row']

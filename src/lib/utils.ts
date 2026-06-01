@@ -21,6 +21,13 @@ export function formatMoney(amount: number, currency: string, locale: string): s
   }).format(amount)
 }
 
+/** Build a WhatsApp click-to-chat link from a phone number (null if none). */
+export function waLink(phone: string | null | undefined): string | null {
+  if (!phone) return null
+  const digits = phone.replace(/\D/g, '')
+  return digits ? `https://wa.me/${digits}` : null
+}
+
 /** Short date (e.g. 12 Jun 2026) for the active UI locale; null → em dash. */
 export function formatDate(value: string | null, locale: string): string {
   if (!value) return '—'

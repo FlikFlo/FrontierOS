@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, MessageCircle } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -12,6 +12,7 @@ import { DataState } from '../data-state'
 import { ClientFormModal } from './client-form-modal'
 import { useI18n } from '@/i18n/provider'
 import { removeClient } from '@/app/(app)/clients/actions'
+import { waLink } from '@/lib/utils'
 import type { Client, ClientStatus } from '@/types/database'
 
 type ClientsViewProps =
@@ -93,6 +94,18 @@ export function ClientsView(props: ClientsViewProps) {
                     </TD>
                     <TD className="text-right">
                       <div className="flex items-center justify-end gap-1">
+                        {waLink(c.phone) && (
+                          <a
+                            href={waLink(c.phone)!}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            aria-label={t('common.whatsapp')}
+                            title={t('common.whatsapp')}
+                            className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-success/10 hover:text-success transition-colors"
+                          >
+                            <MessageCircle size={14} />
+                          </a>
+                        )}
                         <button
                           onClick={() => setForm({ open: true, client: c })}
                           aria-label={t('common.edit')}

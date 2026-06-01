@@ -7,12 +7,13 @@ import type { Locale } from './config'
 const en = {
   nav: {
     dashboard: 'Dashboard',
+    calendar: 'Calendar',
     clients: 'Clients',
     deals: 'Deals',
     orders: 'Orders',
     products: 'Products',
     settings: 'Settings',
-    sections: { sales: 'Sales', catalog: 'Catalog', system: 'System' },
+    sections: { planning: 'Planning', sales: 'Sales', catalog: 'Catalog', system: 'System' },
   },
   pages: {
     dashboard: { subtitle: 'Overview of key metrics' },
@@ -42,6 +43,21 @@ const en = {
     save: 'Save',
     saving: 'Saving…',
     actions: 'Actions',
+    whatsapp: 'WhatsApp',
+  },
+  calendar: {
+    subtitle: 'Reminders & follow-ups',
+    today: 'Today',
+    form: {
+      newTitle: 'New reminder',
+      editTitle: 'Edit reminder',
+      title: 'Title',
+      date: 'Date',
+      client: 'Client',
+      noClient: '— No client —',
+      done: 'Done',
+    },
+    delete: { title: 'Delete reminder?', body: 'This permanently removes “{title}”.' },
   },
   clients: {
     total: '{count} total',
@@ -128,12 +144,13 @@ type Dictionary = typeof en
 const fr: Dictionary = {
   nav: {
     dashboard: 'Tableau de bord',
+    calendar: 'Calendrier',
     clients: 'Clients',
     deals: 'Affaires',
     orders: 'Commandes',
     products: 'Produits',
     settings: 'Paramètres',
-    sections: { sales: 'Ventes', catalog: 'Catalogue', system: 'Système' },
+    sections: { planning: 'Planification', sales: 'Ventes', catalog: 'Catalogue', system: 'Système' },
   },
   pages: {
     dashboard: { subtitle: 'Aperçu des indicateurs clés' },
@@ -163,6 +180,21 @@ const fr: Dictionary = {
     save: 'Enregistrer',
     saving: 'Enregistrement…',
     actions: 'Actions',
+    whatsapp: 'WhatsApp',
+  },
+  calendar: {
+    subtitle: 'Rappels et relances',
+    today: 'Aujourd’hui',
+    form: {
+      newTitle: 'Nouveau rappel',
+      editTitle: 'Modifier le rappel',
+      title: 'Titre',
+      date: 'Date',
+      client: 'Client',
+      noClient: '— Aucun client —',
+      done: 'Terminé',
+    },
+    delete: { title: 'Supprimer le rappel ?', body: 'Cela supprime définitivement « {title} ».' },
   },
   clients: {
     total: '{count} au total',
