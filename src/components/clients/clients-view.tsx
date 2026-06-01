@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2, MessageCircle, Globe } from 'lucide-react'
 import { Card } from '../ui/card'
@@ -117,11 +118,11 @@ export function ClientsView(props: ClientsViewProps) {
                       <TH>
                         <SortHeader label={t('clients.columns.name')} sortKey="name" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
-                      <TH>
+                      <TH className="hidden md:table-cell">
                         <SortHeader label={t('clients.columns.industry')} sortKey="industry" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
-                      <TH>{t('clients.columns.email')}</TH>
-                      <TH>{t('clients.columns.phone')}</TH>
+                      <TH className="hidden lg:table-cell">{t('clients.columns.email')}</TH>
+                      <TH className="hidden md:table-cell">{t('clients.columns.phone')}</TH>
                       <TH>
                         <SortHeader label={t('clients.columns.status')} sortKey="status" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
@@ -131,10 +132,14 @@ export function ClientsView(props: ClientsViewProps) {
                   <TBody>
                     {ctrl.pageRows.map((c) => (
                   <TR key={c.id}>
-                    <TD className="font-medium text-white">{c.name}</TD>
-                    <TD>{c.industry ?? '—'}</TD>
-                    <TD className="font-mono text-[13px] text-white/60">{c.email ?? '—'}</TD>
-                    <TD className="font-mono text-[13px] text-white/60">{c.phone ?? '—'}</TD>
+                    <TD className="font-medium">
+                      <Link href={`/clients/${c.id}`} className="text-white hover:text-primary-light transition-colors">
+                        {c.name}
+                      </Link>
+                    </TD>
+                    <TD className="hidden md:table-cell">{c.industry ?? '—'}</TD>
+                    <TD className="hidden font-mono text-[13px] text-white/60 lg:table-cell">{c.email ?? '—'}</TD>
+                    <TD className="hidden font-mono text-[13px] text-white/60 md:table-cell">{c.phone ?? '—'}</TD>
                     <TD>
                       <Badge variant={STATUS_VARIANT[c.status]}>{t(`clients.status.${c.status}`)}</Badge>
                     </TD>

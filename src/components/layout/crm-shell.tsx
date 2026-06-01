@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -34,9 +35,11 @@ import type { NavItem, NavSection } from "./types";
 export function CrmShell({
   children,
   userEmail = null,
+  overdueCount = 0,
 }: {
   children: ReactNode
   userEmail?: string | null
+  overdueCount?: number
 }) {
   const { t } = useI18n();
   const { role } = useRole();
@@ -99,10 +102,10 @@ export function CrmShell({
 
   const bottomDefs: { module: ModuleKey; item: NavItem }[] = [
     { module: "overview", item: { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard } },
+    { module: "calendar", item: { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays, badge: overdueCount } },
     { module: "crm", item: { href: "/clients", label: t("nav.clients"), icon: Users } },
     { module: "crm", item: { href: "/deals", label: t("nav.deals"), icon: Handshake } },
     { module: "crm", item: { href: "/orders", label: t("nav.orders"), icon: ShoppingCart } },
-    { module: "admin", item: { href: "/settings", label: t("nav.settings"), icon: Settings } },
   ];
   const bottomNav = bottomDefs.filter((d) => canAccess(role, d.module)).map((d) => d.item);
 
@@ -117,12 +120,18 @@ export function CrmShell({
         topbarActions={
           <>
             <LangSwitcher />
-            <button
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
+            <Link
+              href="/calendar"
+              className="relative flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
               aria-label={t("a11y.notifications")}
             >
               <Bell size={18} />
-            </button>
+              {overdueCount > 0 && (
+                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-white">
+                  {overdueCount > 9 ? "9+" : overdueCount}
+                </span>
+              )}
+            </Link>
             <UserMenu email={userEmail} />
           </>
         }
