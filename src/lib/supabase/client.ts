@@ -1,6 +1,5 @@
 import { createBrowserClient } from '@supabase/ssr'
-// NOTE: typed client (`createBrowserClient<Database>`) returns once the CRM
-// schema + generated types land. Untyped for now during the rebuild.
+import type { Database } from '@/types/database'
 
 export function isSupabaseConfigured() {
   return Boolean(
@@ -11,7 +10,7 @@ export function isSupabaseConfigured() {
 
 export function createClient() {
   if (!isSupabaseConfigured()) return null
-  return createBrowserClient(
+  return createBrowserClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
   )

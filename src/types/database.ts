@@ -1,0 +1,232 @@
+// FrontierOS CRM — database types.
+// Hand-authored to match supabase/schema.sql. When the Supabase CLI is set up,
+// these can be regenerated with `supabase gen types typescript`.
+
+export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
+
+export type ClientStatus = 'lead' | 'active' | 'inactive'
+export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
+export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
+
+export interface Database {
+  public: {
+    Tables: {
+      clients: {
+        Row: {
+          id: string
+          name: string
+          industry: string | null
+          website: string | null
+          email: string | null
+          phone: string | null
+          address: string | null
+          status: ClientStatus
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          industry?: string | null
+          website?: string | null
+          email?: string | null
+          phone?: string | null
+          address?: string | null
+          status?: ClientStatus
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['clients']['Insert']>
+        Relationships: []
+      }
+      contacts: {
+        Row: {
+          id: string
+          client_id: string
+          first_name: string
+          last_name: string | null
+          title: string | null
+          email: string | null
+          phone: string | null
+          is_primary: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          client_id: string
+          first_name: string
+          last_name?: string | null
+          title?: string | null
+          email?: string | null
+          phone?: string | null
+          is_primary?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['contacts']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'contacts_client_id_fkey'
+            columns: ['client_id']
+            referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      products: {
+        Row: {
+          id: string
+          sku: string | null
+          name: string
+          description: string | null
+          price: number
+          currency: string
+          unit: string
+          active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          sku?: string | null
+          name: string
+          description?: string | null
+          price?: number
+          currency?: string
+          unit?: string
+          active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['products']['Insert']>
+        Relationships: []
+      }
+      deals: {
+        Row: {
+          id: string
+          title: string
+          client_id: string | null
+          contact_id: string | null
+          stage: DealStage
+          amount: number
+          currency: string
+          probability: number
+          expected_close_date: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          title: string
+          client_id?: string | null
+          contact_id?: string | null
+          stage?: DealStage
+          amount?: number
+          currency?: string
+          probability?: number
+          expected_close_date?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['deals']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'deals_client_id_fkey'
+            columns: ['client_id']
+            referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'deals_contact_id_fkey'
+            columns: ['contact_id']
+            referencedRelation: 'contacts'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          id: string
+          order_number: string
+          client_id: string | null
+          status: OrderStatus
+          order_date: string
+          currency: string
+          notes: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          order_number: string
+          client_id?: string | null
+          status?: OrderStatus
+          order_date?: string
+          currency?: string
+          notes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['orders']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'orders_client_id_fkey'
+            columns: ['client_id']
+            referencedRelation: 'clients'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          id: string
+          order_id: string
+          product_id: string | null
+          description: string | null
+          quantity: number
+          unit_price: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          order_id: string
+          product_id?: string | null
+          description?: string | null
+          quantity?: number
+          unit_price?: number
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['order_items']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'order_items_order_id_fkey'
+            columns: ['order_id']
+            referencedRelation: 'orders'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'order_items_product_id_fkey'
+            columns: ['product_id']
+            referencedRelation: 'products'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+    }
+    Views: Record<string, never>
+    Functions: Record<string, never>
+    Enums: Record<string, never>
+    CompositeTypes: Record<string, never>
+  }
+}
+
+/** Convenience row aliases. */
+export type Client = Database['public']['Tables']['clients']['Row']
+export type Contact = Database['public']['Tables']['contacts']['Row']
+export type Product = Database['public']['Tables']['products']['Row']
+export type Deal = Database['public']['Tables']['deals']['Row']
+export type Order = Database['public']['Tables']['orders']['Row']
+export type OrderItem = Database['public']['Tables']['order_items']['Row']
