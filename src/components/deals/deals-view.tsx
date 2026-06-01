@@ -11,7 +11,7 @@ import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { DealsBoard } from './deals-board'
 import { DealFormModal, type ClientOption } from './deal-form-modal'
-import { SearchInput, SortHeader, useListControls } from '../list-controls'
+import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { moveDeal, removeDeal } from '@/app/(app)/deals/actions'
@@ -159,7 +159,7 @@ export function DealsView(props: DealsViewProps) {
                     </TR>
                   </THead>
                   <TBody>
-                    {ctrl.rows.map((d) => (
+                    {ctrl.pageRows.map((d) => (
                       <TR key={d.id}>
                         <TD className="font-medium text-white">{d.title}</TD>
                         <TD>{d.clientName ?? '—'}</TD>
@@ -194,6 +194,7 @@ export function DealsView(props: DealsViewProps) {
                   </TBody>
                 </Table>
               </div>
+              <Pager page={ctrl.page} pageCount={ctrl.pageCount} onPage={ctrl.setPage} />
             </Card>
           )}
         </>

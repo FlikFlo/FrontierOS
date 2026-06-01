@@ -10,7 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ClientFormModal } from './client-form-modal'
-import { SearchInput, SortHeader, useListControls } from '../list-controls'
+import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { removeClient } from '@/app/(app)/clients/actions'
 import { waLink } from '@/lib/utils'
@@ -105,7 +105,7 @@ export function ClientsView(props: ClientsViewProps) {
                     </TR>
                   </THead>
                   <TBody>
-                    {ctrl.rows.map((c) => (
+                    {ctrl.pageRows.map((c) => (
                   <TR key={c.id}>
                     <TD className="font-medium text-white">{c.name}</TD>
                     <TD>{c.industry ?? '—'}</TD>
@@ -149,6 +149,7 @@ export function ClientsView(props: ClientsViewProps) {
                   </TBody>
                 </Table>
               </div>
+              <Pager page={ctrl.page} pageCount={ctrl.pageCount} onPage={ctrl.setPage} />
             </Card>
           )}
         </>

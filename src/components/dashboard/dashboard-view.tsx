@@ -41,7 +41,7 @@ function Kpi({ label, value, sub }: { label: string; value: string; sub: string 
 }
 
 export function DashboardView(props: DashboardViewProps) {
-  const { t, locale } = useI18n()
+  const { t, tn, locale } = useI18n()
 
   const header = (
     <div>
@@ -75,17 +75,17 @@ export function DashboardView(props: DashboardViewProps) {
         <Kpi
           label={t('dashboard.kpi.pipeline')}
           value={formatMoney(m.openValue, 'MAD', locale)}
-          sub={t('dashboard.kpi.pipelineSub', { n: m.openCount })}
+          sub={tn('dashboard.kpi.pipelineSub', m.openCount)}
         />
         <Kpi
           label={t('dashboard.kpi.won')}
           value={formatMoney(m.wonValue, 'MAD', locale)}
-          sub={t('dashboard.kpi.wonSub', { n: m.wonCount })}
+          sub={tn('dashboard.kpi.wonSub', m.wonCount)}
         />
         <Kpi
           label={t('dashboard.kpi.revenue')}
           value={formatMoney(m.revenue, 'MAD', locale)}
-          sub={t('dashboard.kpi.revenueSub', { n: m.ordersCount })}
+          sub={tn('dashboard.kpi.revenueSub', m.ordersCount)}
         />
       </div>
 

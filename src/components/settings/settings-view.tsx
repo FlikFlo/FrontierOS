@@ -10,7 +10,17 @@ import { useI18n } from '@/i18n/provider'
 import { createClient } from '@/lib/supabase/client'
 import type { Role } from '@/rbac/config'
 
-export function SettingsView({ email, role }: { email: string | null; role: Role }) {
+export type TeamMember = { id: string; email: string | null; full_name: string | null; role: Role }
+
+export function SettingsView({
+  email,
+  role,
+  members = [],
+}: {
+  email: string | null
+  role: Role
+  members?: TeamMember[]
+}) {
   const { t } = useI18n()
   const router = useRouter()
 
@@ -58,6 +68,28 @@ export function SettingsView({ email, role }: { email: string | null; role: Role
           </CardContent>
         </Card>
       </div>
+
+      {role === 'owner' && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('settings.team')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {members.length === 0 ? (
+              <p className="text-[13px] text-white/45">{t('settings.noMembers')}</p>
+            ) : (
+              <ul className="divide-y divide-white/[0.06]">
+                {members.map((m) => (
+                  <li key={m.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                    <span className="font-mono text-[13px] text-white/80">{m.email ?? m.full_name ?? '—'}</span>
+                    <Badge variant={m.role === 'owner' ? 'accent' : 'default'}>{t(`roles.${m.role}`)}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>

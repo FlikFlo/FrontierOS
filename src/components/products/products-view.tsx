@@ -10,7 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ProductFormModal } from './product-form-modal'
-import { SearchInput, SortHeader, useListControls } from '../list-controls'
+import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatMoney } from '@/lib/utils'
 import { removeProduct } from '@/app/(app)/products/actions'
@@ -105,7 +105,7 @@ export function ProductsView(props: ProductsViewProps) {
                     </TR>
                   </THead>
                   <TBody>
-                    {ctrl.rows.map((p) => (
+                    {ctrl.pageRows.map((p) => (
                   <TR key={p.id}>
                     <TD className="font-mono text-[13px] text-white/60">{p.sku ?? '—'}</TD>
                     <TD className="font-medium text-white">{p.name}</TD>
@@ -141,6 +141,7 @@ export function ProductsView(props: ProductsViewProps) {
                   </TBody>
                 </Table>
               </div>
+              <Pager page={ctrl.page} pageCount={ctrl.pageCount} onPage={ctrl.setPage} />
             </Card>
           )}
         </>

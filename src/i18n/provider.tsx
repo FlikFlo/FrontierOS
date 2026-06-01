@@ -11,6 +11,8 @@ interface I18nContextValue {
   setLocale: (locale: Locale) => void
   /** Translate a dotted key, interpolating `{var}` placeholders. */
   t: (key: string, vars?: Vars) => string
+  /** Plural-aware translate: key resolves to { one, other, … }; `{n}` = count. */
+  tn: (key: string, count: number, vars?: Vars) => string
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null)
@@ -56,7 +58,20 @@ export function I18nProvider({
     [locale],
   )
 
-  const value = useMemo(() => ({ locale, setLocale, t }), [locale, setLocale, t])
+  const tn = useCallback(
+    (key: string, count: number, vars?: Vars) => {
+      const node = lookup(dictionaries[locale], key)
+      const tag = locale === 'fr' ? 'fr-FR' : 'en-US'
+      const cat = new Intl.PluralRules(tag).select(count)
+      const obj = node && typeof node === 'object' ? (node as Record<string, unknown>) : {}
+      const template =
+        typeof obj[cat] === 'string' ? obj[cat] : typeof obj.other === 'string' ? obj.other : key
+      return interpolate(String(template), { ...vars, n: count, count })
+    },
+    [locale],
+  )
+
+  const value = useMemo(() => ({ locale, setLocale, t, tn }), [locale, setLocale, t, tn])
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>
 }

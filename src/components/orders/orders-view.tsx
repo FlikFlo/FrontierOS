@@ -10,7 +10,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
-import { SearchInput, SortHeader, useListControls } from '../list-controls'
+import { Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { removeOrder } from '@/app/(app)/orders/actions'
@@ -143,7 +143,7 @@ export function OrdersView(props: OrdersViewProps) {
                     </TR>
                   </THead>
                   <TBody>
-                    {ctrl.rows.map((o) => (
+                    {ctrl.pageRows.map((o) => (
                   <TR key={o.id}>
                     <TD className="font-mono text-[13px] font-medium text-white">{o.order_number}</TD>
                     <TD>{o.clientName ?? '—'}</TD>
@@ -178,6 +178,7 @@ export function OrdersView(props: OrdersViewProps) {
                   </TBody>
                 </Table>
               </div>
+              <Pager page={ctrl.page} pageCount={ctrl.pageCount} onPage={ctrl.setPage} />
             </Card>
           )}
         </>
