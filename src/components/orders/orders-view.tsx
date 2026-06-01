@@ -1,29 +1,45 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
 import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
-import { ListHeader } from '../list-header'
+import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
+import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney } from '@/lib/utils'
+import { removeOrder } from '@/app/(app)/orders/actions'
 import type { OrderStatus } from '@/types/database'
+
+export type OrderLine = {
+  product_id: string | null
+  description: string | null
+  quantity: number
+  unit_price: number
+}
 
 export type OrderRow = {
   id: string
   order_number: string
+  client_id: string | null
   clientName: string | null
   status: OrderStatus
   order_date: string
   currency: string
+  notes: string | null
   total: number
   itemCount: number
+  lines: OrderLine[]
 }
 
 type OrdersViewProps =
   | { status: 'unconfigured' }
   | { status: 'error' }
-  | { status: 'ok'; rows: OrderRow[] }
+  | { status: 'ok'; rows: OrderRow[]; clients: ClientOpt[]; products: ProductOpt[] }
 
 const STATUS_VARIANT: Record<OrderStatus, 'default' | 'warning' | 'success' | 'danger' | 'accent'> = {
   draft: 'default',
@@ -33,18 +49,48 @@ const STATUS_VARIANT: Record<OrderStatus, 'default' | 'warning' | 'success' | 'd
   cancelled: 'danger',
 }
 
+const NO_OPTS: never[] = []
+
 export function OrdersView(props: OrdersViewProps) {
   const { t, locale } = useI18n()
+  const router = useRouter()
   const rows = props.status === 'ok' ? props.rows : []
+  const clients = props.status === 'ok' ? props.clients : (NO_OPTS as ClientOpt[])
+  const products = props.status === 'ok' ? props.products : (NO_OPTS as ProductOpt[])
+  const today = new Date().toISOString().slice(0, 10)
+
+  const [form, setForm] = useState<{ open: boolean; order: OrderRow | null }>({ open: false, order: null })
+  const [toDelete, setToDelete] = useState<OrderRow | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  async function confirmDelete() {
+    if (!toDelete) return
+    setDeleting(true)
+    await removeOrder(toDelete.id)
+    setDeleting(false)
+    setToDelete(null)
+    router.refresh()
+  }
 
   return (
     <div className="space-y-4">
-      <ListHeader
-        titleKey="nav.orders"
-        subtitleKey="pages.orders.subtitle"
-        totalKey="orders.total"
-        count={props.status === 'ok' ? rows.length : undefined}
-      />
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">{t('nav.orders')}</h1>
+          <p className="mt-1 text-sm text-white/45">{t('pages.orders.subtitle')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {props.status === 'ok' && rows.length > 0 && (
+            <Badge variant="accent">{t('orders.total', { count: rows.length })}</Badge>
+          )}
+          {props.status === 'ok' && (
+            <Button size="sm" onClick={() => setForm({ open: true, order: null })}>
+              <Plus size={15} />
+              {t('common.new')}
+            </Button>
+          )}
+        </div>
+      </div>
 
       {props.status === 'unconfigured' && <DataState state="unconfigured" />}
       {props.status === 'error' && <DataState state="error" />}
@@ -62,6 +108,7 @@ export function OrdersView(props: OrdersViewProps) {
                   <TH>{t('orders.columns.date')}</TH>
                   <TH className="text-right">{t('orders.columns.items')}</TH>
                   <TH className="text-right">{t('orders.columns.total')}</TH>
+                  <TH className="text-right">{t('common.actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -77,6 +124,24 @@ export function OrdersView(props: OrdersViewProps) {
                     <TD className="text-right font-mono tabular-nums text-white">
                       {formatMoney(o.total, o.currency, locale)}
                     </TD>
+                    <TD className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setForm({ open: true, order: o })}
+                          aria-label={t('common.edit')}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white transition-colors"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => setToDelete(o)}
+                          aria-label={t('common.delete')}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-danger/10 hover:text-danger transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </TD>
                   </TR>
                 ))}
               </TBody>
@@ -84,6 +149,28 @@ export function OrdersView(props: OrdersViewProps) {
           </div>
         </Card>
       )}
+
+      {form.open && (
+        <OrderFormModal
+          key={form.order?.id ?? 'new'}
+          open
+          clients={clients}
+          products={products}
+          order={form.order}
+          today={today}
+          onClose={() => setForm({ open: false, order: null })}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(toDelete)}
+        title={t('orders.delete.title')}
+        body={toDelete ? t('orders.delete.body', { number: toDelete.order_number }) : undefined}
+        confirmLabel={deleting ? t('common.saving') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setToDelete(null)}
+      />
     </div>
   )
 }

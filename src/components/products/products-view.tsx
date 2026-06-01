@@ -1,12 +1,18 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
+import { Button } from '../ui/button'
 import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
-import { ListHeader } from '../list-header'
+import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
+import { ProductFormModal } from './product-form-modal'
 import { useI18n } from '@/i18n/provider'
 import { formatMoney } from '@/lib/utils'
+import { removeProduct } from '@/app/(app)/products/actions'
 import type { Product } from '@/types/database'
 
 type ProductsViewProps =
@@ -16,16 +22,41 @@ type ProductsViewProps =
 
 export function ProductsView(props: ProductsViewProps) {
   const { t, locale } = useI18n()
+  const router = useRouter()
   const rows = props.status === 'ok' ? props.rows : []
+
+  const [form, setForm] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null })
+  const [toDelete, setToDelete] = useState<Product | null>(null)
+  const [deleting, setDeleting] = useState(false)
+
+  async function confirmDelete() {
+    if (!toDelete) return
+    setDeleting(true)
+    await removeProduct(toDelete.id)
+    setDeleting(false)
+    setToDelete(null)
+    router.refresh()
+  }
 
   return (
     <div className="space-y-4">
-      <ListHeader
-        titleKey="nav.products"
-        subtitleKey="pages.products.subtitle"
-        totalKey="products.total"
-        count={props.status === 'ok' ? rows.length : undefined}
-      />
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-white">{t('nav.products')}</h1>
+          <p className="mt-1 text-sm text-white/45">{t('pages.products.subtitle')}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {props.status === 'ok' && rows.length > 0 && (
+            <Badge variant="accent">{t('products.total', { count: rows.length })}</Badge>
+          )}
+          {props.status === 'ok' && (
+            <Button size="sm" onClick={() => setForm({ open: true, product: null })}>
+              <Plus size={15} />
+              {t('common.new')}
+            </Button>
+          )}
+        </div>
+      </div>
 
       {props.status === 'unconfigured' && <DataState state="unconfigured" />}
       {props.status === 'error' && <DataState state="error" />}
@@ -42,6 +73,7 @@ export function ProductsView(props: ProductsViewProps) {
                   <TH className="text-right">{t('products.columns.price')}</TH>
                   <TH>{t('products.columns.unit')}</TH>
                   <TH>{t('products.columns.state')}</TH>
+                  <TH className="text-right">{t('common.actions')}</TH>
                 </TR>
               </THead>
               <TBody>
@@ -58,6 +90,24 @@ export function ProductsView(props: ProductsViewProps) {
                         {t(`products.state.${p.active ? 'active' : 'inactive'}`)}
                       </Badge>
                     </TD>
+                    <TD className="text-right">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setForm({ open: true, product: p })}
+                          aria-label={t('common.edit')}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white transition-colors"
+                        >
+                          <Pencil size={14} />
+                        </button>
+                        <button
+                          onClick={() => setToDelete(p)}
+                          aria-label={t('common.delete')}
+                          className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-danger/10 hover:text-danger transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </TD>
                   </TR>
                 ))}
               </TBody>
@@ -65,6 +115,25 @@ export function ProductsView(props: ProductsViewProps) {
           </div>
         </Card>
       )}
+
+      {form.open && (
+        <ProductFormModal
+          key={form.product?.id ?? 'new'}
+          open
+          product={form.product}
+          onClose={() => setForm({ open: false, product: null })}
+        />
+      )}
+
+      <ConfirmDialog
+        open={Boolean(toDelete)}
+        title={t('products.delete.title')}
+        body={toDelete ? t('products.delete.body', { name: toDelete.name }) : undefined}
+        confirmLabel={deleting ? t('common.saving') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmDelete}
+        onCancel={() => setToDelete(null)}
+      />
     </div>
   )
 }
