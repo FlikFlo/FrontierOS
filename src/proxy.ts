@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
 import { isAuthBypassed } from '@/lib/dev-auth'
+import { canAccess, moduleForPath, isRole, DEFAULT_ROLE } from '@/rbac/config'
 
 /**
  * proxy — Next 16's middleware replacement. Refreshes the Supabase session on
@@ -52,6 +53,22 @@ export async function proxy(request: NextRequest) {
     redirectUrl.pathname = '/dashboard'
     redirectUrl.search = ''
     return NextResponse.redirect(redirectUrl)
+  }
+
+  // Server-side role enforcement: bounce a signed-in user away from a module
+  // their role can't access (mirrors the client nav guard, but authoritative).
+  if (user && !isAuthRoute) {
+    const mod = moduleForPath(pathname)
+    if (mod) {
+      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+      const role = isRole(profile?.role) ? profile.role : DEFAULT_ROLE
+      if (!canAccess(role, mod)) {
+        const redirectUrl = request.nextUrl.clone()
+        redirectUrl.pathname = '/dashboard'
+        redirectUrl.search = ''
+        return NextResponse.redirect(redirectUrl)
+      }
+    }
   }
 
   return response

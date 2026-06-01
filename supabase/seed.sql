@@ -6,10 +6,10 @@
 
 -- ── clients ────────────────────────────────────────────────────────────────
 insert into public.clients (id, name, industry, website, email, phone, status) values
-  ('11111111-1111-1111-1111-111111111101', 'Nordwind Logistics', 'Logistics',     'nordwind.example', 'hello@nordwind.example', '+33 1 23 45 67 01', 'active'),
-  ('11111111-1111-1111-1111-111111111102', 'Atlas Robotics',     'Manufacturing', 'atlas.example',    'sales@atlas.example',    '+33 1 23 45 67 02', 'active'),
-  ('11111111-1111-1111-1111-111111111103', 'Verde Organics',     'Food & Bev',    'verde.example',    'contact@verde.example',  '+33 1 23 45 67 03', 'lead'),
-  ('11111111-1111-1111-1111-111111111104', 'Helios Energy',      'Energy',        'helios.example',   'info@helios.example',    '+33 1 23 45 67 04', 'inactive')
+  ('11111111-1111-1111-1111-111111111101', 'Nordwind Logistics', 'Logistics',     'nordwind.example', 'hello@nordwind.example', '+212 5 22 00 00 01', 'active'),
+  ('11111111-1111-1111-1111-111111111102', 'Atlas Robotics',     'Manufacturing', 'atlas.example',    'sales@atlas.example',    '+212 5 22 00 00 02', 'active'),
+  ('11111111-1111-1111-1111-111111111103', 'Verde Organics',     'Food & Bev',    'verde.example',    'contact@verde.example',  '+212 6 61 00 00 03', 'lead'),
+  ('11111111-1111-1111-1111-111111111104', 'Helios Energy',      'Energy',        'helios.example',   'info@helios.example',    '+212 5 37 00 00 04', 'inactive')
 on conflict (id) do nothing;
 
 -- ── contacts ───────────────────────────────────────────────────────────────

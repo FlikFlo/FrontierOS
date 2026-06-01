@@ -115,6 +115,14 @@ const en = {
     },
     pipelineTitle: 'Pipeline by stage',
   },
+  settings: {
+    profile: 'Profile',
+    account: 'Account',
+    preferences: 'Preferences',
+    language: 'Language',
+    email: 'Email',
+    role: 'Role',
+  },
   roles: {
     owner: 'Owner',
     sales_manager: 'Sales manager',
@@ -253,6 +261,14 @@ const fr: Dictionary = {
       revenueSub: '{n} commandes',
     },
     pipelineTitle: 'Pipeline par étape',
+  },
+  settings: {
+    profile: 'Profil',
+    account: 'Compte',
+    preferences: 'Préférences',
+    language: 'Langue',
+    email: 'E-mail',
+    role: 'Rôle',
   },
   roles: {
     owner: 'Direction',
