@@ -3,6 +3,8 @@ import { DM_Sans, DM_Mono } from 'next/font/google'
 import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
 import { CrmShell } from '@/components/layout/crm-shell'
+import { I18nProvider } from '@/i18n/provider'
+import { getLocale } from '@/i18n/server'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -18,7 +20,7 @@ const dmMono = DM_Mono({
 
 export const metadata: Metadata = {
   title: 'FrontierOS',
-  description: 'CRM на дизайн-ките Croat',
+  description: 'CRM on the Croat design kit',
 }
 
 export const viewport: Viewport = {
@@ -27,13 +29,17 @@ export const viewport: Viewport = {
   viewportFit: 'cover',
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const locale = await getLocale()
+
   return (
-    <html lang="ru" className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}>
+    <html lang={locale} className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}>
       <body className="min-h-full">
-        <ToastProvider>
-          <CrmShell>{children}</CrmShell>
-        </ToastProvider>
+        <I18nProvider initialLocale={locale}>
+          <ToastProvider>
+            <CrmShell>{children}</CrmShell>
+          </ToastProvider>
+        </I18nProvider>
       </body>
     </html>
   )

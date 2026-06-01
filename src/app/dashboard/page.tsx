@@ -1,5 +1,5 @@
 import { Placeholder } from '@/components/placeholder'
 
 export default function Page() {
-  return <Placeholder title="Дашборд" subtitle="Обзор ключевых показателей" />
+  return <Placeholder titleKey="nav.dashboard" subtitleKey="pages.dashboard.subtitle" />
 }
