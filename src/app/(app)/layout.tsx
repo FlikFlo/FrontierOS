@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { RoleProvider } from '@/rbac/provider'
 import { CrmShell } from '@/components/layout/crm-shell'
 import { DEFAULT_ROLE, isRole } from '@/rbac/config'
+import { isAuthBypassed } from '@/lib/dev-auth'
 
 /**
  * Authenticated app layout. The proxy already gates unauthenticated traffic;
@@ -11,6 +12,15 @@ import { DEFAULT_ROLE, isRole } from '@/rbac/config'
  * absent (local boot without Supabase).
  */
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
+  // Dev bypass: render as owner, no session required.
+  if (isAuthBypassed()) {
+    return (
+      <RoleProvider role="owner">
+        <CrmShell userEmail="dev@local">{children}</CrmShell>
+      </RoleProvider>
+    )
+  }
+
   const supabase = await createClient()
 
   let role = DEFAULT_ROLE

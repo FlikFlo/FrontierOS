@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { isAuthBypassed } from '@/lib/dev-auth'
 
 /**
  * proxy — Next 16's middleware replacement. Refreshes the Supabase session on
@@ -14,7 +15,8 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request })
 
-  if (!url || !key) return response
+  // Dev bypass (and the no-env case) skip auth entirely.
+  if (isAuthBypassed() || !url || !key) return response
 
   const supabase = createServerClient(url, key, {
     cookies: {
