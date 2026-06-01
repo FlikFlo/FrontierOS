@@ -68,6 +68,19 @@ const en = {
     columns: { sku: 'SKU', name: 'Name', price: 'Price', unit: 'Unit', state: 'Status' },
     state: { active: 'Active', inactive: 'Archived' },
   },
+  dashboard: {
+    kpi: {
+      clients: 'Clients',
+      clientsSub: '{n} active',
+      pipeline: 'Open pipeline',
+      pipelineSub: '{n} deals',
+      won: 'Won',
+      wonSub: '{n} deals',
+      revenue: 'Orders revenue',
+      revenueSub: '{n} orders',
+    },
+    pipelineTitle: 'Pipeline by stage',
+  },
   roles: {
     owner: 'Owner',
     sales_manager: 'Sales manager',
@@ -159,6 +172,19 @@ const fr: Dictionary = {
     total: '{count} au total',
     columns: { sku: 'SKU', name: 'Nom', price: 'Prix', unit: 'Unité', state: 'Statut' },
     state: { active: 'Actif', inactive: 'Archivé' },
+  },
+  dashboard: {
+    kpi: {
+      clients: 'Clients',
+      clientsSub: '{n} actifs',
+      pipeline: 'Pipeline ouvert',
+      pipelineSub: '{n} affaires',
+      won: 'Gagné',
+      wonSub: '{n} affaires',
+      revenue: 'Chiffre commandes',
+      revenueSub: '{n} commandes',
+    },
+    pipelineTitle: 'Pipeline par étape',
   },
   roles: {
     owner: 'Direction',
