@@ -1,6 +1,7 @@
 "use client";
 
-import { type ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
@@ -14,58 +15,81 @@ import { AppShell } from "./app-shell";
 import { BottomNav } from "./bottom-nav";
 import { Avatar } from "../ui/avatar";
 import { LangSwitcher } from "../ui/lang-switcher";
+import { RoleSwitcher } from "../ui/role-switcher";
 import { useI18n } from "@/i18n/provider";
+import { useRole } from "@/rbac/provider";
+import { canAccess, moduleForPath, type ModuleKey } from "@/rbac/config";
 import type { NavItem, NavSection } from "./types";
 
-/* CRM navigation — stub destinations for the rebuild. Labels are translation
-   keys resolved at render so the nav re-localizes instantly on switch. Every
-   item resolves to a placeholder route so the shell is fully navigable. None
-   uses "/" as href, so the kit's pathname.startsWith() active logic stays
-   correct. */
+/* CRM navigation — labels are translation keys resolved at render; every
+   section/item is tagged with a module and filtered by the active role, so the
+   sidebar + bottom-nav only show what the role may access. A guard mirrors this
+   for direct URL access (real enforcement lands with auth + RLS). */
 
 /**
- * CrmShell — app chrome built on the Croat AppShell (Topbar + docked Sidebar)
- * plus a mobile BottomNav. The sidebar is a drawer below `lg` and docked from
- * `lg` up; the BottomNav shows only below `lg`. Content gets bottom padding on
- * mobile so the last rows clear the bottom bar.
+ * CrmShell — app chrome on the Croat AppShell (Topbar + docked Sidebar) plus a
+ * mobile BottomNav. Role-aware: nav is filtered and unauthorized routes redirect
+ * to the dashboard.
  */
 export function CrmShell({ children }: { children: ReactNode }) {
   const { t } = useI18n();
+  const { role } = useRole();
+  const pathname = usePathname();
+  const router = useRouter();
 
-  const pinned: NavItem = { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard };
+  // Guard: bounce direct navigation to a module the role can't access.
+  useEffect(() => {
+    const mod = moduleForPath(pathname);
+    if (mod && !canAccess(role, mod)) router.replace("/dashboard");
+  }, [pathname, role, router]);
 
-  const sections: NavSection[] = [
+  const pinned: NavItem | undefined = canAccess(role, "overview")
+    ? { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard }
+    : undefined;
+
+  const sectionDefs: { module: ModuleKey; section: NavSection }[] = [
     {
-      id: "sales",
-      label: t("nav.sections.sales"),
-      icon: Handshake,
-      items: [
-        { href: "/clients", label: t("nav.clients"), icon: Users },
-        { href: "/deals", label: t("nav.deals"), icon: Handshake },
-        { href: "/orders", label: t("nav.orders"), icon: ShoppingCart },
-      ],
+      module: "crm",
+      section: {
+        id: "sales",
+        label: t("nav.sections.sales"),
+        icon: Handshake,
+        items: [
+          { href: "/clients", label: t("nav.clients"), icon: Users },
+          { href: "/deals", label: t("nav.deals"), icon: Handshake },
+          { href: "/orders", label: t("nav.orders"), icon: ShoppingCart },
+        ],
+      },
     },
     {
-      id: "catalog",
-      label: t("nav.sections.catalog"),
-      icon: Package,
-      items: [{ href: "/products", label: t("nav.products"), icon: Package }],
+      module: "crm",
+      section: {
+        id: "catalog",
+        label: t("nav.sections.catalog"),
+        icon: Package,
+        items: [{ href: "/products", label: t("nav.products"), icon: Package }],
+      },
     },
     {
-      id: "system",
-      label: t("nav.sections.system"),
-      icon: Settings,
-      items: [{ href: "/settings", label: t("nav.settings"), icon: Settings }],
+      module: "admin",
+      section: {
+        id: "system",
+        label: t("nav.sections.system"),
+        icon: Settings,
+        items: [{ href: "/settings", label: t("nav.settings"), icon: Settings }],
+      },
     },
   ];
+  const sections = sectionDefs.filter((d) => canAccess(role, d.module)).map((d) => d.section);
 
-  const bottomNav: NavItem[] = [
-    { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard },
-    { href: "/clients", label: t("nav.clients"), icon: Users },
-    { href: "/deals", label: t("nav.deals"), icon: Handshake },
-    { href: "/orders", label: t("nav.orders"), icon: ShoppingCart },
-    { href: "/settings", label: t("nav.settings"), icon: Settings },
+  const bottomDefs: { module: ModuleKey; item: NavItem }[] = [
+    { module: "overview", item: { href: "/dashboard", label: t("nav.dashboard"), icon: LayoutDashboard } },
+    { module: "crm", item: { href: "/clients", label: t("nav.clients"), icon: Users } },
+    { module: "crm", item: { href: "/deals", label: t("nav.deals"), icon: Handshake } },
+    { module: "crm", item: { href: "/orders", label: t("nav.orders"), icon: ShoppingCart } },
+    { module: "admin", item: { href: "/settings", label: t("nav.settings"), icon: Settings } },
   ];
+  const bottomNav = bottomDefs.filter((d) => canAccess(role, d.module)).map((d) => d.item);
 
   return (
     <>
@@ -77,6 +101,7 @@ export function CrmShell({ children }: { children: ReactNode }) {
         }
         topbarActions={
           <>
+            <RoleSwitcher />
             <LangSwitcher />
             <button
               className="flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"

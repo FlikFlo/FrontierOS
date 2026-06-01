@@ -40,9 +40,15 @@ const en = {
     },
     error: 'Could not load clients',
   },
+  roles: {
+    owner: 'Owner',
+    sales_manager: 'Sales manager',
+    brewer: 'Brewer',
+  },
   a11y: {
     notifications: 'Notifications',
     language: 'Language',
+    role: 'Role',
   },
 }
 
@@ -85,9 +91,15 @@ const fr: Dictionary = {
     },
     error: 'Impossible de charger les clients',
   },
+  roles: {
+    owner: 'Direction',
+    sales_manager: 'Responsable commercial',
+    brewer: 'Brasseur',
+  },
   a11y: {
     notifications: 'Notifications',
     language: 'Langue',
+    role: 'Rôle',
   },
 }
 
