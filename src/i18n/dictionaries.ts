@@ -34,10 +34,21 @@ const en = {
     empty: { title: 'Nothing here yet', body: 'Run supabase/seed.sql to load demo data.' },
     error: 'Could not load data',
   },
+  common: {
+    new: 'New',
+    edit: 'Edit',
+    delete: 'Delete',
+    cancel: 'Cancel',
+    save: 'Save',
+    saving: 'Saving…',
+    actions: 'Actions',
+  },
   clients: {
     total: '{count} total',
     columns: { name: 'Name', industry: 'Industry', email: 'Email', phone: 'Phone', status: 'Status' },
     status: { lead: 'Lead', active: 'Active', inactive: 'Inactive' },
+    form: { newTitle: 'New client', editTitle: 'Edit client' },
+    delete: { title: 'Delete client?', body: 'This permanently removes “{name}”.' },
   },
   deals: {
     total: '{count} total',
@@ -112,10 +123,21 @@ const fr: Dictionary = {
     empty: { title: 'Rien pour l’instant', body: 'Exécutez supabase/seed.sql pour charger des données de démo.' },
     error: 'Impossible de charger les données',
   },
+  common: {
+    new: 'Nouveau',
+    edit: 'Modifier',
+    delete: 'Supprimer',
+    cancel: 'Annuler',
+    save: 'Enregistrer',
+    saving: 'Enregistrement…',
+    actions: 'Actions',
+  },
   clients: {
     total: '{count} au total',
     columns: { name: 'Nom', industry: 'Secteur', email: 'E-mail', phone: 'Téléphone', status: 'Statut' },
     status: { lead: 'Prospect', active: 'Actif', inactive: 'Inactif' },
+    form: { newTitle: 'Nouveau client', editTitle: 'Modifier le client' },
+    delete: { title: 'Supprimer le client ?', body: 'Cela supprime définitivement « {name} ».' },
   },
   deals: {
     total: '{count} au total',
