@@ -93,6 +93,7 @@ const en = {
       date: 'Date',
       client: 'Client',
       noClient: '— No client —',
+      assignee: 'Assignee',
       done: 'Done',
     },
     delete: { title: 'Delete reminder?', body: 'This permanently removes “{title}”.' },
@@ -176,6 +177,7 @@ const en = {
   },
   orders: {
     total: '{count} total',
+    proforma: 'Proforma',
     columns: { number: 'Order', client: 'Client', status: 'Status', date: 'Date', items: 'Items', total: 'Total' },
     status: { draft: 'Draft', confirmed: 'Confirmed', shipped: 'Shipped', delivered: 'Delivered', cancelled: 'Cancelled' },
     form: {
@@ -222,6 +224,12 @@ const en = {
       annual: 'Cases / yr (weighted)',
       outlets: 'Outlets',
     },
+    followupsTitle: 'Follow-ups · next 7 days',
+    followupsEmpty: 'Nothing due — you’re clear',
+    overdue: 'Overdue',
+    staleTitle: 'Stale deals · no activity 14d+',
+    staleEmpty: 'No stale deals',
+    daysStale: '{n}d',
   },
   settings: {
     profile: 'Profile',
@@ -373,6 +381,7 @@ const fr: Dictionary = {
       date: 'Date',
       client: 'Client',
       noClient: '— Aucun client —',
+      assignee: 'Responsable',
       done: 'Terminé',
     },
     delete: { title: 'Supprimer le rappel ?', body: 'Cela supprime définitivement « {title} ».' },
@@ -456,6 +465,7 @@ const fr: Dictionary = {
   },
   orders: {
     total: '{count} au total',
+    proforma: 'Proforma',
     columns: { number: 'Commande', client: 'Client', status: 'Statut', date: 'Date', items: 'Articles', total: 'Total' },
     status: { draft: 'Brouillon', confirmed: 'Confirmée', shipped: 'Expédiée', delivered: 'Livrée', cancelled: 'Annulée' },
     form: {
@@ -502,6 +512,12 @@ const fr: Dictionary = {
       annual: 'Caisses / an (pondéré)',
       outlets: 'Points de vente',
     },
+    followupsTitle: 'Relances · 7 prochains jours',
+    followupsEmpty: 'Rien à faire — tout est à jour',
+    overdue: 'En retard',
+    staleTitle: 'Affaires dormantes · sans activité 14j+',
+    staleEmpty: 'Aucune affaire dormante',
+    daysStale: '{n}j',
   },
   settings: {
     profile: 'Profil',

@@ -7,6 +7,7 @@ export type ReminderInput = {
   title: string
   due_date: string
   client_id: string | null
+  assignee_id: string | null
   done: boolean
 }
 

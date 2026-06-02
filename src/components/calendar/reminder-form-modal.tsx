@@ -16,17 +16,20 @@ import {
 import type { Reminder } from '@/types/database'
 
 export type ClientOpt = { id: string; name: string }
+export type MemberOpt = { id: string; name: string }
 
 export function ReminderFormModal({
   open,
   onClose,
   clients,
+  members = [],
   reminder,
   defaultDate,
 }: {
   open: boolean
   onClose: () => void
   clients: ClientOpt[]
+  members?: MemberOpt[]
   reminder?: Reminder | null
   defaultDate: string
 }) {
@@ -38,6 +41,7 @@ export function ReminderFormModal({
     title: reminder?.title ?? '',
     due_date: reminder?.due_date ?? defaultDate,
     client_id: reminder?.client_id ?? '',
+    assignee_id: reminder?.assignee_id ?? '',
     done: reminder?.done ?? false,
   })
   const [error, setError] = useState<string | null>(null)
@@ -55,6 +59,7 @@ export function ReminderFormModal({
       title: form.title.trim(),
       due_date: form.due_date,
       client_id: form.client_id || null,
+      assignee_id: form.assignee_id || null,
       done: form.done,
     }
     const res = editing ? await editReminder(reminder!.id, payload) : await addReminder(payload)
@@ -101,6 +106,18 @@ export function ReminderFormModal({
               ))}
             </Select>
           </div>
+        </div>
+
+        <div>
+          <Label htmlFor="r-assignee">{t('calendar.form.assignee')}</Label>
+          <Select id="r-assignee" value={form.assignee_id} onChange={(e) => set('assignee_id', e.target.value)}>
+            <option value="">{t('common.unassigned')}</option>
+            {members.map((m) => (
+              <option key={m.id} value={m.id}>
+                {m.name}
+              </option>
+            ))}
+          </Select>
         </div>
 
         <label className="flex items-center gap-2 text-sm text-white/70">

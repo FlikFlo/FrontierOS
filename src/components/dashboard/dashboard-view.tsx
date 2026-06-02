@@ -1,10 +1,12 @@
 'use client'
 
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
+import { Badge } from '../ui/badge'
 import { DataState } from '../data-state'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
-import { formatMoney, cn } from '@/lib/utils'
+import { formatMoney, formatDate, cn } from '@/lib/utils'
 import type { DealStage } from '@/types/database'
 
 const RT_TABLES = ['deals', 'orders', 'order_items', 'clients', 'products']
@@ -24,6 +26,15 @@ export type DashboardMetrics = {
   revenueByMonth: { month: string; value: number }[]
   topClients: { name: string; value: number }[]
   volume: { casesMonth: number; weightedCasesMonth: number; outlets: number }
+  followups: {
+    id: string
+    title: string
+    dueDate: string
+    overdue: boolean
+    clientName: string | null
+    assigneeName: string | null
+  }[]
+  staleDeals: { id: string; title: string; daysStale: number; ownerName: string | null }[]
 }
 
 type DashboardViewProps = { status: 'unconfigured' } | { status: 'ok'; metrics: DashboardMetrics }
@@ -208,6 +219,58 @@ export function DashboardView(props: DashboardViewProps) {
                     />
                   </div>
                 </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.followupsTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {m.followups.length === 0 ? (
+              <p className="text-[13px] text-white/45">{t('dashboard.followupsEmpty')}</p>
+            ) : (
+              m.followups.map((f) => (
+                <div key={f.id} className="flex items-center justify-between gap-3 py-1.5 text-sm">
+                  <div className="min-w-0">
+                    <p className="truncate text-white/85">{f.title}</p>
+                    <p className="truncate text-[12px] text-white/40">
+                      {[f.clientName, f.assigneeName].filter(Boolean).join(' · ') || '—'}
+                    </p>
+                  </div>
+                  <Badge variant={f.overdue ? 'danger' : 'default'}>
+                    {f.overdue ? t('dashboard.overdue') : formatDate(f.dueDate, locale)}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.staleTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-1">
+            {m.staleDeals.length === 0 ? (
+              <p className="text-[13px] text-white/45">{t('dashboard.staleEmpty')}</p>
+            ) : (
+              m.staleDeals.map((d) => (
+                <Link
+                  key={d.id}
+                  href={`/deals/${d.id}`}
+                  className="flex items-center justify-between gap-3 rounded-lg px-1 -mx-1 py-1.5 text-sm transition-colors hover:bg-white/[0.03]"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-white/85">{d.title}</p>
+                    <p className="truncate text-[12px] text-white/40">{d.ownerName ?? t('common.unassigned')}</p>
+                  </div>
+                  <Badge variant="warning">{t('dashboard.daysStale', { n: d.daysStale })}</Badge>
+                </Link>
               ))
             )}
           </CardContent>

@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Button } from '../ui/button'
 import { DataState } from '../data-state'
-import { ReminderFormModal, type ClientOpt } from './reminder-form-modal'
+import { ReminderFormModal, type ClientOpt, type MemberOpt } from './reminder-form-modal'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { cn } from '@/lib/utils'
@@ -16,7 +16,7 @@ const RT_TABLES = ['reminders']
 type CalendarViewProps =
   | { status: 'unconfigured' }
   | { status: 'error' }
-  | { status: 'ok'; reminders: Reminder[]; clients: ClientOpt[] }
+  | { status: 'ok'; reminders: Reminder[]; clients: ClientOpt[]; members: MemberOpt[] }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const dateKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -29,6 +29,7 @@ export function CalendarView(props: CalendarViewProps) {
   useRealtime(RT_TABLES)
   const reminders = props.status === 'ok' ? props.reminders : (NO as Reminder[])
   const clients = props.status === 'ok' ? props.clients : (NO as ClientOpt[])
+  const members = props.status === 'ok' ? props.members : (NO as MemberOpt[])
 
   const now = new Date()
   const [cursor, setCursor] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
@@ -182,6 +183,7 @@ export function CalendarView(props: CalendarViewProps) {
           key={form.reminder?.id ?? `new-${form.date}`}
           open
           clients={clients}
+          members={members}
           reminder={form.reminder}
           defaultDate={form.date}
           onClose={() => setForm((f) => ({ ...f, open: false }))}

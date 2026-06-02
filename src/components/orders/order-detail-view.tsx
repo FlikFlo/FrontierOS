@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, FileText } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -67,10 +67,21 @@ export function OrderDetailView({
           <h1 className="font-mono text-2xl font-semibold text-white">{order.order_number}</h1>
           <Badge variant={STATUS_VARIANT[order.status]}>{t(`orders.status.${order.status}`)}</Badge>
         </div>
-        <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
-          <Pencil size={14} />
-          {t('common.edit')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <a
+            href={`/proforma/${order.id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/15 px-3 text-[13px] font-medium text-white/80 transition-colors hover:bg-white/[0.06] hover:text-white"
+          >
+            <FileText size={14} />
+            {t('orders.proforma')}
+          </a>
+          <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+            <Pencil size={14} />
+            {t('common.edit')}
+          </Button>
+        </div>
       </div>
 
       <Card>

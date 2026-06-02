@@ -1,27 +1,34 @@
 import { createClient } from '@/lib/supabase/server'
 import { DashboardView, type DashboardMetrics } from '@/components/dashboard/dashboard-view'
+import { getTeamMembers } from '@/lib/team'
 import type { DealStage } from '@/types/database'
 
 const STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']
 const OPEN_STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation']
 const pad = (n: number) => String(n).padStart(2, '0')
+const STALE_DAYS = 14
+const dayKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
 
 export default async function DashboardPage() {
   const supabase = await createClient()
   if (!supabase) return <DashboardView status="unconfigured" />
 
-  const [clientsRes, dealsRes, ordersRes, itemsRes, productsRes] = await Promise.all([
+  const [clientsRes, dealsRes, ordersRes, itemsRes, productsRes, remindersRes, members] = await Promise.all([
     supabase.from('clients').select('id, name, status'),
-    supabase.from('deals').select('stage, amount, client_id, probability, est_cases_per_month, outlets'),
+    supabase.from('deals').select('id, title, stage, amount, client_id, owner_id, updated_at, probability, est_cases_per_month, outlets'),
     supabase.from('orders').select('id, order_date'),
     supabase.from('order_items').select('order_id, quantity, unit_price'),
     supabase.from('products').select('id'),
+    supabase.from('reminders').select('id, title, due_date, client_id, assignee_id, done').eq('done', false),
+    getTeamMembers(),
   ])
 
   const clients = clientsRes.data ?? []
   const deals = dealsRes.data ?? []
   const orders = ordersRes.data ?? []
   const items = itemsRes.data ?? []
+  const reminders = remindersRes.data ?? []
+  const memberName = new Map(members.map((m) => [m.id, m.name]))
 
   const sumAmount = (rows: { amount: number }[]) => rows.reduce((s, d) => s + Number(d.amount), 0)
   const openDeals = deals.filter((d) => OPEN_STAGES.includes(d.stage))
@@ -57,6 +64,36 @@ export default async function DashboardPage() {
     .sort((a, b) => b.value - a.value)
     .slice(0, 5)
 
+  // Follow-ups: open reminders due within the next 7 days or overdue.
+  const todayKey = dayKey(now)
+  const horizon = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 7)
+  const horizonKey = dayKey(horizon)
+  const followups = reminders
+    .filter((r) => r.due_date <= horizonKey)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))
+    .slice(0, 6)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      dueDate: r.due_date,
+      overdue: r.due_date < todayKey,
+      clientName: r.client_id ? nameById.get(r.client_id) ?? null : null,
+      assigneeName: r.assignee_id ? memberName.get(r.assignee_id) ?? null : null,
+    }))
+
+  // Stale deals: open deals untouched for STALE_DAYS+.
+  const staleCutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - STALE_DAYS)
+  const staleDeals = openDeals
+    .filter((d) => new Date(d.updated_at) < staleCutoff)
+    .sort((a, b) => a.updated_at.localeCompare(b.updated_at))
+    .slice(0, 6)
+    .map((d) => ({
+      id: d.id,
+      title: d.title,
+      daysStale: Math.floor((now.getTime() - new Date(d.updated_at).getTime()) / 86_400_000),
+      ownerName: d.owner_id ? memberName.get(d.owner_id) ?? null : null,
+    }))
+
   const metrics: DashboardMetrics = {
     clientsTotal: clients.length,
     clientsActive: clients.filter((c) => c.status === 'active').length,
@@ -81,6 +118,8 @@ export default async function DashboardPage() {
       ),
       outlets: openDeals.reduce((s, d) => s + Number(d.outlets ?? 0), 0),
     },
+    followups,
+    staleDeals,
   }
 
   return <DashboardView status="ok" metrics={metrics} />
