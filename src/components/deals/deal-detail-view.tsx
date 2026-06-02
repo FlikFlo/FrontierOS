@@ -10,12 +10,15 @@ import { Button } from '../ui/button'
 import { EntityThread, type AttachmentView } from '../entity-thread'
 import { DealFormModal, type ClientOption } from './deal-form-modal'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
 import type { Comment, Deal, DealStage } from '@/types/database'
 
 export type DealDetail = Deal & { clientName: string | null }
 export type DealContact = { name: string; title: string | null; phone: string | null; email: string | null }
 export type { AttachmentView }
+
+const RT_TABLES = ['deals']
 
 const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'danger'> = {
   lead: 'default',
@@ -50,6 +53,7 @@ export function DealDetailView({
 }) {
   const { t, locale } = useI18n()
   const router = useRouter()
+  useRealtime(RT_TABLES)
   const [editOpen, setEditOpen] = useState(false)
   const weighted = (deal.amount * deal.probability) / 100
   const cases = deal.est_cases_per_month

@@ -10,7 +10,10 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { EntityThread, type AttachmentView } from '../entity-thread'
 import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
+
+const RT_TABLES = ['orders', 'order_items']
 import type { OrderRow } from './orders-view'
 import type { Comment, OrderStatus } from '@/types/database'
 
@@ -45,6 +48,7 @@ export function OrderDetailView({
   attachments: AttachmentView[]
 }) {
   const { t, locale } = useI18n()
+  useRealtime(RT_TABLES)
   const [editOpen, setEditOpen] = useState(false)
   const today = new Date().toISOString().slice(0, 10)
 

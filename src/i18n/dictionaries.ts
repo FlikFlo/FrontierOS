@@ -71,6 +71,7 @@ const en = {
     joined: 'joined as',
     entity: {
       client: 'client',
+      contact: 'contact',
       deal: 'deal',
       order: 'order',
       product: 'product',
@@ -228,6 +229,7 @@ const en = {
     owner: 'Owner',
     sales_manager: 'Sales manager',
     brewer: 'Brewer',
+    pending: 'Pending',
   },
   auth: {
     tagline: 'Sign in to your CRM workspace',
@@ -330,6 +332,7 @@ const fr: Dictionary = {
     joined: 'a rejoint en tant que',
     entity: {
       client: 'client',
+      contact: 'contact',
       deal: 'affaire',
       order: 'commande',
       product: 'produit',
@@ -487,6 +490,7 @@ const fr: Dictionary = {
     owner: 'Direction',
     sales_manager: 'Responsable commercial',
     brewer: 'Brasseur',
+    pending: 'En attente',
   },
   auth: {
     tagline: 'Connectez-vous à votre espace CRM',

@@ -31,6 +31,7 @@ export async function addDeal(input: DealInput): Promise<Result<Deal | null>> {
 
   await logActivity('deal', 'created', input.title, data?.id)
   revalidatePath('/deals')
+  revalidatePath('/dashboard')
   return { error: null, data }
 }
 
@@ -48,6 +49,7 @@ export async function editDeal(id: string, input: DealInput): Promise<Result<Dea
 
   await logActivity('deal', 'updated', input.title, id)
   revalidatePath('/deals')
+  revalidatePath('/dashboard')
   return { error: null, data }
 }
 
@@ -61,6 +63,7 @@ export async function removeDeal(id: string): Promise<{ error: string | null }> 
 
   await logActivity('deal', 'deleted', row?.title ?? 'Deal', id)
   revalidatePath('/deals')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -69,9 +72,12 @@ export async function moveDeal(id: string, stage: DealStage): Promise<{ error: s
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
 
+  const { data: row } = await supabase.from('deals').select('title').eq('id', id).single()
   const { error } = await supabase.from('deals').update({ stage }).eq('id', id)
   if (error) return { error: error.message }
 
+  await logActivity('deal', 'updated', `${row?.title ?? 'Deal'} → ${stage}`, id)
   revalidatePath('/deals')
+  revalidatePath('/dashboard')
   return { error: null }
 }

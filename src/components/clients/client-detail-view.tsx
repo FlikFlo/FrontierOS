@@ -10,7 +10,10 @@ import { ClientFormModal } from './client-form-modal'
 import { ContactFormModal } from './contact-form-modal'
 import { EntityThread, type AttachmentView } from '../entity-thread'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney, waLink } from '@/lib/utils'
+
+const RT_TABLES = ['clients', 'contacts']
 import type {
   Client,
   Contact,
@@ -81,6 +84,7 @@ export function ClientDetailView({
   attachments: AttachmentView[]
 }) {
   const { t, locale } = useI18n()
+  useRealtime(RT_TABLES)
   const [editOpen, setEditOpen] = useState(false)
   const [contactForm, setContactForm] = useState<{ open: boolean; contact: Contact | null }>({
     open: false,

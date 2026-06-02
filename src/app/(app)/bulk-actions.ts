@@ -23,6 +23,7 @@ export async function bulkDelete(table: BulkTable, ids: string[]): Promise<Resul
   if (error) return { error: error.message }
   await logActivity(table, 'deleted', `${ids.length} item(s)`)
   revalidatePath(PATHS[table])
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -34,6 +35,7 @@ export async function bulkUpdateStage(ids: string[], stage: DealStage): Promise<
   if (error) return { error: error.message }
   await logActivity('deal', 'updated', `${ids.length} deal(s) → ${stage}`)
   revalidatePath('/deals')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 

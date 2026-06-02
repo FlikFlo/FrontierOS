@@ -28,6 +28,7 @@ export async function addProduct(input: ProductInput): Promise<ActionResult> {
 
   await logActivity('product', 'created', input.name, data?.id)
   revalidatePath('/products')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -40,6 +41,7 @@ export async function editProduct(id: string, input: ProductInput): Promise<Acti
 
   await logActivity('product', 'updated', input.name, id)
   revalidatePath('/products')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -53,5 +55,6 @@ export async function removeProduct(id: string): Promise<ActionResult> {
 
   await logActivity('product', 'deleted', row?.name ?? 'Product', id)
   revalidatePath('/products')
+  revalidatePath('/dashboard')
   return { error: null }
 }

@@ -7,7 +7,7 @@ import { useRealtime } from '@/lib/use-realtime'
 import { formatMoney, cn } from '@/lib/utils'
 import type { DealStage } from '@/types/database'
 
-const RT_TABLES = ['deals', 'orders', 'order_items', 'clients']
+const RT_TABLES = ['deals', 'orders', 'order_items', 'clients', 'products']
 
 export type DashboardMetrics = {
   clientsTotal: number

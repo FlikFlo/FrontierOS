@@ -27,6 +27,7 @@ export async function addClient(input: ClientInput): Promise<ActionResult> {
 
   await logActivity('client', 'created', input.name, data?.id)
   revalidatePath('/clients')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -39,6 +40,7 @@ export async function editClient(id: string, input: ClientInput): Promise<Action
 
   await logActivity('client', 'updated', input.name, id)
   revalidatePath('/clients')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -52,6 +54,7 @@ export async function removeClient(id: string): Promise<ActionResult> {
 
   await logActivity('client', 'deleted', row?.name ?? 'Client', id)
   revalidatePath('/clients')
+  revalidatePath('/dashboard')
   return { error: null }
 }
 
@@ -67,11 +70,15 @@ export type ContactInput = {
   is_primary: boolean
 }
 
+const contactName = (i: { first_name: string; last_name: string | null }) =>
+  [i.first_name, i.last_name].filter(Boolean).join(' ') || 'Contact'
+
 export async function addContact(input: ContactInput): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
-  const { error } = await supabase.from('contacts').insert(input)
+  const { data, error } = await supabase.from('contacts').insert(input).select('id').single()
   if (error) return { error: error.message }
+  await logActivity('contact', 'created', contactName(input), data?.id)
   revalidatePath(`/clients/${input.client_id}`)
   return { error: null }
 }
@@ -81,6 +88,7 @@ export async function editContact(id: string, input: ContactInput): Promise<Acti
   if (!supabase) return { error: 'Supabase is not configured' }
   const { error } = await supabase.from('contacts').update(input).eq('id', id)
   if (error) return { error: error.message }
+  await logActivity('contact', 'updated', contactName(input), id)
   revalidatePath(`/clients/${input.client_id}`)
   return { error: null }
 }
@@ -88,8 +96,14 @@ export async function editContact(id: string, input: ContactInput): Promise<Acti
 export async function removeContact(id: string, clientId: string): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
+  const { data: row } = await supabase
+    .from('contacts')
+    .select('first_name, last_name')
+    .eq('id', id)
+    .single()
   const { error } = await supabase.from('contacts').delete().eq('id', id)
   if (error) return { error: error.message }
+  await logActivity('contact', 'deleted', row ? contactName(row) : 'Contact', id)
   revalidatePath(`/clients/${clientId}`)
   return { error: null }
 }

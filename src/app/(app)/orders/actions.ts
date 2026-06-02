@@ -54,7 +54,7 @@ export async function editOrder(id: string, input: OrderInput, lines: OrderLineI
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
 
-  const { error } = await supabase.from('orders').update(input).eq('id', id)
+  const { error } = await supabase.from('orders').update({ ...input, currency: 'MAD' }).eq('id', id)
   if (error) return { error: error.message }
 
   await logActivity('order', 'updated', input.order_number, id)
