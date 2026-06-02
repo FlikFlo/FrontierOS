@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +46,10 @@ export function Modal({
 
   if (!open) return null;
 
-  return (
+  // Portal to <body> so the dialog escapes any transformed ancestor (e.g. the
+  // animate-fade-up content wrapper), which would otherwise become the
+  // containing block for `position: fixed` and shift/clip the modal.
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -89,6 +93,7 @@ export function Modal({
           {children}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

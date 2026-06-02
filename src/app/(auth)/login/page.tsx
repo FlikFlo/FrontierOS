@@ -14,6 +14,8 @@ export default async function LoginPage({
         <LoginForm next={target} />
         <p className="mt-5 text-center text-[11px] tracking-wide text-white/30">
           Developed by <span className="text-white/45">Zlatko Hrvatinić</span>
+          <span className="mx-1.5 text-white/20">·</span>
+          <span className="font-mono text-white/40">v0.1</span>
         </p>
       </div>
     </main>

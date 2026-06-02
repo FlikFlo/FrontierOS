@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -49,7 +50,7 @@ export function ConfirmDialog({
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div
       role="dialog"
       aria-modal="true"
@@ -104,6 +105,7 @@ export function ConfirmDialog({
         </div>
       </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
