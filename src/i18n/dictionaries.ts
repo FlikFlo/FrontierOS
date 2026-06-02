@@ -156,8 +156,11 @@ const en = {
       wonSub: { one: '{n} deal', other: '{n} deals' },
       revenue: 'Orders revenue',
       revenueSub: { one: '{n} order', other: '{n} orders' },
+      winRate: 'Win rate',
     },
     pipelineTitle: 'Pipeline by stage',
+    revenueTitle: 'Revenue · last 6 months',
+    topClientsTitle: 'Top clients · open pipeline',
   },
   settings: {
     profile: 'Profile',
@@ -349,8 +352,11 @@ const fr: Dictionary = {
       wonSub: { one: '{n} affaire', other: '{n} affaires' },
       revenue: 'Chiffre commandes',
       revenueSub: { one: '{n} commande', other: '{n} commandes' },
+      winRate: 'Taux de réussite',
     },
     pipelineTitle: 'Pipeline par étape',
+    revenueTitle: 'Chiffre · 6 derniers mois',
+    topClientsTitle: 'Top clients · pipeline ouvert',
   },
   settings: {
     profile: 'Profil',

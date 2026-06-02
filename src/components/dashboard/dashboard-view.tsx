@@ -16,7 +16,10 @@ export type DashboardMetrics = {
   openCount: number
   wonValue: number
   wonCount: number
+  winRate: number
   pipeline: { stage: DealStage; count: number; value: number }[]
+  revenueByMonth: { month: string; value: number }[]
+  topClients: { name: string; value: number }[]
 }
 
 type DashboardViewProps = { status: 'unconfigured' } | { status: 'ok'; metrics: DashboardMetrics }
@@ -61,12 +64,19 @@ export function DashboardView(props: DashboardViewProps) {
 
   const m = props.metrics
   const maxValue = Math.max(1, ...m.pipeline.map((p) => p.value))
+  const maxRev = Math.max(1, ...m.revenueByMonth.map((r) => r.value))
+  const maxClient = Math.max(1, ...m.topClients.map((c) => c.value))
+  const tag = locale === 'fr' ? 'fr-MA' : 'en-US'
+  const monthLabel = (key: string) => {
+    const [y, mm] = key.split('-').map(Number)
+    return new Intl.DateTimeFormat(tag, { month: 'short' }).format(new Date(y, mm - 1, 1))
+  }
 
   return (
     <div className="space-y-4">
       {header}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-5">
         <Kpi
           label={t('dashboard.kpi.clients')}
           value={String(m.clientsTotal)}
@@ -80,6 +90,11 @@ export function DashboardView(props: DashboardViewProps) {
         <Kpi
           label={t('dashboard.kpi.won')}
           value={formatMoney(m.wonValue, 'MAD', locale)}
+          sub={tn('dashboard.kpi.wonSub', m.wonCount)}
+        />
+        <Kpi
+          label={t('dashboard.kpi.winRate')}
+          value={`${m.winRate}%`}
           sub={tn('dashboard.kpi.wonSub', m.wonCount)}
         />
         <Kpi
@@ -116,6 +131,58 @@ export function DashboardView(props: DashboardViewProps) {
           ))}
         </CardContent>
       </Card>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.revenueTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex h-36 items-stretch gap-2">
+              {m.revenueByMonth.map((r) => (
+                <div key={r.month} className="flex flex-1 flex-col items-center gap-1.5">
+                  <div className="flex w-full flex-1 items-end">
+                    <div
+                      title={formatMoney(r.value, 'MAD', locale)}
+                      className="w-full rounded-t bg-gradient-to-t from-primary/40 to-primary-light/70 transition-all"
+                      style={{ height: `${Math.max(2, (r.value / maxRev) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-[10px] capitalize text-white/40">{monthLabel(r.month)}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.topClientsTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {m.topClients.length === 0 ? (
+              <p className="text-[13px] text-white/45">—</p>
+            ) : (
+              m.topClients.map((c) => (
+                <div key={c.name}>
+                  <div className="mb-1 flex items-center justify-between text-[12px]">
+                    <span className="truncate text-white/75">{c.name}</span>
+                    <span className="ml-2 flex-shrink-0 font-mono tabular-nums text-white/70">
+                      {formatMoney(c.value, 'MAD', locale)}
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div
+                      className="h-full rounded-full bg-accent/70"
+                      style={{ width: `${(c.value / maxClient) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))
+            )}
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
