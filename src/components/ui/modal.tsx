@@ -49,36 +49,45 @@ export function Modal({
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[70] overflow-y-auto overscroll-contain"
     >
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm animate-sheet-backdrop-in"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm animate-sheet-backdrop-in"
         onClick={onClose}
         aria-hidden="true"
       />
+      {/* min-h-full keeps the panel centred when it fits, and lets the overlay
+          scroll (instead of clipping the top) when the panel is taller. */}
       <div
-        className={cn(
-          "relative w-full rounded-2xl border border-white/[0.10] p-5 shadow-2xl animate-fade-up",
-          widthClassName
-        )}
-        style={{ background: "rgba(13,15,20,0.99)" }}
+        className="relative flex min-h-full items-center justify-center p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onClose();
+        }}
       >
-        {(title || !hideClose) && (
-          <div className="flex items-start justify-between gap-4 mb-3">
-            {title && <h2 className="text-base font-semibold text-white">{title}</h2>}
-            {!hideClose && (
-              <button
-                type="button"
-                onClick={onClose}
-                aria-label="Close"
-                className="-mr-1 -mt-1 ml-auto text-white/40 hover:text-white transition-colors p-1"
-              >
-                <X size={18} />
-              </button>
-            )}
-          </div>
-        )}
-        {children}
+        <div
+          className={cn(
+            "relative my-4 w-full rounded-2xl border border-white/[0.10] p-5 shadow-2xl animate-fade-up",
+            widthClassName
+          )}
+          style={{ background: "rgba(13,15,20,0.99)" }}
+        >
+          {(title || !hideClose) && (
+            <div className="flex items-start justify-between gap-4 mb-3">
+              {title && <h2 className="text-base font-semibold text-white">{title}</h2>}
+              {!hideClose && (
+                <button
+                  type="button"
+                  onClick={onClose}
+                  aria-label="Close"
+                  className="-mr-1 -mt-1 ml-auto text-white/40 hover:text-white transition-colors p-1"
+                >
+                  <X size={18} />
+                </button>
+              )}
+            </div>
+          )}
+          {children}
+        </div>
       </div>
     </div>
   );

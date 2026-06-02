@@ -55,15 +55,21 @@ export function ConfirmDialog({
       aria-modal="true"
       aria-labelledby="confirm-title"
       aria-describedby={body ? "confirm-body" : undefined}
-      className="fixed inset-0 z-[70] flex items-center justify-center p-4"
+      className="fixed inset-0 z-[70] overflow-y-auto overscroll-contain"
     >
       <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onCancel}
         aria-hidden="true"
       />
       <div
-        className="relative w-full max-w-sm rounded-2xl border border-white/[0.10] p-5 shadow-2xl"
+        className="relative flex min-h-full items-center justify-center p-4"
+        onClick={(e) => {
+          if (e.target === e.currentTarget) onCancel();
+        }}
+      >
+      <div
+        className="relative my-4 w-full max-w-sm rounded-2xl border border-white/[0.10] p-5 shadow-2xl"
         style={{ background: "rgba(13,15,20,0.99)" }}
       >
         <h2 id="confirm-title" className="text-base font-semibold text-white">
@@ -96,6 +102,7 @@ export function ConfirmDialog({
             {confirmLabel}
           </button>
         </div>
+      </div>
       </div>
     </div>
   );
