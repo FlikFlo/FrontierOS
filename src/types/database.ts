@@ -201,6 +201,60 @@ export interface Database {
           },
         ]
       }
+      deal_comments: {
+        Row: {
+          id: string
+          deal_id: string
+          body: string
+          author: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          deal_id: string
+          body: string
+          author?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['deal_comments']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'deal_comments_deal_id_fkey'
+            columns: ['deal_id']
+            referencedRelation: 'deals'
+            referencedColumns: ['id']
+          },
+        ]
+      }
+      deal_attachments: {
+        Row: {
+          id: string
+          deal_id: string
+          name: string
+          path: string
+          mime: string | null
+          size: number | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          deal_id: string
+          name: string
+          path: string
+          mime?: string | null
+          size?: number | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['deal_attachments']['Insert']>
+        Relationships: [
+          {
+            foreignKeyName: 'deal_attachments_deal_id_fkey'
+            columns: ['deal_id']
+            referencedRelation: 'deals'
+            referencedColumns: ['id']
+          },
+        ]
+      }
       reminders: {
         Row: {
           id: string
@@ -282,3 +336,5 @@ export type Deal = Database['public']['Tables']['deals']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 export type OrderItem = Database['public']['Tables']['order_items']['Row']
 export type Reminder = Database['public']['Tables']['reminders']['Row']
+export type DealComment = Database['public']['Tables']['deal_comments']['Row']
+export type DealAttachment = Database['public']['Tables']['deal_attachments']['Row']

@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
@@ -182,7 +183,11 @@ export function DealsView(props: DealsViewProps) {
                   <TBody>
                     {ctrl.pageRows.map((d) => (
                       <TR key={d.id}>
-                        <TD className="font-medium text-white">{d.title}</TD>
+                        <TD className="font-medium">
+                          <Link href={`/deals/${d.id}`} className="text-white hover:text-primary-light transition-colors">
+                            {d.title}
+                          </Link>
+                        </TD>
                         <TD>{d.clientName ?? '—'}</TD>
                         <TD>
                           <Badge variant={STAGE_VARIANT[d.stage]}>{t(`deals.stage.${d.stage}`)}</Badge>

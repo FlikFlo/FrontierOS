@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, type DragEvent } from 'react'
+import Link from 'next/link'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useI18n } from '@/i18n/provider'
 import { formatMoney, cn } from '@/lib/utils'
@@ -95,7 +96,12 @@ export function DealsBoard({
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <p className="text-[13px] font-medium leading-snug text-white">{deal.title}</p>
+                      <Link
+                        href={`/deals/${deal.id}`}
+                        className="text-[13px] font-medium leading-snug text-white hover:text-primary-light"
+                      >
+                        {deal.title}
+                      </Link>
                       <div className="flex flex-shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
                         <button
                           onClick={() => onEdit(deal)}
