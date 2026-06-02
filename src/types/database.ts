@@ -137,6 +137,8 @@ export interface Database {
           amount: number
           currency: string
           probability: number
+          est_cases_per_month: number
+          outlets: number
           expected_close_date: string | null
           created_at: string
           updated_at: string
@@ -150,6 +152,8 @@ export interface Database {
           amount?: number
           currency?: string
           probability?: number
+          est_cases_per_month?: number
+          outlets?: number
           expected_close_date?: string | null
           created_at?: string
           updated_at?: string

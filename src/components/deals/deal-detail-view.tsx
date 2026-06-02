@@ -52,6 +52,9 @@ export function DealDetailView({
   const router = useRouter()
   const [editOpen, setEditOpen] = useState(false)
   const weighted = (deal.amount * deal.probability) / 100
+  const cases = deal.est_cases_per_month
+  const weightedCases = Math.round((cases * deal.probability) / 100)
+  const nf = new Intl.NumberFormat(locale === 'fr' ? 'fr-MA' : 'en-US')
 
   return (
     <div className="space-y-4">
@@ -110,6 +113,21 @@ export function DealDetailView({
           </div>
         </CardContent>
       </Card>
+
+      {(cases > 0 || deal.outlets > 0) && (
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('deals.detail.volumeTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="grid grid-cols-2 gap-x-8 gap-y-1 sm:grid-cols-4">
+            <Field label={t('deals.columns.cases')}>{nf.format(cases)}</Field>
+            <Field label={t('deals.columns.outlets')}>{nf.format(deal.outlets)}</Field>
+            <Field label={t('deals.detail.weightedCases')}>{nf.format(weightedCases)}</Field>
+            <Field label={t('deals.detail.cansMonth')}>{nf.format(cases * 24)}</Field>
+            <Field label={t('deals.detail.annualCases')}>{nf.format(cases * 12)}</Field>
+          </CardContent>
+        </Card>
+      )}
 
       <EntityThread entity="deal" entityId={deal.id} comments={comments} attachments={attachments} />
 

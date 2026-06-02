@@ -12,7 +12,7 @@ export default async function DashboardPage() {
 
   const [clientsRes, dealsRes, ordersRes, itemsRes, productsRes] = await Promise.all([
     supabase.from('clients').select('id, name, status'),
-    supabase.from('deals').select('stage, amount, client_id'),
+    supabase.from('deals').select('stage, amount, client_id, probability, est_cases_per_month, outlets'),
     supabase.from('orders').select('id, order_date'),
     supabase.from('order_items').select('order_id, quantity, unit_price'),
     supabase.from('products').select('id'),
@@ -74,6 +74,13 @@ export default async function DashboardPage() {
     }),
     revenueByMonth,
     topClients,
+    volume: {
+      casesMonth: openDeals.reduce((s, d) => s + Number(d.est_cases_per_month ?? 0), 0),
+      weightedCasesMonth: Math.round(
+        openDeals.reduce((s, d) => s + (Number(d.est_cases_per_month ?? 0) * Number(d.probability ?? 0)) / 100, 0),
+      ),
+      outlets: openDeals.reduce((s, d) => s + Number(d.outlets ?? 0), 0),
+    },
   }
 
   return <DashboardView status="ok" metrics={metrics} />

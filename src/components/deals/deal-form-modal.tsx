@@ -34,6 +34,8 @@ export function DealFormModal({
     stage: (deal?.stage ?? 'lead') as DealStage,
     amount: String(deal?.amount ?? ''),
     probability: String(deal?.probability ?? ''),
+    est_cases_per_month: String(deal?.est_cases_per_month ?? ''),
+    outlets: String(deal?.outlets ?? ''),
     expected_close_date: deal?.expected_close_date ?? '',
   })
   const [error, setError] = useState<string | null>(null)
@@ -54,6 +56,8 @@ export function DealFormModal({
       stage: form.stage,
       amount: Number(form.amount) || 0,
       probability: Math.max(0, Math.min(100, Number(form.probability) || 0)),
+      est_cases_per_month: Math.max(0, Math.round(Number(form.est_cases_per_month) || 0)),
+      outlets: Math.max(0, Math.round(Number(form.outlets) || 0)),
       expected_close_date: form.expected_close_date || null,
     }
 
@@ -131,6 +135,33 @@ export function DealFormModal({
               type="date"
               value={form.expected_close_date}
               onChange={(e) => set('expected_close_date', e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="d-cases">{t('deals.columns.cases')}</Label>
+            <Input
+              id="d-cases"
+              type="number"
+              min={0}
+              step="1"
+              placeholder="0"
+              value={form.est_cases_per_month}
+              onChange={(e) => set('est_cases_per_month', e.target.value)}
+            />
+          </div>
+          <div>
+            <Label htmlFor="d-outlets">{t('deals.columns.outlets')}</Label>
+            <Input
+              id="d-outlets"
+              type="number"
+              min={0}
+              step="1"
+              placeholder="0"
+              value={form.outlets}
+              onChange={(e) => set('outlets', e.target.value)}
             />
           </div>
         </div>

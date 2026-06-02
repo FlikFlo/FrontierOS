@@ -52,6 +52,8 @@ const DEAL_CSV: CsvColumn<DealRow>[] = [
   { header: 'Amount', value: (d) => d.amount },
   { header: 'Currency', value: (d) => d.currency },
   { header: 'Probability', value: (d) => d.probability },
+  { header: 'Cases/mo', value: (d) => d.est_cases_per_month },
+  { header: 'Outlets', value: (d) => d.outlets },
   { header: 'Expected close', value: (d) => d.expected_close_date },
 ]
 

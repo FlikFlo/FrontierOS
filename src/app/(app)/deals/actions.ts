@@ -11,6 +11,8 @@ export type DealInput = {
   stage: DealStage
   amount: number
   probability: number
+  est_cases_per_month: number
+  outlets: number
   expected_close_date: string | null
 }
 

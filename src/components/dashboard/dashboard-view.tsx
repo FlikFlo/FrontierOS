@@ -23,6 +23,7 @@ export type DashboardMetrics = {
   pipeline: { stage: DealStage; count: number; value: number }[]
   revenueByMonth: { month: string; value: number }[]
   topClients: { name: string; value: number }[]
+  volume: { casesMonth: number; weightedCasesMonth: number; outlets: number }
 }
 
 type DashboardViewProps = { status: 'unconfigured' } | { status: 'ok'; metrics: DashboardMetrics }
@@ -71,6 +72,7 @@ export function DashboardView(props: DashboardViewProps) {
   const maxRev = Math.max(1, ...m.revenueByMonth.map((r) => r.value))
   const maxClient = Math.max(1, ...m.topClients.map((c) => c.value))
   const tag = locale === 'fr' ? 'fr-MA' : 'en-US'
+  const nf = new Intl.NumberFormat(tag)
   const monthLabel = (key: string) => {
     const [y, mm] = key.split('-').map(Number)
     return new Intl.DateTimeFormat(tag, { month: 'short' }).format(new Date(y, mm - 1, 1))
@@ -107,6 +109,30 @@ export function DashboardView(props: DashboardViewProps) {
           sub={tn('dashboard.kpi.revenueSub', m.ordersCount)}
         />
       </div>
+
+      <Card className="bg-primary/[0.06]">
+        <CardHeader>
+          <CardTitle>{t('dashboard.volumeTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div>
+            <p className="text-3xl font-semibold text-white tabular-nums">{nf.format(m.volume.weightedCasesMonth)}</p>
+            <p className="mt-0.5 text-[12px] text-white/45">{t('dashboard.volume.weighted')}</p>
+          </div>
+          <div>
+            <p className="text-3xl font-semibold text-white/80 tabular-nums">{nf.format(m.volume.casesMonth)}</p>
+            <p className="mt-0.5 text-[12px] text-white/45">{t('dashboard.volume.total')}</p>
+          </div>
+          <div>
+            <p className="text-3xl font-semibold text-white/80 tabular-nums">{nf.format(m.volume.weightedCasesMonth * 12)}</p>
+            <p className="mt-0.5 text-[12px] text-white/45">{t('dashboard.volume.annual')}</p>
+          </div>
+          <div>
+            <p className="text-3xl font-semibold text-white/80 tabular-nums">{nf.format(m.volume.outlets)}</p>
+            <p className="mt-0.5 text-[12px] text-white/45">{t('dashboard.volume.outlets')}</p>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
