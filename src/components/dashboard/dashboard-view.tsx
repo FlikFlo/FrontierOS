@@ -35,6 +35,10 @@ export type DashboardMetrics = {
     assigneeName: string | null
   }[]
   staleDeals: { id: string; title: string; daysStale: number; ownerName: string | null }[]
+  leaderboard: { name: string; openValue: number; wonValue: number; openCount: number }[]
+  funnel: { stage: DealStage; reached: number; conv: number }[]
+  avgDaysToWin: number | null
+  channelBreakdown: { channel: string; clients: number; openValue: number; cases: number }[]
 }
 
 type DashboardViewProps = { status: 'unconfigured' } | { status: 'ok'; metrics: DashboardMetrics }
@@ -276,6 +280,103 @@ export function DashboardView(props: DashboardViewProps) {
           </CardContent>
         </Card>
       </div>
+
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle>{t('dashboard.leaderboardTitle')}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {m.leaderboard.length === 0 ? (
+              <p className="text-[13px] text-white/45">{t('dashboard.leaderboardEmpty')}</p>
+            ) : (
+              (() => {
+                const maxLb = Math.max(1, ...m.leaderboard.map((l) => l.openValue + l.wonValue))
+                return m.leaderboard.map((l) => (
+                  <div key={l.name}>
+                    <div className="mb-1 flex items-center justify-between text-[12px]">
+                      <span className="truncate text-white/75">{l.name}</span>
+                      <span className="ml-2 flex-shrink-0 font-mono tabular-nums text-white/70">
+                        {formatMoney(l.openValue, 'MAD', locale)}
+                        <span className="text-white/30"> · {tn('dashboard.kpi.pipelineSub', l.openCount)}</span>
+                      </span>
+                    </div>
+                    <div className="flex h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                      <div className="h-full bg-primary-light/70" style={{ width: `${(l.openValue / maxLb) * 100}%` }} />
+                      <div className="h-full bg-success/70" style={{ width: `${(l.wonValue / maxLb) * 100}%` }} />
+                    </div>
+                  </div>
+                ))
+              })()
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex items-center justify-between">
+            <CardTitle>{t('dashboard.funnelTitle')}</CardTitle>
+            {m.avgDaysToWin != null && (
+              <span className="text-[12px] text-white/45">
+                {t('dashboard.avgDaysToWin', { n: m.avgDaysToWin })}
+              </span>
+            )}
+          </CardHeader>
+          <CardContent className="space-y-2.5">
+            {(() => {
+              const maxF = Math.max(1, ...m.funnel.map((f) => f.reached))
+              return m.funnel.map((f, i) => (
+                <div key={f.stage}>
+                  <div className="mb-1 flex items-center justify-between text-[12px]">
+                    <span className="text-white/70">{t(`deals.stage.${f.stage}`)}</span>
+                    <span className="font-mono tabular-nums text-white/60">
+                      {f.reached}
+                      {i > 0 && <span className="ml-2 text-white/30">{f.conv}%</span>}
+                    </span>
+                  </div>
+                  <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                    <div className="h-full rounded-full bg-info/70" style={{ width: `${(f.reached / maxF) * 100}%` }} />
+                  </div>
+                </div>
+              ))
+            })()}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>{t('dashboard.channelTitle')}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {m.channelBreakdown.length === 0 ? (
+            <p className="text-[13px] text-white/45">{t('dashboard.channelEmpty')}</p>
+          ) : (
+            <div className="space-y-2.5">
+              {(() => {
+                const maxCh = Math.max(1, ...m.channelBreakdown.map((c) => c.openValue))
+                return m.channelBreakdown.map((c) => (
+                  <div key={c.channel}>
+                    <div className="mb-1 flex items-center justify-between text-[12px]">
+                      <span className="flex items-center gap-2 text-white/75">
+                        {t(`clients.channel.${c.channel}`)}
+                        <span className="text-white/30">
+                          {c.clients} · {nf.format(c.cases)} {t('deals.columns.cases')}
+                        </span>
+                      </span>
+                      <span className="ml-2 flex-shrink-0 font-mono tabular-nums text-white/70">
+                        {formatMoney(c.openValue, 'MAD', locale)}
+                      </span>
+                    </div>
+                    <div className="h-1.5 overflow-hidden rounded-full bg-white/[0.06]">
+                      <div className="h-full rounded-full bg-accent/70" style={{ width: `${(c.openValue / maxCh) * 100}%` }} />
+                    </div>
+                  </div>
+                ))
+              })()}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   )
 }

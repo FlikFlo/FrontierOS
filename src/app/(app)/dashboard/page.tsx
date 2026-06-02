@@ -14,8 +14,8 @@ export default async function DashboardPage() {
   if (!supabase) return <DashboardView status="unconfigured" />
 
   const [clientsRes, dealsRes, ordersRes, itemsRes, productsRes, remindersRes, members] = await Promise.all([
-    supabase.from('clients').select('id, name, status'),
-    supabase.from('deals').select('id, title, stage, amount, client_id, owner_id, updated_at, probability, est_cases_per_month, outlets'),
+    supabase.from('clients').select('id, name, status, channel'),
+    supabase.from('deals').select('id, title, stage, amount, client_id, owner_id, created_at, updated_at, probability, est_cases_per_month, outlets'),
     supabase.from('orders').select('id, order_date'),
     supabase.from('order_items').select('order_id, quantity, unit_price'),
     supabase.from('products').select('id'),
@@ -94,6 +94,65 @@ export default async function DashboardPage() {
       ownerName: d.owner_id ? memberName.get(d.owner_id) ?? null : null,
     }))
 
+  // Manager leaderboard — pipeline + won by deal owner.
+  const ownerAgg = new Map<string, { openValue: number; wonValue: number; openCount: number }>()
+  for (const d of deals) {
+    if (!d.owner_id) continue
+    const a = ownerAgg.get(d.owner_id) ?? { openValue: 0, wonValue: 0, openCount: 0 }
+    if (OPEN_STAGES.includes(d.stage)) {
+      a.openValue += Number(d.amount)
+      a.openCount += 1
+    } else if (d.stage === 'won') {
+      a.wonValue += Number(d.amount)
+    }
+    ownerAgg.set(d.owner_id, a)
+  }
+  const leaderboard = [...ownerAgg.entries()]
+    .map(([id, a]) => ({ name: memberName.get(id) ?? '—', ...a }))
+    .sort((x, y) => y.openValue + y.wonValue - (x.openValue + x.wonValue))
+    .slice(0, 6)
+
+  // Conversion funnel — snapshot of how far deals have progressed. A deal counts
+  // toward every stage up to and including its current one (lost excluded).
+  const FUNNEL: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won']
+  const reachedAt = (idx: number) =>
+    deals.filter((d) => d.stage !== 'lost' && FUNNEL.indexOf(d.stage) >= idx).length
+  const funnel = FUNNEL.map((stage, i) => {
+    const reached = reachedAt(i)
+    const prev = i === 0 ? reached : reachedAt(i - 1)
+    return { stage, reached, conv: prev > 0 ? Math.round((reached / prev) * 100) : 0 }
+  })
+
+  // Velocity — average days from creation to win.
+  const wonDurations = wonDeals
+    .map((d) => (new Date(d.updated_at).getTime() - new Date(d.created_at).getTime()) / 86_400_000)
+    .filter((n) => n >= 0)
+  const avgDaysToWin = wonDurations.length
+    ? Math.round(wonDurations.reduce((s, n) => s + n, 0) / wonDurations.length)
+    : null
+
+  // Channel breakdown — clients + open pipeline value + cases per channel.
+  const channelOf = new Map(clients.map((c) => [c.id, c.channel]))
+  const chanAgg = new Map<string, { clients: number; openValue: number; cases: number }>()
+  for (const c of clients) {
+    if (!c.channel) continue
+    const a = chanAgg.get(c.channel) ?? { clients: 0, openValue: 0, cases: 0 }
+    a.clients += 1
+    chanAgg.set(c.channel, a)
+  }
+  for (const d of openDeals) {
+    if (!d.client_id) continue
+    const ch = channelOf.get(d.client_id)
+    if (!ch) continue
+    const a = chanAgg.get(ch) ?? { clients: 0, openValue: 0, cases: 0 }
+    a.openValue += Number(d.amount)
+    a.cases += Number(d.est_cases_per_month ?? 0)
+    chanAgg.set(ch, a)
+  }
+  const channelBreakdown = [...chanAgg.entries()]
+    .map(([channel, a]) => ({ channel, ...a }))
+    .sort((x, y) => y.openValue - x.openValue)
+
   const metrics: DashboardMetrics = {
     clientsTotal: clients.length,
     clientsActive: clients.filter((c) => c.status === 'active').length,
@@ -120,6 +179,10 @@ export default async function DashboardPage() {
     },
     followups,
     staleDeals,
+    leaderboard,
+    funnel,
+    avgDaysToWin,
+    channelBreakdown,
   }
 
   return <DashboardView status="ok" metrics={metrics} />
