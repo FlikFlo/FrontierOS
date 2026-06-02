@@ -211,6 +211,8 @@ const en = {
       noComments: 'No comments yet',
       noAttachments: 'No attachments yet',
       previewUnavailable: 'No in-app preview for this file type',
+      fileTooLarge: 'File is too large (max 25 MB)',
+      uploadFailed: 'Upload failed — please try again',
     },
   },
   orders: {
@@ -544,6 +546,8 @@ const fr: Dictionary = {
       noComments: 'Aucun commentaire',
       noAttachments: 'Aucune pièce jointe',
       previewUnavailable: 'Pas d’aperçu intégré pour ce type de fichier',
+      fileTooLarge: 'Fichier trop volumineux (max 25 Mo)',
+      uploadFailed: 'Échec de l’envoi — réessayez',
     },
   },
   orders: {

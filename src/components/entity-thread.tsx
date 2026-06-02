@@ -7,13 +7,17 @@ import { Card, CardHeader, CardTitle, CardContent } from './ui/card'
 import { Button } from './ui/button'
 import { Modal } from './ui/modal'
 import { Textarea } from './ui/input'
+import { useToast } from './ui/toast'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { formatDate } from '@/lib/utils'
-import { addComment, removeComment, uploadAttachment, removeAttachment } from '@/app/(app)/thread-actions'
+import { addComment, removeComment, saveAttachmentMeta, removeAttachment } from '@/app/(app)/thread-actions'
+import { createClient } from '@/lib/supabase/client'
 import type { Comment, EntityKind } from '@/types/database'
 
 const RT_TABLES = ['comments', 'attachments']
+const BUCKET = 'attachments'
+const MAX_UPLOAD_BYTES = 25 * 1024 * 1024
 
 export type AttachmentView = {
   id: string
@@ -38,6 +42,7 @@ export function EntityThread({
   attachments: AttachmentView[]
 }) {
   const { t, locale } = useI18n()
+  const { toast } = useToast()
   const router = useRouter()
   useRealtime(RT_TABLES)
   const fileRef = useRef<HTMLInputElement | null>(null)
@@ -58,15 +63,45 @@ export function EntityThread({
   }
 
   async function onUpload(file: File) {
+    if (file.size > MAX_UPLOAD_BYTES) {
+      toast({ title: t('deals.detail.fileTooLarge'), variant: 'danger' })
+      if (fileRef.current) fileRef.current.value = ''
+      return
+    }
     setUploading(true)
-    const fd = new FormData()
-    fd.append('entity', entity)
-    fd.append('entityId', entityId)
-    fd.append('file', file)
-    await uploadAttachment(fd)
-    setUploading(false)
-    if (fileRef.current) fileRef.current.value = ''
-    router.refresh()
+    try {
+      const supabase = createClient()
+      if (!supabase) throw new Error('unconfigured')
+
+      // Upload bytes straight to Storage (no server-action body limit), then
+      // persist a small metadata row.
+      const safe = file.name.replace(/[^\w.\-]+/g, '_')
+      const path = `${entity}/${entityId}/${crypto.randomUUID()}-${safe}`
+      const { error: upErr } = await supabase.storage
+        .from(BUCKET)
+        .upload(path, file, { contentType: file.type || undefined, upsert: false })
+      if (upErr) {
+        toast({ title: upErr.message, variant: 'danger' })
+        return
+      }
+
+      const res = await saveAttachmentMeta({
+        entity,
+        entityId,
+        name: file.name,
+        path,
+        mime: file.type || null,
+        size: file.size,
+      })
+      if (res?.error) toast({ title: res.error, variant: 'danger' })
+    } catch {
+      // Never leave the button stuck on "Saving…".
+      toast({ title: t('deals.detail.uploadFailed'), variant: 'danger' })
+    } finally {
+      setUploading(false)
+      if (fileRef.current) fileRef.current.value = ''
+      router.refresh()
+    }
   }
 
   return (

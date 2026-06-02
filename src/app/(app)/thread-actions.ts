@@ -73,6 +73,35 @@ export async function uploadAttachment(formData: FormData): Promise<ActionResult
   return { error: null }
 }
 
+/**
+ * Save attachment metadata after the browser uploaded the bytes straight to
+ * Storage. Keeps large files out of the server-action body (Next 1MB / Vercel
+ * 4.5MB caps), so uploads no longer stall on big photos.
+ */
+export async function saveAttachmentMeta(input: {
+  entity: EntityKind
+  entityId: string
+  name: string
+  path: string
+  mime: string | null
+  size: number
+}): Promise<ActionResult> {
+  if (!input.entity || !input.entityId || !input.path) return { error: 'Invalid attachment' }
+  const supabase = await createClient()
+  if (!supabase) return { error: 'Supabase is not configured' }
+  const { error } = await supabase.from('attachments').insert({
+    entity: input.entity,
+    entity_id: input.entityId,
+    name: input.name,
+    path: input.path,
+    mime: input.mime,
+    size: input.size,
+  })
+  if (error) return { error: error.message }
+  revalidatePath(entityPath(input.entity, input.entityId))
+  return { error: null }
+}
+
 export async function removeAttachment(
   id: string,
   entity: EntityKind,
