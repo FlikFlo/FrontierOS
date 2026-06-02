@@ -68,7 +68,6 @@ export function CrmShell({
         icon: CalendarDays,
         items: [
           { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
-          { href: "/activity", label: t("nav.activity"), icon: Activity },
         ],
       },
     },
@@ -100,7 +99,10 @@ export function CrmShell({
         id: "system",
         label: t("nav.sections.system"),
         icon: Settings,
-        items: [{ href: "/settings", label: t("nav.settings"), icon: Settings }],
+        items: [
+          { href: "/activity", label: t("nav.activity"), icon: Activity },
+          { href: "/settings", label: t("nav.settings"), icon: Settings },
+        ],
       },
     },
   ];
