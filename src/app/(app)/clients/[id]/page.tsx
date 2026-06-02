@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ClientDetailView, type DealMini, type OrderMini } from '@/components/clients/client-detail-view'
 import { fetchThread } from '@/lib/thread'
+import { getTeamMembers } from '@/lib/team'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -46,6 +47,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
   }))
 
   const { comments, attachments } = await fetchThread(supabase, 'client', id)
+  const members = (await getTeamMembers()).map((m) => ({ id: m.id, name: m.name }))
 
   return (
     <ClientDetailView
@@ -55,6 +57,7 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
       orders={orderRows}
       comments={comments}
       attachments={attachments}
+      members={members}
     />
   )
 }

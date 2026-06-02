@@ -8,7 +8,18 @@ export type UserRole = 'owner' | 'sales_manager' | 'brewer'
 export type EntityKind = 'deal' | 'client' | 'order'
 export type ActivityAction = 'created' | 'updated' | 'deleted' | 'joined'
 export type ClientStatus = 'lead' | 'active' | 'inactive'
+export type SalesChannel = 'horeca' | 'retail' | 'gms' | 'wholesale' | 'other'
+export type LostReason = 'price' | 'competitor' | 'timing' | 'no_interest' | 'no_response' | 'other'
 export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
+export const SALES_CHANNELS: SalesChannel[] = ['horeca', 'retail', 'gms', 'wholesale', 'other']
+export const LOST_REASONS: LostReason[] = [
+  'price',
+  'competitor',
+  'timing',
+  'no_interest',
+  'no_response',
+  'other',
+]
 export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
 
 export interface Database {
@@ -44,6 +55,8 @@ export interface Database {
           phone: string | null
           address: string | null
           status: ClientStatus
+          channel: SalesChannel | null
+          owner_id: string | null
           notes: string | null
           created_at: string
           updated_at: string
@@ -57,6 +70,8 @@ export interface Database {
           phone?: string | null
           address?: string | null
           status?: ClientStatus
+          channel?: SalesChannel | null
+          owner_id?: string | null
           notes?: string | null
           created_at?: string
           updated_at?: string
@@ -139,6 +154,8 @@ export interface Database {
           probability: number
           est_cases_per_month: number
           outlets: number
+          owner_id: string | null
+          lost_reason: LostReason | null
           expected_close_date: string | null
           created_at: string
           updated_at: string
@@ -154,6 +171,8 @@ export interface Database {
           probability?: number
           est_cases_per_month?: number
           outlets?: number
+          owner_id?: string | null
+          lost_reason?: LostReason | null
           expected_close_date?: string | null
           created_at?: string
           updated_at?: string

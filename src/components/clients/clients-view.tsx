@@ -10,7 +10,7 @@ import { Button } from '../ui/button'
 import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
-import { ClientFormModal } from './client-form-modal'
+import { ClientFormModal, type MemberOption } from './client-form-modal'
 import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
@@ -18,24 +18,16 @@ import { downloadCsv, type CsvColumn } from '@/lib/csv'
 import { removeClient } from '@/app/(app)/clients/actions'
 import { bulkDelete } from '@/app/(app)/bulk-actions'
 import { waLink } from '@/lib/utils'
-import type { Client, ClientStatus } from '@/types/database'
+import { SALES_CHANNELS, type Client, type ClientStatus } from '@/types/database'
 
 const RT_TABLES = ['clients']
-
-const CLIENT_CSV: CsvColumn<Client>[] = [
-  { header: 'Name', value: (c) => c.name },
-  { header: 'Status', value: (c) => c.status },
-  { header: 'Industry', value: (c) => c.industry },
-  { header: 'Email', value: (c) => c.email },
-  { header: 'Phone', value: (c) => c.phone },
-  { header: 'Website', value: (c) => c.website },
-  { header: 'Address', value: (c) => c.address },
-]
 
 type ClientsViewProps =
   | { status: 'unconfigured' }
   | { status: 'error' }
-  | { status: 'ok'; rows: Client[] }
+  | { status: 'ok'; rows: Client[]; members: MemberOption[] }
+
+const NO_MEMBERS: MemberOption[] = []
 
 const STATUS_VARIANT: Record<ClientStatus, 'success' | 'warning' | 'default'> = {
   active: 'success',
@@ -64,13 +56,36 @@ export function ClientsView(props: ClientsViewProps) {
   const router = useRouter()
   useRealtime(RT_TABLES)
   const rows = props.status === 'ok' ? props.rows : NO_ROWS
+  const members = props.status === 'ok' ? props.members : NO_MEMBERS
+  const memberById = useMemo(() => new Map(members.map((m) => [m.id, m.name])), [members])
   const [statusFilter, setStatusFilter] = useState('all')
+  const [channelFilter, setChannelFilter] = useState('all')
   const visible = useMemo(
-    () => (statusFilter === 'all' ? rows : rows.filter((c) => c.status === statusFilter)),
-    [rows, statusFilter],
+    () =>
+      rows.filter(
+        (c) =>
+          (statusFilter === 'all' || c.status === statusFilter) &&
+          (channelFilter === 'all' || c.channel === channelFilter),
+      ),
+    [rows, statusFilter, channelFilter],
   )
   const ctrl = useListControls(visible, clientSearch, CLIENT_SORTS, 'name')
   const sel = useSelection()
+
+  const clientCsvCols = useMemo<CsvColumn<Client>[]>(
+    () => [
+      { header: 'Name', value: (c) => c.name },
+      { header: 'Status', value: (c) => c.status },
+      { header: 'Channel', value: (c) => c.channel ?? '' },
+      { header: 'Owner', value: (c) => (c.owner_id ? memberById.get(c.owner_id) ?? '' : '') },
+      { header: 'Industry', value: (c) => c.industry },
+      { header: 'Email', value: (c) => c.email },
+      { header: 'Phone', value: (c) => c.phone },
+      { header: 'Website', value: (c) => c.website },
+      { header: 'Address', value: (c) => c.address },
+    ],
+    [memberById],
+  )
 
   const [form, setForm] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null })
   const [toDelete, setToDelete] = useState<Client | null>(null)
@@ -111,7 +126,7 @@ export function ClientsView(props: ClientsViewProps) {
             <Badge variant="accent">{t('clients.total', { count: rows.length })}</Badge>
           )}
           {props.status === 'ok' && rows.length > 0 && (
-            <Button size="sm" variant="outline" onClick={() => downloadCsv('clients.csv', ctrl.rows, CLIENT_CSV)}>
+            <Button size="sm" variant="outline" onClick={() => downloadCsv('clients.csv', ctrl.rows, clientCsvCols)}>
               <Download size={15} />
               {t('common.export')}
             </Button>
@@ -139,6 +154,14 @@ export function ClientsView(props: ClientsViewProps) {
               options={[
                 { value: 'all', label: t('common.all') },
                 ...CLIENT_STATUSES.map((s) => ({ value: s, label: t(`clients.status.${s}`) })),
+              ]}
+            />
+            <FilterSelect
+              value={channelFilter}
+              onChange={setChannelFilter}
+              options={[
+                { value: 'all', label: t('clients.columns.channel') },
+                ...SALES_CHANNELS.map((c) => ({ value: c, label: t(`clients.channel.${c}`) })),
               ]}
             />
           </div>
@@ -173,6 +196,8 @@ export function ClientsView(props: ClientsViewProps) {
                       </TH>
                       <TH className="hidden lg:table-cell">{t('clients.columns.email')}</TH>
                       <TH className="hidden md:table-cell">{t('clients.columns.phone')}</TH>
+                      <TH className="hidden lg:table-cell">{t('clients.columns.channel')}</TH>
+                      <TH className="hidden lg:table-cell">{t('clients.columns.owner')}</TH>
                       <TH>
                         <SortHeader label={t('clients.columns.status')} sortKey="status" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
@@ -193,6 +218,12 @@ export function ClientsView(props: ClientsViewProps) {
                     <TD className="hidden md:table-cell">{c.industry ?? '—'}</TD>
                     <TD className="hidden font-mono text-[13px] text-white/60 lg:table-cell">{c.email ?? '—'}</TD>
                     <TD className="hidden font-mono text-[13px] text-white/60 md:table-cell">{c.phone ?? '—'}</TD>
+                    <TD className="hidden lg:table-cell">
+                      {c.channel ? <Badge>{t(`clients.channel.${c.channel}`)}</Badge> : <span className="text-white/30">—</span>}
+                    </TD>
+                    <TD className="hidden text-[13px] text-white/60 lg:table-cell">
+                      {c.owner_id ? memberById.get(c.owner_id) ?? '—' : '—'}
+                    </TD>
                     <TD>
                       <Badge variant={STATUS_VARIANT[c.status]}>{t(`clients.status.${c.status}`)}</Badge>
                     </TD>
@@ -254,6 +285,7 @@ export function ClientsView(props: ClientsViewProps) {
           key={form.client?.id ?? 'new'}
           open
           client={form.client}
+          members={members}
           onClose={() => setForm({ open: false, client: null })}
         />
       )}

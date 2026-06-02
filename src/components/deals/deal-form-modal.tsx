@@ -6,22 +6,25 @@ import { Button } from '../ui/button'
 import { Input, Label, Select } from '../ui/input'
 import { useI18n } from '@/i18n/provider'
 import { addDeal, editDeal, type DealInput } from '@/app/(app)/deals/actions'
-import type { Deal, DealStage } from '@/types/database'
+import { LOST_REASONS, type Deal, type DealStage, type LostReason } from '@/types/database'
 
 const STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']
 
 export type ClientOption = { id: string; name: string }
+export type MemberOption = { id: string; name: string }
 
 export function DealFormModal({
   open,
   onClose,
   clients,
+  members = [],
   deal,
   onSaved,
 }: {
   open: boolean
   onClose: () => void
   clients: ClientOption[]
+  members?: MemberOption[]
   deal?: Deal | null
   onSaved: (deal: Deal) => void
 }) {
@@ -36,6 +39,8 @@ export function DealFormModal({
     probability: String(deal?.probability ?? ''),
     est_cases_per_month: String(deal?.est_cases_per_month ?? ''),
     outlets: String(deal?.outlets ?? ''),
+    owner_id: deal?.owner_id ?? '',
+    lost_reason: (deal?.lost_reason ?? '') as LostReason | '',
     expected_close_date: deal?.expected_close_date ?? '',
   })
   const [error, setError] = useState<string | null>(null)
@@ -58,6 +63,8 @@ export function DealFormModal({
       probability: Math.max(0, Math.min(100, Number(form.probability) || 0)),
       est_cases_per_month: Math.max(0, Math.round(Number(form.est_cases_per_month) || 0)),
       outlets: Math.max(0, Math.round(Number(form.outlets) || 0)),
+      owner_id: form.owner_id || null,
+      lost_reason: form.stage === 'lost' ? (form.lost_reason || null) : null,
       expected_close_date: form.expected_close_date || null,
     }
 
@@ -164,6 +171,37 @@ export function DealFormModal({
               onChange={(e) => set('outlets', e.target.value)}
             />
           </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="d-owner">{t('deals.columns.owner')}</Label>
+            <Select id="d-owner" value={form.owner_id} onChange={(e) => set('owner_id', e.target.value)}>
+              <option value="">{t('common.unassigned')}</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
+          </div>
+          {form.stage === 'lost' && (
+            <div>
+              <Label htmlFor="d-lost">{t('deals.columns.lostReason')}</Label>
+              <Select
+                id="d-lost"
+                value={form.lost_reason}
+                onChange={(e) => set('lost_reason', e.target.value as LostReason | '')}
+              >
+                <option value="">{t('common.unspecified')}</option>
+                {LOST_REASONS.map((r) => (
+                  <option key={r} value={r}>
+                    {t(`deals.lostReason.${r}`)}
+                  </option>
+                ))}
+              </Select>
+            </div>
+          )}
         </div>
 
         {error && <p className="text-[13px] text-danger">{error}</p>}

@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity'
-import type { Deal, DealStage } from '@/types/database'
+import type { Deal, DealStage, LostReason } from '@/types/database'
 
 export type DealInput = {
   title: string
@@ -13,6 +13,8 @@ export type DealInput = {
   probability: number
   est_cases_per_month: number
   outlets: number
+  owner_id: string | null
+  lost_reason: LostReason | null
   expected_close_date: string | null
 }
 

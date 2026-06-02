@@ -13,7 +13,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { DealsBoard } from './deals-board'
-import { DealFormModal, type ClientOption } from './deal-form-modal'
+import { DealFormModal, type ClientOption, type MemberOption } from './deal-form-modal'
 import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
@@ -30,9 +30,10 @@ export type DealRow = Deal & { clientName: string | null }
 type DealsViewProps =
   | { status: 'unconfigured' }
   | { status: 'error' }
-  | { status: 'ok'; rows: DealRow[]; clients: ClientOption[] }
+  | { status: 'ok'; rows: DealRow[]; clients: ClientOption[]; members: MemberOption[] }
 
 const NO_CLIENTS: ClientOption[] = []
+const NO_MEMBERS: MemberOption[] = []
 const NO_ROWS: DealRow[] = []
 
 const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'danger'> = {
@@ -73,6 +74,8 @@ export function DealsView(props: DealsViewProps) {
   useRealtime(RT_TABLES)
   const sel = useSelection()
   const clients = props.status === 'ok' ? props.clients : NO_CLIENTS
+  const members = props.status === 'ok' ? props.members : NO_MEMBERS
+  const memberById = useMemo(() => new Map(members.map((m) => [m.id, m.name])), [members])
 
   // Local state powers optimistic kanban drag, but must re-sync whenever the
   // server sends fresh rows (navigation OR a realtime router.refresh()).
@@ -97,6 +100,15 @@ export function DealsView(props: DealsViewProps) {
     [deals, view, stageFilter],
   )
   const ctrl = useListControls(visible, dealSearch, DEAL_SORTS, 'amount', 'desc')
+
+  const dealCsvCols = useMemo<CsvColumn<DealRow>[]>(
+    () => [
+      ...DEAL_CSV,
+      { header: 'Owner', value: (d) => (d.owner_id ? memberById.get(d.owner_id) ?? '' : '') },
+      { header: 'Lost reason', value: (d) => d.lost_reason ?? '' },
+    ],
+    [memberById],
+  )
 
   const nameById = useMemo(() => new Map(clients.map((c) => [c.id, c.name])), [clients])
   const enrich = (d: Deal): DealRow => ({
@@ -158,7 +170,7 @@ export function DealsView(props: DealsViewProps) {
         {props.status === 'ok' && (
           <div className="flex items-center gap-2">
             {deals.length > 0 && (
-              <Button size="sm" variant="outline" onClick={() => downloadCsv('deals.csv', ctrl.rows, DEAL_CSV)}>
+              <Button size="sm" variant="outline" onClick={() => downloadCsv('deals.csv', ctrl.rows, dealCsvCols)}>
                 <Download size={15} />
                 {t('common.export')}
               </Button>
@@ -260,6 +272,7 @@ export function DealsView(props: DealsViewProps) {
                       <TH>
                         <SortHeader label={t('deals.columns.stage')} sortKey="stage" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
+                      <TH>{t('deals.columns.owner')}</TH>
                       <TH className="text-right">
                         <SortHeader label={t('deals.columns.amount')} sortKey="amount" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} align="right" />
                       </TH>
@@ -287,6 +300,7 @@ export function DealsView(props: DealsViewProps) {
                         <TD>
                           <Badge variant={STAGE_VARIANT[d.stage]}>{t(`deals.stage.${d.stage}`)}</Badge>
                         </TD>
+                        <TD className="text-white/60">{d.owner_id ? memberById.get(d.owner_id) ?? '—' : '—'}</TD>
                         <TD className="text-right font-mono tabular-nums text-white">
                           {formatMoney(d.amount, d.currency, locale)}
                         </TD>
@@ -326,6 +340,7 @@ export function DealsView(props: DealsViewProps) {
           key={form.deal?.id ?? 'new'}
           open
           clients={clients}
+          members={members}
           deal={form.deal}
           onClose={() => setForm({ open: false, deal: null })}
           onSaved={handleSaved}

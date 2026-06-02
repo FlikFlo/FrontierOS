@@ -7,9 +7,11 @@ import { Button } from '../ui/button'
 import { Input, Label, Select, Textarea } from '../ui/input'
 import { useI18n } from '@/i18n/provider'
 import { addClient, editClient, type ClientInput } from '@/app/(app)/clients/actions'
-import type { Client, ClientStatus } from '@/types/database'
+import { SALES_CHANNELS, type Client, type ClientStatus, type SalesChannel } from '@/types/database'
 
 const STATUSES: ClientStatus[] = ['lead', 'active', 'inactive']
+
+export type MemberOption = { id: string; name: string }
 
 /**
  * ClientFormModal — create or edit a client. Submits through the server actions
@@ -20,10 +22,12 @@ export function ClientFormModal({
   open,
   onClose,
   client,
+  members = [],
 }: {
   open: boolean
   onClose: () => void
   client?: Client | null
+  members?: MemberOption[]
 }) {
   const { t } = useI18n()
   const router = useRouter()
@@ -37,6 +41,8 @@ export function ClientFormModal({
     phone: client?.phone ?? '',
     address: client?.address ?? '',
     status: (client?.status ?? 'lead') as ClientStatus,
+    channel: (client?.channel ?? '') as SalesChannel | '',
+    owner_id: client?.owner_id ?? '',
     notes: client?.notes ?? '',
   })
   const [error, setError] = useState<string | null>(null)
@@ -59,6 +65,8 @@ export function ClientFormModal({
       phone: form.phone.trim() || null,
       address: form.address.trim() || null,
       status: form.status,
+      channel: form.channel || null,
+      owner_id: form.owner_id || null,
       notes: form.notes.trim() || null,
     }
 
@@ -122,6 +130,35 @@ export function ClientFormModal({
           <div>
             <Label htmlFor="c-address">{t('clients.columns.address')}</Label>
             <Input id="c-address" value={form.address} onChange={(e) => set('address', e.target.value)} />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <Label htmlFor="c-channel">{t('clients.columns.channel')}</Label>
+            <Select
+              id="c-channel"
+              value={form.channel}
+              onChange={(e) => set('channel', e.target.value as SalesChannel | '')}
+            >
+              <option value="">{t('common.unspecified')}</option>
+              {SALES_CHANNELS.map((c) => (
+                <option key={c} value={c}>
+                  {t(`clients.channel.${c}`)}
+                </option>
+              ))}
+            </Select>
+          </div>
+          <div>
+            <Label htmlFor="c-owner">{t('clients.columns.owner')}</Label>
+            <Select id="c-owner" value={form.owner_id} onChange={(e) => set('owner_id', e.target.value)}>
+              <option value="">{t('common.unassigned')}</option>
+              {members.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+            </Select>
           </div>
         </div>
 

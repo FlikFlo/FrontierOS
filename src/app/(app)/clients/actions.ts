@@ -3,7 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity'
-import type { ClientStatus } from '@/types/database'
+import type { ClientStatus, SalesChannel } from '@/types/database'
 
 export type ClientInput = {
   name: string
@@ -13,6 +13,8 @@ export type ClientInput = {
   phone: string | null
   address: string | null
   status: ClientStatus
+  channel: SalesChannel | null
+  owner_id: string | null
   notes: string | null
 }
 

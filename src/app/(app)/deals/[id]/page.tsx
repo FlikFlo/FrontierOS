@@ -2,15 +2,17 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { DealDetailView, type DealDetail, type DealContact } from '@/components/deals/deal-detail-view'
 import { fetchThread } from '@/lib/thread'
+import { getTeamMembers } from '@/lib/team'
 
 export default async function DealDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   const supabase = await createClient()
   if (!supabase) notFound()
 
-  const [dealRes, clientsRes] = await Promise.all([
+  const [dealRes, clientsRes, members] = await Promise.all([
     supabase.from('deals').select('*').eq('id', id).single(),
     supabase.from('clients').select('id, name').order('name'),
+    getTeamMembers(),
   ])
   if (dealRes.error || !dealRes.data) notFound()
 
@@ -44,6 +46,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
     <DealDetailView
       deal={deal}
       clients={clients}
+      members={members.map((m) => ({ id: m.id, name: m.name }))}
       contact={contact}
       comments={comments}
       attachments={attachments}

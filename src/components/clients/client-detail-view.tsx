@@ -6,7 +6,7 @@ import { ArrowLeft, Pencil, Plus, Globe, MessageCircle, Star } from 'lucide-reac
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
-import { ClientFormModal } from './client-form-modal'
+import { ClientFormModal, type MemberOption } from './client-form-modal'
 import { ContactFormModal } from './contact-form-modal'
 import { EntityThread, type AttachmentView } from '../entity-thread'
 import { useI18n } from '@/i18n/provider'
@@ -75,6 +75,7 @@ export function ClientDetailView({
   orders,
   comments,
   attachments,
+  members = [],
 }: {
   client: Client
   contacts: Contact[]
@@ -82,9 +83,11 @@ export function ClientDetailView({
   orders: OrderMini[]
   comments: Comment[]
   attachments: AttachmentView[]
+  members?: MemberOption[]
 }) {
   const { t, locale } = useI18n()
   useRealtime(RT_TABLES)
+  const ownerName = client.owner_id ? members.find((m) => m.id === client.owner_id)?.name ?? null : null
   const [editOpen, setEditOpen] = useState(false)
   const [contactForm, setContactForm] = useState<{ open: boolean; contact: Contact | null }>({
     open: false,
@@ -146,6 +149,10 @@ export function ClientDetailView({
           </CardHeader>
           <CardContent className="divide-y divide-white/[0.06]">
             <Field label={t('clients.columns.industry')}>{client.industry ?? '—'}</Field>
+            <Field label={t('clients.columns.channel')}>
+              {client.channel ? t(`clients.channel.${client.channel}`) : '—'}
+            </Field>
+            <Field label={t('clients.columns.owner')}>{ownerName ?? t('common.unassigned')}</Field>
             <Field label={t('clients.columns.email')}>{client.email ?? '—'}</Field>
             <Field label={t('clients.columns.phone')}>{client.phone ?? '—'}</Field>
             <Field label={t('clients.columns.website')}>{client.website ?? '—'}</Field>
@@ -248,7 +255,7 @@ export function ClientDetailView({
       <EntityThread entity="client" entityId={client.id} comments={comments} attachments={attachments} />
 
       {editOpen && (
-        <ClientFormModal open client={client} onClose={() => setEditOpen(false)} />
+        <ClientFormModal open client={client} members={members} onClose={() => setEditOpen(false)} />
       )}
       {contactForm.open && (
         <ContactFormModal

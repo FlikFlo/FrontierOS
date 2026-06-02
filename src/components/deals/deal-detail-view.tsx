@@ -8,7 +8,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { EntityThread, type AttachmentView } from '../entity-thread'
-import { DealFormModal, type ClientOption } from './deal-form-modal'
+import { DealFormModal, type ClientOption, type MemberOption } from './deal-form-modal'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
@@ -41,12 +41,14 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function DealDetailView({
   deal,
   clients,
+  members = [],
   contact,
   comments,
   attachments,
 }: {
   deal: DealDetail
   clients: ClientOption[]
+  members?: MemberOption[]
   contact?: DealContact | null
   comments: Comment[]
   attachments: AttachmentView[]
@@ -55,6 +57,7 @@ export function DealDetailView({
   const router = useRouter()
   useRealtime(RT_TABLES)
   const [editOpen, setEditOpen] = useState(false)
+  const ownerName = deal.owner_id ? members.find((m) => m.id === deal.owner_id)?.name ?? null : null
   const weighted = (deal.amount * deal.probability) / 100
   const cases = deal.est_cases_per_month
   const weightedCases = Math.round((cases * deal.probability) / 100)
@@ -111,6 +114,12 @@ export function DealDetailView({
           </div>
           <div className="divide-y divide-white/[0.06]">
             <Field label={t('deals.columns.probability')}>{deal.probability}%</Field>
+            <Field label={t('deals.columns.owner')}>{ownerName ?? t('common.unassigned')}</Field>
+            {deal.stage === 'lost' && (
+              <Field label={t('deals.columns.lostReason')}>
+                {deal.lost_reason ? t(`deals.lostReason.${deal.lost_reason}`) : t('common.unspecified')}
+              </Field>
+            )}
             <Field label={t('deals.columns.close')}>{formatDate(deal.expected_close_date, locale)}</Field>
             <Field label={t('deals.detail.created')}>{formatDate(deal.created_at, locale)}</Field>
             <Field label={t('deals.detail.updated')}>{formatDate(deal.updated_at, locale)}</Field>
@@ -139,6 +148,7 @@ export function DealDetailView({
         <DealFormModal
           open
           clients={clients}
+          members={members}
           deal={deal}
           onClose={() => setEditOpen(false)}
           onSaved={() => router.refresh()}
