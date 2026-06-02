@@ -11,6 +11,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
+import { nextOrderNumber } from '@/lib/order-number'
 import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
@@ -95,6 +96,10 @@ export function OrdersView(props: OrdersViewProps) {
   const clients = props.status === 'ok' ? props.clients : (NO_OPTS as ClientOpt[])
   const products = props.status === 'ok' ? props.products : (NO_OPTS as ProductOpt[])
   const today = new Date().toISOString().slice(0, 10)
+  const nextNumber = useMemo(
+    () => nextOrderNumber(rows.map((o) => o.order_number), Number(today.slice(0, 4))),
+    [rows, today],
+  )
 
   const pageIds = ctrl.pageRows.map((o) => o.id)
   const allOnPage = pageIds.length > 0 && pageIds.every((id) => sel.selected.has(id))
@@ -294,6 +299,7 @@ export function OrdersView(props: OrdersViewProps) {
           products={products}
           order={form.order}
           today={today}
+          nextNumber={nextNumber}
           onClose={() => setForm({ open: false, order: null })}
         />
       )}

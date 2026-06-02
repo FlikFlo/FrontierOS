@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { logActivity } from '@/lib/activity'
+import { nextOrderNumber } from '@/lib/order-number'
 import type { OrderStatus } from '@/types/database'
 
 export type OrderLineInput = {
@@ -31,11 +32,16 @@ export async function addOrder(input: OrderInput, lines: OrderLineInput[]): Prom
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
 
-  const { data: order, error } = await supabase
-    .from('orders')
-    .insert({ ...input, currency: 'MAD' })
-    .select('id')
-    .single()
+  // Insert; if the order number collided (two people created at once), fetch the
+  // live list, regenerate the next number, and retry once.
+  let number = input.order_number.trim()
+  let attempt = await supabase.from('orders').insert({ ...input, order_number: number, currency: 'MAD' }).select('id').single()
+  if (attempt.error?.code === '23505') {
+    const { data: existing } = await supabase.from('orders').select('order_number')
+    number = nextOrderNumber((existing ?? []).map((o) => o.order_number), Number(input.order_date.slice(0, 4)))
+    attempt = await supabase.from('orders').insert({ ...input, order_number: number, currency: 'MAD' }).select('id').single()
+  }
+  const { data: order, error } = attempt
   if (error || !order) return { error: error?.message ?? 'Error' }
 
   if (lines.length) {
@@ -45,7 +51,7 @@ export async function addOrder(input: OrderInput, lines: OrderLineInput[]): Prom
     if (liErr) return { error: liErr.message }
   }
 
-  await logActivity('order', 'created', input.order_number, order.id)
+  await logActivity('order', 'created', number, order.id)
   revalidate()
   return { error: null }
 }

@@ -28,6 +28,7 @@ export function OrderFormModal({
   products,
   order,
   today,
+  nextNumber = '',
 }: {
   open: boolean
   onClose: () => void
@@ -35,13 +36,14 @@ export function OrderFormModal({
   products: ProductOpt[]
   order?: OrderRow | null
   today: string
+  nextNumber?: string
 }) {
   const { t, locale } = useI18n()
   const router = useRouter()
   const editing = Boolean(order)
 
   const [form, setForm] = useState({
-    order_number: order?.order_number ?? '',
+    order_number: order?.order_number ?? nextNumber,
     client_id: order?.client_id ?? '',
     status: (order?.status ?? 'draft') as OrderStatus,
     order_date: order?.order_date ?? today,
@@ -126,6 +128,7 @@ export function OrderFormModal({
           <div>
             <Label htmlFor="o-number">{t('orders.form.number')}</Label>
             <Input id="o-number" required value={form.order_number} onChange={(e) => setField('order_number', e.target.value)} />
+            {!editing && <p className="mt-1 text-[11px] text-white/35">{t('orders.form.autoNumber')}</p>}
           </div>
           <div>
             <Label htmlFor="o-date">{t('orders.columns.date')}</Label>
