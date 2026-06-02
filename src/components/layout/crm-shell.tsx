@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, type ReactNode } from "react";
-import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
@@ -11,7 +10,6 @@ import {
   ShoppingCart,
   Package,
   Settings,
-  Bell,
   Search,
   Activity,
 } from "lucide-react";
@@ -20,6 +18,7 @@ import { BottomNav } from "./bottom-nav";
 import { CommandPalette } from "../command-palette";
 import { LangSwitcher } from "../ui/lang-switcher";
 import { UserMenu } from "../ui/user-menu";
+import { NotificationBell, type NotificationItem } from "./notification-bell";
 import { useI18n } from "@/i18n/provider";
 import { useRole } from "@/rbac/provider";
 import { canAccess, moduleForPath, type ModuleKey } from "@/rbac/config";
@@ -39,10 +38,12 @@ export function CrmShell({
   children,
   userEmail = null,
   overdueCount = 0,
+  notifications = [],
 }: {
   children: ReactNode
   userEmail?: string | null
   overdueCount?: number
+  notifications?: NotificationItem[]
 }) {
   const { t } = useI18n();
   const { role } = useRole();
@@ -143,18 +144,7 @@ export function CrmShell({
               <Search size={18} />
             </button>
             <LangSwitcher />
-            <Link
-              href="/calendar"
-              className="relative flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
-              aria-label={t("a11y.notifications")}
-            >
-              <Bell size={18} />
-              {overdueCount > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[9px] font-bold leading-none text-white">
-                  {overdueCount > 9 ? "9+" : overdueCount}
-                </span>
-              )}
-            </Link>
+            <NotificationBell items={notifications} />
             <UserMenu email={userEmail} />
           </>
         }

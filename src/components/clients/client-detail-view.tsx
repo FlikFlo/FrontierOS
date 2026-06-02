@@ -2,7 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { ArrowLeft, Pencil, Plus, Globe, MessageCircle, Star } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, Globe, Star } from 'lucide-react'
+import { WhatsAppMenu } from '../whatsapp-menu'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -11,7 +12,7 @@ import { ContactFormModal } from './contact-form-modal'
 import { EntityThread, type AttachmentView } from '../entity-thread'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
-import { formatDate, formatMoney, waLink } from '@/lib/utils'
+import { formatDate, formatMoney } from '@/lib/utils'
 
 const RT_TABLES = ['clients', 'contacts']
 import type {
@@ -95,7 +96,6 @@ export function ClientDetailView({
   })
 
   const site = siteUrl(client.website)
-  const wa = waLink(client.phone)
 
   return (
     <div className="space-y-4">
@@ -124,17 +124,7 @@ export function ClientDetailView({
               <Globe size={16} />
             </a>
           )}
-          {wa && (
-            <a
-              href={wa}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={t('common.whatsapp')}
-              className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-white/50 hover:bg-success/10 hover:text-success"
-            >
-              <MessageCircle size={16} />
-            </a>
-          )}
+          <WhatsAppMenu phone={client.phone} clientName={client.name} />
           <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
             <Pencil size={14} />
             {t('common.edit')}

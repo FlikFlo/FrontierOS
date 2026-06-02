@@ -64,6 +64,33 @@ const en = {
     results: 'Results',
     empty: 'No results',
   },
+  notifications: {
+    title: 'Follow-ups',
+    empty: 'All caught up',
+    viewAll: 'View calendar',
+  },
+  whatsapp: {
+    title: 'Quick message',
+    openChat: 'Open chat (no message)',
+    templates: {
+      intro: {
+        label: 'Introduction',
+        body: 'Hello {client}, this is Frontier — we make premium non-alcoholic beer. Would you have a moment to discuss carrying it?',
+      },
+      followup: {
+        label: 'Follow-up',
+        body: 'Hello {client}, just following up on our conversation about Frontier non-alcoholic beer. Happy to answer any questions.',
+      },
+      sample: {
+        label: 'Offer samples',
+        body: 'Hello {client}, we’d love to drop off a few free samples of Frontier for you to taste. When would suit you?',
+      },
+      order: {
+        label: 'Confirm order',
+        body: 'Hello {client}, thank you for your order with Frontier! We’re preparing it and will confirm the delivery date shortly.',
+      },
+    },
+  },
   activity: {
     subtitle: 'Recent changes across your workspace',
     empty: 'No activity yet',
@@ -123,6 +150,17 @@ const en = {
     form: { newTitle: 'New client', editTitle: 'Edit client' },
     delete: { title: 'Delete client?', body: 'This permanently removes “{name}”.' },
     detail: { back: 'Clients', info: 'Details', deals: 'Deals', orders: 'Orders' },
+    import: {
+      button: 'Import',
+      title: 'Import clients from CSV',
+      hint: 'Columns are matched by header: name, email, phone, industry, address, website, status, channel. Only name is required.',
+      choose: 'Choose a CSV file',
+      preview: '{n} clients ready',
+      confirm: 'Import {n}',
+      done: 'Imported {n} clients',
+      noRows: 'No valid rows found (need a “name” column).',
+      parseError: 'Could not read this file.',
+    },
   },
   contacts: {
     title: 'Contacts',
@@ -358,6 +396,33 @@ const fr: Dictionary = {
     results: 'Résultats',
     empty: 'Aucun résultat',
   },
+  notifications: {
+    title: 'Relances',
+    empty: 'Tout est à jour',
+    viewAll: 'Voir le calendrier',
+  },
+  whatsapp: {
+    title: 'Message rapide',
+    openChat: 'Ouvrir la discussion (sans message)',
+    templates: {
+      intro: {
+        label: 'Introduction',
+        body: 'Bonjour {client}, ici Frontier — nous produisons de la bière sans alcool premium. Auriez-vous un moment pour en parler ?',
+      },
+      followup: {
+        label: 'Relance',
+        body: 'Bonjour {client}, je reviens vers vous suite à notre échange sur la bière sans alcool Frontier. Je reste à votre disposition.',
+      },
+      sample: {
+        label: 'Proposer des échantillons',
+        body: 'Bonjour {client}, nous aimerions vous déposer quelques échantillons gratuits de Frontier à déguster. Quand cela vous conviendrait-il ?',
+      },
+      order: {
+        label: 'Confirmer la commande',
+        body: 'Bonjour {client}, merci pour votre commande chez Frontier ! Nous la préparons et confirmerons la date de livraison très vite.',
+      },
+    },
+  },
   activity: {
     subtitle: 'Changements récents dans votre espace',
     empty: 'Aucune activité',
@@ -417,6 +482,17 @@ const fr: Dictionary = {
     form: { newTitle: 'Nouveau client', editTitle: 'Modifier le client' },
     delete: { title: 'Supprimer le client ?', body: 'Cela supprime définitivement « {name} ».' },
     detail: { back: 'Clients', info: 'Détails', deals: 'Affaires', orders: 'Commandes' },
+    import: {
+      button: 'Importer',
+      title: 'Importer des clients (CSV)',
+      hint: 'Les colonnes sont reconnues par leur en-tête : nom, email, téléphone, secteur, adresse, site, statut, canal. Seul le nom est obligatoire.',
+      choose: 'Choisir un fichier CSV',
+      preview: '{n} clients prêts',
+      confirm: 'Importer {n}',
+      done: '{n} clients importés',
+      noRows: 'Aucune ligne valide (colonne « nom » requise).',
+      parseError: 'Impossible de lire ce fichier.',
+    },
   },
   contacts: {
     title: 'Contacts',

@@ -30,21 +30,33 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     if (profile && isRole(profile.role)) role = profile.role
   }
 
-  // Overdue reminders → bell badge.
+  // Notification center: open follow-ups due within the next week or overdue,
+  // earliest deadline first. The bell badge counts the overdue ones.
+  const today = new Date().toISOString().slice(0, 10)
+  const h = new Date(today)
+  h.setDate(h.getDate() + 7)
+  const horizon = h.toISOString().slice(0, 10)
   let overdueCount = 0
+  let notifications: { id: string; title: string; dueDate: string; overdue: boolean; clientName: string | null }[] = []
   if (supabase) {
-    const today = new Date().toISOString().slice(0, 10)
-    const { count } = await supabase
+    const { data } = await supabase
       .from('reminders')
-      .select('id', { count: 'exact', head: true })
+      .select('id, title, due_date, clients(name)')
       .eq('done', false)
-      .lt('due_date', today)
-    overdueCount = count ?? 0
+      .lte('due_date', horizon)
+      .order('due_date', { ascending: true })
+      .limit(10)
+    notifications = (data ?? []).map((r) => {
+      const c = r.clients as unknown as { name: string } | { name: string }[] | null
+      const clientName = Array.isArray(c) ? c[0]?.name ?? null : c?.name ?? null
+      return { id: r.id, title: r.title, dueDate: r.due_date, overdue: r.due_date < today, clientName }
+    })
+    overdueCount = notifications.filter((n) => n.overdue).length
   }
 
   return (
     <RoleProvider role={role}>
-      <CrmShell userEmail={email} overdueCount={overdueCount}>
+      <CrmShell userEmail={email} overdueCount={overdueCount} notifications={notifications}>
         {children}
       </CrmShell>
     </RoleProvider>

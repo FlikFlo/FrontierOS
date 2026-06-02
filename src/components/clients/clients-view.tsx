@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, MessageCircle, Globe, Download } from 'lucide-react'
+import { Plus, Pencil, Trash2, MessageCircle, Globe, Download, Upload } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -11,6 +11,7 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ClientFormModal, type MemberOption } from './client-form-modal'
+import { ImportModal } from './import-modal'
 import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
@@ -88,6 +89,7 @@ export function ClientsView(props: ClientsViewProps) {
   )
 
   const [form, setForm] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null })
+  const [importOpen, setImportOpen] = useState(false)
   const [toDelete, setToDelete] = useState<Client | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [bulkConfirm, setBulkConfirm] = useState(false)
@@ -129,6 +131,12 @@ export function ClientsView(props: ClientsViewProps) {
             <Button size="sm" variant="outline" onClick={() => downloadCsv('clients.csv', ctrl.rows, clientCsvCols)}>
               <Download size={15} />
               {t('common.export')}
+            </Button>
+          )}
+          {props.status === 'ok' && (
+            <Button size="sm" variant="outline" onClick={() => setImportOpen(true)}>
+              <Upload size={15} />
+              {t('clients.import.button')}
             </Button>
           )}
           {props.status === 'ok' && (
@@ -289,6 +297,8 @@ export function ClientsView(props: ClientsViewProps) {
           onClose={() => setForm({ open: false, client: null })}
         />
       )}
+
+      {importOpen && <ImportModal open onClose={() => setImportOpen(false)} />}
 
       <ConfirmDialog
         open={Boolean(toDelete)}

@@ -46,6 +46,37 @@ export async function editClient(id: string, input: ClientInput): Promise<Action
   return { error: null }
 }
 
+export type ClientImportRow = {
+  name: string
+  email: string | null
+  phone: string | null
+  industry: string | null
+  address: string | null
+  website: string | null
+  status: ClientStatus
+  channel: SalesChannel | null
+}
+
+/** Bulk-insert clients from a parsed CSV. Returns how many were inserted. */
+export async function importClients(rows: ClientImportRow[]): Promise<{ error: string | null; inserted: number }> {
+  const supabase = await createClient()
+  if (!supabase) return { error: 'Supabase is not configured', inserted: 0 }
+
+  const clean = rows
+    .filter((r) => r.name.trim())
+    .slice(0, 1000)
+    .map((r) => ({ ...r, name: r.name.trim() }))
+  if (!clean.length) return { error: 'No valid rows', inserted: 0 }
+
+  const { data, error } = await supabase.from('clients').insert(clean).select('id')
+  if (error) return { error: error.message, inserted: 0 }
+
+  await logActivity('client', 'created', `Imported ${data?.length ?? 0} clients`)
+  revalidatePath('/clients')
+  revalidatePath('/dashboard')
+  return { error: null, inserted: data?.length ?? 0 }
+}
+
 export async function removeClient(id: string): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
