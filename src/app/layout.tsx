@@ -4,7 +4,6 @@ import './globals.css'
 import { ToastProvider } from '@/components/ui/toast'
 import { I18nProvider } from '@/i18n/provider'
 import { getLocale } from '@/i18n/server'
-import { getTheme } from '@/lib/theme-server'
 
 const dmSans = DM_Sans({
   variable: '--font-dm-sans',
@@ -30,14 +29,10 @@ export const viewport: Viewport = {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const [locale, theme] = await Promise.all([getLocale(), getTheme()])
+  const locale = await getLocale()
 
   return (
-    <html
-      lang={locale}
-      data-theme={theme}
-      className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}
-    >
+    <html lang={locale} className={`${dmSans.variable} ${dmMono.variable} h-full antialiased`}>
       <body className="min-h-full">
         <I18nProvider initialLocale={locale}>
           <ToastProvider>{children}</ToastProvider>

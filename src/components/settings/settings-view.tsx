@@ -8,12 +8,10 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Input, Select } from '../ui/input'
 import { LangSwitcher } from '../ui/lang-switcher'
-import { ThemeToggle } from '../ui/theme-toggle'
 import { useI18n } from '@/i18n/provider'
 import { createClient } from '@/lib/supabase/client'
 import { updateMyProfile, updateMember } from '@/app/(app)/settings/actions'
 import { ROLES, type Role } from '@/rbac/config'
-import type { Theme } from '@/lib/theme'
 
 export type TeamMember = { id: string; email: string | null; full_name: string | null; role: Role }
 
@@ -23,14 +21,12 @@ export function SettingsView({
   fullName,
   userId,
   members = [],
-  theme = 'dark',
 }: {
   email: string | null
   role: Role
   fullName?: string | null
   userId?: string | null
   members?: TeamMember[]
-  theme?: Theme
 }) {
   const { t } = useI18n()
   const router = useRouter()
@@ -105,15 +101,9 @@ export function SettingsView({
           <CardHeader>
             <CardTitle>{t('settings.preferences')}</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3 text-sm">
-            <div className="flex items-center justify-between">
-              <span className="text-white/45">{t('settings.language')}</span>
-              <LangSwitcher />
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-white/45">{t('settings.theme')}</span>
-              <ThemeToggle initial={theme} />
-            </div>
+          <CardContent className="flex items-center justify-between text-sm">
+            <span className="text-white/45">{t('settings.language')}</span>
+            <LangSwitcher />
           </CardContent>
         </Card>
       </div>

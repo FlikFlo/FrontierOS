@@ -19,9 +19,7 @@ import { AppShell } from "./app-shell";
 import { BottomNav } from "./bottom-nav";
 import { CommandPalette } from "../command-palette";
 import { LangSwitcher } from "../ui/lang-switcher";
-import { ThemeToggle } from "../ui/theme-toggle";
 import { UserMenu } from "../ui/user-menu";
-import type { Theme } from "@/lib/theme";
 import { useI18n } from "@/i18n/provider";
 import { useRole } from "@/rbac/provider";
 import { canAccess, moduleForPath, type ModuleKey } from "@/rbac/config";
@@ -41,12 +39,10 @@ export function CrmShell({
   children,
   userEmail = null,
   overdueCount = 0,
-  theme = "dark",
 }: {
   children: ReactNode
   userEmail?: string | null
   overdueCount?: number
-  theme?: Theme
 }) {
   const { t } = useI18n();
   const { role } = useRole();
@@ -144,7 +140,6 @@ export function CrmShell({
             >
               <Search size={18} />
             </button>
-            <ThemeToggle initial={theme} />
             <LangSwitcher />
             <Link
               href="/calendar"
