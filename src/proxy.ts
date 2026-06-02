@@ -16,6 +16,10 @@ export async function proxy(request: NextRequest) {
 
   let response = NextResponse.next({ request })
 
+  // API routes authenticate themselves (e.g. the cron digest uses CRON_SECRET);
+  // don't bounce them to /login.
+  if (request.nextUrl.pathname.startsWith('/api/')) return response
+
   // Dev bypass (and the no-env case) skip auth entirely.
   if (isAuthBypassed() || !url || !key) return response
 
