@@ -29,6 +29,7 @@ type DealsViewProps =
   | { status: 'ok'; rows: DealRow[]; clients: ClientOption[] }
 
 const NO_CLIENTS: ClientOption[] = []
+const NO_ROWS: DealRow[] = []
 
 const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'danger'> = {
   lead: 'default',
@@ -55,7 +56,17 @@ export function DealsView(props: DealsViewProps) {
   useRealtime(RT_TABLES)
   const clients = props.status === 'ok' ? props.clients : NO_CLIENTS
 
-  const [deals, setDeals] = useState<DealRow[]>(props.status === 'ok' ? props.rows : [])
+  // Local state powers optimistic kanban drag, but must re-sync whenever the
+  // server sends fresh rows (navigation OR a realtime router.refresh()).
+  // Render-phase reset (vs. an effect) keeps it instant and lint-clean.
+  const incoming = props.status === 'ok' ? props.rows : NO_ROWS
+  const [deals, setDeals] = useState<DealRow[]>(incoming)
+  const [syncedRows, setSyncedRows] = useState<DealRow[]>(incoming)
+  if (incoming !== syncedRows) {
+    setSyncedRows(incoming)
+    setDeals(incoming)
+  }
+
   const [view, setView] = useState<'board' | 'table'>('board')
   const [stageFilter, setStageFilter] = useState('all')
   const [form, setForm] = useState<{ open: boolean; deal: Deal | null }>({ open: false, deal: null })

@@ -31,9 +31,19 @@ export function useRealtime(tables: string[]) {
     for (const table of list) {
       channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh)
     }
-    channel.subscribe()
+
+    let cancelled = false
+    // Apply the signed-in user's access token to Realtime BEFORE subscribing,
+    // otherwise the socket authorizes as `anon` and RLS (`to authenticated`)
+    // silently drops every change event.
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return
+      if (data.session) supabase.realtime.setAuth(data.session.access_token)
+      channel.subscribe()
+    })
 
     return () => {
+      cancelled = true
       if (timer) clearTimeout(timer)
       supabase.removeChannel(channel)
     }
