@@ -3,8 +3,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card'
 import { DataState } from '../data-state'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatMoney, cn } from '@/lib/utils'
 import type { DealStage } from '@/types/database'
+
+const RT_TABLES = ['deals', 'orders', 'order_items', 'clients']
 
 export type DashboardMetrics = {
   clientsTotal: number
@@ -45,6 +48,7 @@ function Kpi({ label, value, sub }: { label: string; value: string; sub: string 
 
 export function DashboardView(props: DashboardViewProps) {
   const { t, tn, locale } = useI18n()
+  useRealtime(RT_TABLES)
 
   const header = (
     <div>

@@ -8,9 +8,12 @@ import { Button } from './ui/button'
 import { Modal } from './ui/modal'
 import { Textarea } from './ui/input'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatDate } from '@/lib/utils'
 import { addComment, removeComment, uploadAttachment, removeAttachment } from '@/app/(app)/thread-actions'
 import type { Comment, EntityKind } from '@/types/database'
+
+const RT_TABLES = ['comments', 'attachments']
 
 export type AttachmentView = {
   id: string
@@ -36,6 +39,7 @@ export function EntityThread({
 }) {
   const { t, locale } = useI18n()
   const router = useRouter()
+  useRealtime(RT_TABLES)
   const fileRef = useRef<HTMLInputElement | null>(null)
 
   const [comment, setComment] = useState('')

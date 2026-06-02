@@ -7,8 +7,11 @@ import { Button } from '../ui/button'
 import { DataState } from '../data-state'
 import { ReminderFormModal, type ClientOpt } from './reminder-form-modal'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { cn } from '@/lib/utils'
 import type { Reminder } from '@/types/database'
+
+const RT_TABLES = ['reminders']
 
 type CalendarViewProps =
   | { status: 'unconfigured' }
@@ -23,6 +26,7 @@ const NO: never[] = []
 
 export function CalendarView(props: CalendarViewProps) {
   const { t, locale } = useI18n()
+  useRealtime(RT_TABLES)
   const reminders = props.status === 'ok' ? props.reminders : (NO as Reminder[])
   const clients = props.status === 'ok' ? props.clients : (NO as ClientOpt[])
 

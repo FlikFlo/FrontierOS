@@ -13,9 +13,12 @@ import { DataState } from '../data-state'
 import { ClientFormModal } from './client-form-modal'
 import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { removeClient } from '@/app/(app)/clients/actions'
 import { waLink } from '@/lib/utils'
 import type { Client, ClientStatus } from '@/types/database'
+
+const RT_TABLES = ['clients']
 
 type ClientsViewProps =
   | { status: 'unconfigured' }
@@ -47,6 +50,7 @@ const CLIENT_SORTS: Record<string, (c: Client) => string | number> = {
 export function ClientsView(props: ClientsViewProps) {
   const { t } = useI18n()
   const router = useRouter()
+  useRealtime(RT_TABLES)
   const rows = props.status === 'ok' ? props.rows : NO_ROWS
   const [statusFilter, setStatusFilter] = useState('all')
   const visible = useMemo(

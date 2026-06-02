@@ -14,9 +14,12 @@ import { DealsBoard } from './deals-board'
 import { DealFormModal, type ClientOption } from './deal-form-modal'
 import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { moveDeal, removeDeal } from '@/app/(app)/deals/actions'
 import type { Deal, DealStage } from '@/types/database'
+
+const RT_TABLES = ['deals']
 
 export type DealRow = Deal & { clientName: string | null }
 
@@ -49,6 +52,7 @@ const DEAL_SORTS: Record<string, (d: DealRow) => string | number> = {
 
 export function DealsView(props: DealsViewProps) {
   const { t, locale } = useI18n()
+  useRealtime(RT_TABLES)
   const clients = props.status === 'ok' ? props.clients : NO_CLIENTS
 
   const [deals, setDeals] = useState<DealRow[]>(props.status === 'ok' ? props.rows : [])

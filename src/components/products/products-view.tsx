@@ -12,9 +12,12 @@ import { DataState } from '../data-state'
 import { ProductFormModal } from './product-form-modal'
 import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatMoney } from '@/lib/utils'
 import { removeProduct } from '@/app/(app)/products/actions'
 import type { Product } from '@/types/database'
+
+const RT_TABLES = ['products']
 
 type ProductsViewProps =
   | { status: 'unconfigured' }
@@ -34,6 +37,7 @@ const PRODUCT_SORTS: Record<string, (p: Product) => string | number> = {
 export function ProductsView(props: ProductsViewProps) {
   const { t, locale } = useI18n()
   const router = useRouter()
+  useRealtime(RT_TABLES)
   const rows = props.status === 'ok' ? props.rows : NO_ROWS
   const [stateFilter, setStateFilter] = useState('all')
   const visible = useMemo(

@@ -13,9 +13,12 @@ import { DataState } from '../data-state'
 import { OrderFormModal, type ClientOpt, type ProductOpt } from './order-form-modal'
 import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
+import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { removeOrder } from '@/app/(app)/orders/actions'
 import type { OrderStatus } from '@/types/database'
+
+const RT_TABLES = ['orders', 'order_items']
 
 export type OrderLine = {
   product_id: string | null
@@ -68,6 +71,7 @@ const ORDER_SORTS: Record<string, (o: OrderRow) => string | number> = {
 export function OrdersView(props: OrdersViewProps) {
   const { t, locale } = useI18n()
   const router = useRouter()
+  useRealtime(RT_TABLES)
   const rows = props.status === 'ok' ? props.rows : NO_ROWS
   const [statusFilter, setStatusFilter] = useState('all')
   const visible = useMemo(
