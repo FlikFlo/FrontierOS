@@ -22,7 +22,11 @@ export async function addDeal(input: DealInput): Promise<Result<Deal | null>> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured', data: null }
 
-  const { data, error } = await supabase.from('deals').insert(input).select().single()
+  const { data, error } = await supabase
+    .from('deals')
+    .insert({ ...input, currency: 'MAD' })
+    .select()
+    .single()
   if (error) return { error: error.message, data: null }
 
   await logActivity('deal', 'created', input.title, data?.id)
@@ -34,7 +38,12 @@ export async function editDeal(id: string, input: DealInput): Promise<Result<Dea
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured', data: null }
 
-  const { data, error } = await supabase.from('deals').update(input).eq('id', id).select().single()
+  const { data, error } = await supabase
+    .from('deals')
+    .update({ ...input, currency: 'MAD' })
+    .eq('id', id)
+    .select()
+    .single()
   if (error) return { error: error.message, data: null }
 
   await logActivity('deal', 'updated', input.title, id)
