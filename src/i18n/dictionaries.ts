@@ -75,19 +75,19 @@ const en = {
     templates: {
       intro: {
         label: 'Introduction',
-        body: 'Hello {client}, this is Frontier — we make premium non-alcoholic beer. Would you have a moment to discuss carrying it?',
+        body: 'Hello {client}, this is Chamalia — we make premium non-alcoholic beer. Would you have a moment to discuss carrying it?',
       },
       followup: {
         label: 'Follow-up',
-        body: 'Hello {client}, just following up on our conversation about Frontier non-alcoholic beer. Happy to answer any questions.',
+        body: 'Hello {client}, just following up on our conversation about Chamalia non-alcoholic beer. Happy to answer any questions.',
       },
       sample: {
         label: 'Offer samples',
-        body: 'Hello {client}, we’d love to drop off a few free samples of Frontier for you to taste. When would suit you?',
+        body: 'Hello {client}, we’d love to drop off a few free samples of Chamalia for you to taste. When would suit you?',
       },
       order: {
         label: 'Confirm order',
-        body: 'Hello {client}, thank you for your order with Frontier! We’re preparing it and will confirm the delivery date shortly.',
+        body: 'Hello {client}, thank you for your order with Chamalia! We’re preparing it and will confirm the delivery date shortly.',
       },
     },
   },
@@ -407,19 +407,19 @@ const fr: Dictionary = {
     templates: {
       intro: {
         label: 'Introduction',
-        body: 'Bonjour {client}, ici Frontier — nous produisons de la bière sans alcool premium. Auriez-vous un moment pour en parler ?',
+        body: 'Bonjour {client}, ici Chamalia — nous produisons de la bière sans alcool premium. Auriez-vous un moment pour en parler ?',
       },
       followup: {
         label: 'Relance',
-        body: 'Bonjour {client}, je reviens vers vous suite à notre échange sur la bière sans alcool Frontier. Je reste à votre disposition.',
+        body: 'Bonjour {client}, je reviens vers vous suite à notre échange sur la bière sans alcool Chamalia. Je reste à votre disposition.',
       },
       sample: {
         label: 'Proposer des échantillons',
-        body: 'Bonjour {client}, nous aimerions vous déposer quelques échantillons gratuits de Frontier à déguster. Quand cela vous conviendrait-il ?',
+        body: 'Bonjour {client}, nous aimerions vous déposer quelques échantillons gratuits de Chamalia à déguster. Quand cela vous conviendrait-il ?',
       },
       order: {
         label: 'Confirmer la commande',
-        body: 'Bonjour {client}, merci pour votre commande chez Frontier ! Nous la préparons et confirmerons la date de livraison très vite.',
+        body: 'Bonjour {client}, merci pour votre commande chez Chamalia ! Nous la préparons et confirmerons la date de livraison très vite.',
       },
     },
   },

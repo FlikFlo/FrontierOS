@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { getLocale } from '@/i18n/server'
 import { formatMoney, formatDate } from '@/lib/utils'
+import { COMPANY } from '@/lib/company'
 import { ProformaActions } from '@/components/proforma/proforma-actions'
 
 const COPY = {
@@ -19,7 +20,6 @@ const COPY = {
     note: 'This is a proforma invoice, not a tax invoice. Prices in MAD.',
     print: 'Print / Save PDF',
     back: 'Back to order',
-    company: 'Frontier — Non-alcoholic beverages',
   },
   fr: {
     title: 'Facture proforma',
@@ -35,7 +35,6 @@ const COPY = {
     note: 'Ceci est une facture proforma, sans valeur fiscale. Prix en MAD.',
     print: 'Imprimer / Enregistrer PDF',
     back: 'Retour à la commande',
-    company: 'Frontier — Boissons sans alcool',
   },
 } as const
 
@@ -80,7 +79,8 @@ export default async function ProformaPage({ params }: { params: Promise<{ id: s
             </p>
           </div>
           <div className="text-right text-sm">
-            <p className="font-semibold">{c.company}</p>
+            <p className="font-bold tracking-tight">{COMPANY.legalName}</p>
+            <p className="mt-0.5 text-neutral-500">{COMPANY.tagline[locale]}</p>
             <p className="mt-1 text-neutral-500">
               {c.date}: {formatDate(order.order_date, locale)}
             </p>
@@ -90,8 +90,11 @@ export default async function ProformaPage({ params }: { params: Promise<{ id: s
         <div className="grid grid-cols-2 gap-8 py-6 text-sm">
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">{c.from}</p>
-            <p className="font-medium">{c.company}</p>
-            <p className="text-neutral-500">Maroc</p>
+            <p className="font-medium">{COMPANY.legalName}</p>
+            <p className="text-neutral-500">{COMPANY.address}</p>
+            <p className="mt-1 text-[12px] text-neutral-400">
+              ICE: {COMPANY.ice} · RC: {COMPANY.rc} · IF: {COMPANY.if}
+            </p>
           </div>
           <div>
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-400">{c.to}</p>
