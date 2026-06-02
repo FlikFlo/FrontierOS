@@ -229,6 +229,28 @@ export interface Database {
         Update: Partial<Database['public']['Tables']['activity_log']['Insert']>
         Relationships: []
       }
+      invitations: {
+        Row: {
+          id: string
+          role: 'owner' | 'sales_manager' | 'brewer'
+          label: string | null
+          created_by: string | null
+          expires_at: string | null
+          revoked: boolean
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          role: 'owner' | 'sales_manager' | 'brewer'
+          label?: string | null
+          created_by?: string | null
+          expires_at?: string | null
+          revoked?: boolean
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['invitations']['Insert']>
+        Relationships: []
+      }
       comments: {
         Row: {
           id: string
@@ -357,3 +379,4 @@ export type Reminder = Database['public']['Tables']['reminders']['Row']
 export type Comment = Database['public']['Tables']['comments']['Row']
 export type Attachment = Database['public']['Tables']['attachments']['Row']
 export type Activity = Database['public']['Tables']['activity_log']['Row']
+export type Invitation = Database['public']['Tables']['invitations']['Row']

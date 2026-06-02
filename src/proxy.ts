@@ -43,37 +43,36 @@ export async function proxy(request: NextRequest) {
   } = await supabase.auth.getUser()
 
   const { pathname } = request.nextUrl
-  const isAuthRoute = pathname.startsWith('/login')
+  // Public auth pages: sign-in and the invite-based registration page.
+  const isPublic = pathname.startsWith('/login') || pathname.startsWith('/register')
 
-  if (!user && !isAuthRoute) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/login'
-    redirectUrl.searchParams.set('next', pathname)
-    return NextResponse.redirect(redirectUrl)
+  const redirectTo = (to: string, withNext = false) => {
+    const url = request.nextUrl.clone()
+    url.pathname = to
+    url.search = ''
+    if (withNext) url.searchParams.set('next', pathname)
+    return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute) {
-    const redirectUrl = request.nextUrl.clone()
-    redirectUrl.pathname = '/dashboard'
-    redirectUrl.search = ''
-    return NextResponse.redirect(redirectUrl)
+  if (!user) {
+    return isPublic ? response : redirectTo('/login', true)
   }
 
-  // Server-side role enforcement: bounce a signed-in user away from a module
-  // their role can't access (mirrors the client nav guard, but authoritative).
-  if (user && !isAuthRoute) {
-    const mod = moduleForPath(pathname)
-    if (mod) {
-      const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
-      const role = isRole(profile?.role) ? profile.role : DEFAULT_ROLE
-      if (!canAccess(role, mod)) {
-        const redirectUrl = request.nextUrl.clone()
-        redirectUrl.pathname = '/dashboard'
-        redirectUrl.search = ''
-        return NextResponse.redirect(redirectUrl)
-      }
-    }
+  // Resolve the signed-in user's role (authoritative gate).
+  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+  const role = isRole(profile?.role) ? profile.role : DEFAULT_ROLE
+
+  // 'pending' = registered but not yet invited → only the no-access screen.
+  if (role === 'pending') {
+    return pathname === '/no-access' ? response : redirectTo('/no-access')
   }
+
+  // Activated users never need the auth/no-access pages.
+  if (isPublic || pathname === '/no-access') return redirectTo('/dashboard')
+
+  // Module enforcement (mirrors the client nav guard, but authoritative).
+  const mod = moduleForPath(pathname)
+  if (mod && !canAccess(role, mod)) return redirectTo('/dashboard')
 
   return response
 }

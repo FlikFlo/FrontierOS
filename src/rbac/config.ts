@@ -6,10 +6,13 @@
    mirrors this server-side) — this file stays the single source of truth.
    ========================================================================== */
 
-export type Role = 'owner' | 'sales_manager' | 'brewer'
+// 'pending' is the no-access role for a freshly-registered user who hasn't
+// redeemed an invite. It's a real role but never assignable from the UI.
+export type Role = 'owner' | 'sales_manager' | 'brewer' | 'pending'
 
+/** Roles an owner can assign in the Team UI (excludes 'pending'). */
 export const ROLES: Role[] = ['owner', 'sales_manager', 'brewer']
-export const DEFAULT_ROLE: Role = 'owner'
+export const DEFAULT_ROLE: Role = 'pending'
 
 /** Functional areas of the app. Nav sections + routes belong to one. */
 export type ModuleKey = 'overview' | 'calendar' | 'crm' | 'production' | 'admin'
@@ -20,6 +23,7 @@ export const ROLE_MODULES: Record<Role, ModuleKey[]> = {
   owner: ['overview', 'calendar', 'crm', 'production', 'admin'],
   sales_manager: ['overview', 'calendar', 'crm'],
   brewer: ['overview', 'calendar', 'production'],
+  pending: [],
 }
 
 export function canAccess(role: Role, mod: ModuleKey): boolean {
@@ -44,5 +48,7 @@ export function moduleForPath(pathname: string): ModuleKey | null {
 }
 
 export function isRole(value: string | undefined | null): value is Role {
-  return value === 'owner' || value === 'sales_manager' || value === 'brewer'
+  return (
+    value === 'owner' || value === 'sales_manager' || value === 'brewer' || value === 'pending'
+  )
 }

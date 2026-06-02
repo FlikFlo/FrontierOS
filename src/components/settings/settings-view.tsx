@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { LogOut, ShieldCheck, Check } from 'lucide-react'
+import { LogOut, ShieldCheck, Check, Plus, Copy, Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
@@ -11,6 +11,7 @@ import { LangSwitcher } from '../ui/lang-switcher'
 import { useI18n } from '@/i18n/provider'
 import { createClient } from '@/lib/supabase/client'
 import { updateMyProfile, updateMember } from '@/app/(app)/settings/actions'
+import { createInvite, revokeInvite, type InviteRow } from '@/app/(app)/settings/invite-actions'
 import { ROLES, type Role } from '@/rbac/config'
 
 export type TeamMember = { id: string; email: string | null; full_name: string | null; role: Role }
@@ -21,12 +22,14 @@ export function SettingsView({
   fullName,
   userId,
   members = [],
+  invites = [],
 }: {
   email: string | null
   role: Role
   fullName?: string | null
   userId?: string | null
   members?: TeamMember[]
+  invites?: InviteRow[]
 }) {
   const { t } = useI18n()
   const router = useRouter()
@@ -133,6 +136,8 @@ export function SettingsView({
         </Card>
       )}
 
+      {role === 'owner' && <InviteSection invites={invites} onChange={() => router.refresh()} />}
+
       <Card>
         <CardHeader>
           <CardTitle>{t('settings.account')}</CardTitle>
@@ -145,6 +150,109 @@ export function SettingsView({
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+function InviteSection({ invites, onChange }: { invites: InviteRow[]; onChange: () => void }) {
+  const { t } = useI18n()
+  const [role, setRole] = useState<Role>('sales_manager')
+  const [busy, setBusy] = useState(false)
+  const [link, setLink] = useState<string | null>(null)
+  const [copied, setCopied] = useState(false)
+
+  function linkFor(token: string) {
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    return `${origin}/register?invite=${token}`
+  }
+
+  async function generate() {
+    setBusy(true)
+    setCopied(false)
+    const res = await createInvite(role)
+    setBusy(false)
+    if (res.id) {
+      setLink(linkFor(res.id))
+      onChange()
+    }
+  }
+
+  async function copy(value: string) {
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      /* clipboard blocked — user can select manually */
+    }
+  }
+
+  const active = invites.filter((i) => !i.revoked)
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{t('settings.invites')}</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-[13px] text-white/45">{t('settings.invitesHint')}</p>
+
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          <Select value={role} onChange={(e) => setRole(e.target.value as Role)} className="sm:w-48">
+            {ROLES.map((r) => (
+              <option key={r} value={r}>
+                {t(`roles.${r}`)}
+              </option>
+            ))}
+          </Select>
+          <Button size="sm" onClick={generate} disabled={busy}>
+            <Plus size={15} />
+            {busy ? t('common.saving') : t('settings.createInvite')}
+          </Button>
+        </div>
+
+        {link && (
+          <div className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.06] p-2">
+            <code className="min-w-0 flex-1 truncate font-mono text-[12px] text-white/80">{link}</code>
+            <Button size="sm" variant="outline" onClick={() => copy(link)}>
+              {copied ? <Check size={14} /> : <Copy size={14} />}
+              {copied ? t('settings.copied') : t('settings.copy')}
+            </Button>
+          </div>
+        )}
+
+        {active.length > 0 && (
+          <ul className="divide-y divide-white/[0.06] border-t border-white/[0.06] pt-1">
+            {active.map((inv) => (
+              <li key={inv.id} className="flex items-center gap-3 py-2 text-sm">
+                <Badge variant="accent">{t(`roles.${inv.role}`)}</Badge>
+                <code className="min-w-0 flex-1 truncate font-mono text-[11px] text-white/40">
+                  {linkFor(inv.id)}
+                </code>
+                <button
+                  type="button"
+                  onClick={() => copy(linkFor(inv.id))}
+                  aria-label={t('settings.copy')}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-white/[0.06] hover:text-white"
+                >
+                  <Copy size={14} />
+                </button>
+                <button
+                  type="button"
+                  onClick={async () => {
+                    await revokeInvite(inv.id)
+                    onChange()
+                  }}
+                  aria-label={t('settings.revoke')}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-white/40 hover:bg-danger/10 hover:text-danger"
+                >
+                  <Trash2 size={14} />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   )
 }
 

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SettingsView, type TeamMember } from '@/components/settings/settings-view'
 import { DEFAULT_ROLE, isRole, type Role } from '@/rbac/config'
 import { isAuthBypassed } from '@/lib/dev-auth'
+import { listInvites, type InviteRow } from './invite-actions'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -29,6 +30,7 @@ export default async function SettingsPage() {
   }
 
   let members: TeamMember[] = []
+  let invites: InviteRow[] = []
   if (role === 'owner' && supabase) {
     const { data } = await supabase.from('profiles').select('id, email, full_name, role').order('email')
     members = (data ?? []).map((p) => ({
@@ -37,6 +39,7 @@ export default async function SettingsPage() {
       full_name: p.full_name,
       role: isRole(p.role) ? p.role : DEFAULT_ROLE,
     }))
+    invites = await listInvites()
   }
 
   return (
@@ -46,6 +49,7 @@ export default async function SettingsPage() {
       fullName={fullName}
       userId={userId}
       members={members}
+      invites={invites}
     />
   )
 }
