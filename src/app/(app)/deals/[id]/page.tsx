@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { DealDetailView, type DealDetail } from '@/components/deals/deal-detail-view'
+import { DealDetailView, type DealDetail, type DealContact } from '@/components/deals/deal-detail-view'
 import { fetchThread } from '@/lib/thread'
 
 export default async function DealDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -21,7 +21,32 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
     clientName: dealRes.data.client_id ? nameById.get(dealRes.data.client_id) ?? null : null,
   }
 
+  let contact: DealContact | null = null
+  if (dealRes.data.contact_id) {
+    const { data } = await supabase
+      .from('contacts')
+      .select('first_name, last_name, title, phone, email')
+      .eq('id', dealRes.data.contact_id)
+      .single()
+    if (data) {
+      contact = {
+        name: [data.first_name, data.last_name].filter(Boolean).join(' ') || '—',
+        title: data.title,
+        phone: data.phone,
+        email: data.email,
+      }
+    }
+  }
+
   const { comments, attachments } = await fetchThread(supabase, 'deal', id)
 
-  return <DealDetailView deal={deal} clients={clients} comments={comments} attachments={attachments} />
+  return (
+    <DealDetailView
+      deal={deal}
+      clients={clients}
+      contact={contact}
+      comments={comments}
+      attachments={attachments}
+    />
+  )
 }

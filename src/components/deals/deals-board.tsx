@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, type DragEvent } from 'react'
-import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import { Pencil, Trash2 } from 'lucide-react'
 import { useI18n } from '@/i18n/provider'
 import { formatMoney, cn } from '@/lib/utils'
@@ -31,6 +31,7 @@ export function DealsBoard({
   onDelete: (deal: DealRow) => void
 }) {
   const { t, locale } = useI18n()
+  const router = useRouter()
   const [dragId, setDragId] = useState<string | null>(null)
   const [overStage, setOverStage] = useState<DealStage | null>(null)
 
@@ -80,6 +81,7 @@ export function DealsBoard({
                   <div
                     key={deal.id}
                     draggable
+                    onClick={() => router.push(`/deals/${deal.id}`)}
                     onDragStart={(e) => {
                       e.dataTransfer.setData('text/plain', deal.id)
                       e.dataTransfer.effectAllowed = 'move'
@@ -90,28 +92,31 @@ export function DealsBoard({
                       setOverStage(null)
                     }}
                     className={cn(
-                      'group rounded-xl border border-white/[0.08] bg-white/[0.06] p-3 cursor-grab active:cursor-grabbing',
-                      'shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] transition-opacity',
+                      'group rounded-xl border border-white/[0.08] bg-white/[0.06] p-3 cursor-pointer active:cursor-grabbing',
+                      'shadow-[0_1px_0_rgba(255,255,255,0.06)_inset] transition-opacity hover:border-white/[0.16]',
                       dragId === deal.id && 'opacity-40'
                     )}
                   >
                     <div className="flex items-start justify-between gap-2">
-                      <Link
-                        href={`/deals/${deal.id}`}
-                        className="text-[13px] font-medium leading-snug text-white hover:text-primary-light"
-                      >
+                      <span className="text-[13px] font-medium leading-snug text-white">
                         {deal.title}
-                      </Link>
+                      </span>
                       <div className="flex flex-shrink-0 items-center gap-0.5 opacity-100 transition-opacity lg:opacity-0 lg:group-hover:opacity-100">
                         <button
-                          onClick={() => onEdit(deal)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onEdit(deal)
+                          }}
                           aria-label={t('common.edit')}
                           className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white/40 hover:bg-white/[0.08] hover:text-white"
                         >
                           <Pencil size={12} />
                         </button>
                         <button
-                          onClick={() => onDelete(deal)}
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onDelete(deal)
+                          }}
                           aria-label={t('common.delete')}
                           className="inline-flex h-6 w-6 items-center justify-center rounded-md text-white/40 hover:bg-danger/10 hover:text-danger"
                         >
@@ -131,7 +136,11 @@ export function DealsBoard({
                     {/* Touch-friendly stage move (drag is desktop-only). */}
                     <select
                       value={deal.stage}
-                      onChange={(e) => onMove(deal.id, e.target.value as DealStage)}
+                      onClick={(e) => e.stopPropagation()}
+                      onChange={(e) => {
+                        e.stopPropagation()
+                        onMove(deal.id, e.target.value as DealStage)
+                      }}
                       aria-label={t('deals.columns.stage')}
                       className="mt-2 w-full rounded-lg border border-white/[0.10] bg-white/[0.06] px-2 py-1.5 text-[11px] text-white/80 focus:outline-none focus:border-primary/50 lg:hidden"
                     >

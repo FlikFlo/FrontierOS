@@ -14,6 +14,7 @@ import { formatDate, formatMoney } from '@/lib/utils'
 import type { Comment, Deal, DealStage } from '@/types/database'
 
 export type DealDetail = Deal & { clientName: string | null }
+export type DealContact = { name: string; title: string | null; phone: string | null; email: string | null }
 export type { AttachmentView }
 
 const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'danger'> = {
@@ -37,17 +38,20 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 export function DealDetailView({
   deal,
   clients,
+  contact,
   comments,
   attachments,
 }: {
   deal: DealDetail
   clients: ClientOption[]
+  contact?: DealContact | null
   comments: Comment[]
   attachments: AttachmentView[]
 }) {
   const { t, locale } = useI18n()
   const router = useRouter()
   const [editOpen, setEditOpen] = useState(false)
+  const weighted = (deal.amount * deal.probability) / 100
 
   return (
     <div className="space-y-4">
@@ -76,12 +80,33 @@ export function DealDetailView({
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-x-8 divide-white/[0.06] sm:grid-cols-2 sm:divide-x">
           <div className="divide-y divide-white/[0.06] sm:pr-8">
-            <Field label={t('deals.columns.client')}>{deal.clientName ?? '—'}</Field>
+            <Field label={t('deals.columns.client')}>
+              {deal.client_id ? (
+                <Link href={`/clients/${deal.client_id}`} className="text-primary-light hover:underline">
+                  {deal.clientName ?? '—'}
+                </Link>
+              ) : (
+                '—'
+              )}
+            </Field>
+            <Field label={t('deals.detail.contact')}>
+              {contact ? (
+                <span>
+                  {contact.name}
+                  {contact.title ? <span className="text-white/40"> · {contact.title}</span> : null}
+                </span>
+              ) : (
+                '—'
+              )}
+            </Field>
             <Field label={t('deals.columns.amount')}>{formatMoney(deal.amount, deal.currency, locale)}</Field>
+            <Field label={t('deals.detail.weighted')}>{formatMoney(weighted, deal.currency, locale)}</Field>
           </div>
           <div className="divide-y divide-white/[0.06]">
             <Field label={t('deals.columns.probability')}>{deal.probability}%</Field>
             <Field label={t('deals.columns.close')}>{formatDate(deal.expected_close_date, locale)}</Field>
+            <Field label={t('deals.detail.created')}>{formatDate(deal.created_at, locale)}</Field>
+            <Field label={t('deals.detail.updated')}>{formatDate(deal.updated_at, locale)}</Field>
           </div>
         </CardContent>
       </Card>
