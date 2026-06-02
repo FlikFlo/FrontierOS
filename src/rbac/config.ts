@@ -29,6 +29,7 @@ export function canAccess(role: Role, mod: ModuleKey): boolean {
 /** Map a pathname to the module that guards it (null = unguarded). */
 export function moduleForPath(pathname: string): ModuleKey | null {
   if (pathname.startsWith('/dashboard')) return 'overview'
+  if (pathname.startsWith('/activity')) return 'overview'
   if (pathname.startsWith('/calendar')) return 'calendar'
   if (
     pathname.startsWith('/clients') ||

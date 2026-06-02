@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity'
 import type { OrderStatus } from '@/types/database'
 
 export type OrderLineInput = {
@@ -44,6 +45,7 @@ export async function addOrder(input: OrderInput, lines: OrderLineInput[]): Prom
     if (liErr) return { error: liErr.message }
   }
 
+  await logActivity('order', 'created', input.order_number, order.id)
   revalidate()
   return { error: null }
 }
@@ -54,6 +56,8 @@ export async function editOrder(id: string, input: OrderInput, lines: OrderLineI
 
   const { error } = await supabase.from('orders').update(input).eq('id', id)
   if (error) return { error: error.message }
+
+  await logActivity('order', 'updated', input.order_number, id)
 
   // Replace the line items wholesale.
   await supabase.from('order_items').delete().eq('order_id', id)
@@ -73,9 +77,11 @@ export async function removeOrder(id: string): Promise<ActionResult> {
   if (!supabase) return { error: 'Supabase is not configured' }
 
   // order_items cascade-delete via FK.
+  const { data: row } = await supabase.from('orders').select('order_number').eq('id', id).single()
   const { error } = await supabase.from('orders').delete().eq('id', id)
   if (error) return { error: error.message }
 
+  await logActivity('order', 'deleted', row?.order_number ?? 'Order', id)
   revalidate()
   return { error: null }
 }

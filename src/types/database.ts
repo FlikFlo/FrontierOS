@@ -6,6 +6,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type UserRole = 'owner' | 'sales_manager' | 'brewer'
 export type EntityKind = 'deal' | 'client' | 'order'
+export type ActivityAction = 'created' | 'updated' | 'deleted'
 export type ClientStatus = 'lead' | 'active' | 'inactive'
 export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
 export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
@@ -202,6 +203,28 @@ export interface Database {
           },
         ]
       }
+      activity_log: {
+        Row: {
+          id: string
+          actor: string | null
+          action: ActivityAction
+          entity: string
+          entity_id: string | null
+          label: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          actor?: string | null
+          action: ActivityAction
+          entity: string
+          entity_id?: string | null
+          label?: string | null
+          created_at?: string
+        }
+        Update: Partial<Database['public']['Tables']['activity_log']['Insert']>
+        Relationships: []
+      }
       comments: {
         Row: {
           id: string
@@ -329,3 +352,4 @@ export type OrderItem = Database['public']['Tables']['order_items']['Row']
 export type Reminder = Database['public']['Tables']['reminders']['Row']
 export type Comment = Database['public']['Tables']['comments']['Row']
 export type Attachment = Database['public']['Tables']['attachments']['Row']
+export type Activity = Database['public']['Tables']['activity_log']['Row']

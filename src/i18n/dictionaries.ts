@@ -8,6 +8,7 @@ const en = {
   nav: {
     dashboard: 'Dashboard',
     calendar: 'Calendar',
+    activity: 'Activity',
     clients: 'Clients',
     deals: 'Deals',
     orders: 'Orders',
@@ -60,6 +61,23 @@ const en = {
     nav: 'Go to',
     results: 'Results',
     empty: 'No results',
+  },
+  activity: {
+    subtitle: 'Recent changes across your workspace',
+    empty: 'No activity yet',
+    created: 'created',
+    updated: 'updated',
+    deleted: 'deleted',
+    entity: {
+      client: 'client',
+      deal: 'deal',
+      order: 'order',
+      product: 'product',
+      clients: 'clients',
+      deals: 'deals',
+      orders: 'orders',
+      products: 'products',
+    },
   },
   calendar: {
     subtitle: 'Reminders & follow-ups',
@@ -220,6 +238,7 @@ const fr: Dictionary = {
   nav: {
     dashboard: 'Tableau de bord',
     calendar: 'Calendrier',
+    activity: 'Activité',
     clients: 'Clients',
     deals: 'Affaires',
     orders: 'Commandes',
@@ -272,6 +291,23 @@ const fr: Dictionary = {
     nav: 'Aller à',
     results: 'Résultats',
     empty: 'Aucun résultat',
+  },
+  activity: {
+    subtitle: 'Changements récents dans votre espace',
+    empty: 'Aucune activité',
+    created: 'a créé',
+    updated: 'a modifié',
+    deleted: 'a supprimé',
+    entity: {
+      client: 'client',
+      deal: 'affaire',
+      order: 'commande',
+      product: 'produit',
+      clients: 'clients',
+      deals: 'affaires',
+      orders: 'commandes',
+      products: 'produits',
+    },
   },
   calendar: {
     subtitle: 'Rappels et relances',

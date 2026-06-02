@@ -13,6 +13,7 @@ import {
   Settings,
   Bell,
   Search,
+  Activity,
 } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { BottomNav } from "./bottom-nav";
@@ -65,7 +66,10 @@ export function CrmShell({
         id: "planning",
         label: t("nav.sections.planning"),
         icon: CalendarDays,
-        items: [{ href: "/calendar", label: t("nav.calendar"), icon: CalendarDays }],
+        items: [
+          { href: "/calendar", label: t("nav.calendar"), icon: CalendarDays },
+          { href: "/activity", label: t("nav.activity"), icon: Activity },
+        ],
       },
     },
     {

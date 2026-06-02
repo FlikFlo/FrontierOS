@@ -2,6 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
+import { logActivity } from '@/lib/activity'
 import type { ClientStatus } from '@/types/database'
 
 export type ClientInput = {
@@ -21,9 +22,10 @@ export async function addClient(input: ClientInput): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
 
-  const { error } = await supabase.from('clients').insert(input)
+  const { data, error } = await supabase.from('clients').insert(input).select('id').single()
   if (error) return { error: error.message }
 
+  await logActivity('client', 'created', input.name, data?.id)
   revalidatePath('/clients')
   return { error: null }
 }
@@ -35,6 +37,7 @@ export async function editClient(id: string, input: ClientInput): Promise<Action
   const { error } = await supabase.from('clients').update(input).eq('id', id)
   if (error) return { error: error.message }
 
+  await logActivity('client', 'updated', input.name, id)
   revalidatePath('/clients')
   return { error: null }
 }
@@ -43,9 +46,11 @@ export async function removeClient(id: string): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
 
+  const { data: row } = await supabase.from('clients').select('name').eq('id', id).single()
   const { error } = await supabase.from('clients').delete().eq('id', id)
   if (error) return { error: error.message }
 
+  await logActivity('client', 'deleted', row?.name ?? 'Client', id)
   revalidatePath('/clients')
   return { error: null }
 }
