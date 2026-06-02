@@ -12,9 +12,11 @@ import {
   Package,
   Settings,
   Bell,
+  Search,
 } from "lucide-react";
 import { AppShell } from "./app-shell";
 import { BottomNav } from "./bottom-nav";
+import { CommandPalette } from "../command-palette";
 import { LangSwitcher } from "../ui/lang-switcher";
 import { UserMenu } from "../ui/user-menu";
 import { useI18n } from "@/i18n/provider";
@@ -119,6 +121,21 @@ export function CrmShell({
         }
         topbarActions={
           <>
+            <button
+              onClick={() => window.dispatchEvent(new Event("fos:open-command"))}
+              className="hidden sm:inline-flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-2.5 py-1 text-[12px] text-white/45 hover:text-white/80 transition-colors"
+              aria-label={t("common.search")}
+            >
+              <Search size={13} />
+              <kbd className="font-mono text-[10px] text-white/35">⌘K</kbd>
+            </button>
+            <button
+              onClick={() => window.dispatchEvent(new Event("fos:open-command"))}
+              className="sm:hidden flex items-center justify-center w-8 h-8 rounded-lg text-white/60 hover:text-white hover:bg-white/[0.06] transition-colors"
+              aria-label={t("common.search")}
+            >
+              <Search size={18} />
+            </button>
             <LangSwitcher />
             <Link
               href="/calendar"
@@ -145,6 +162,7 @@ export function CrmShell({
         <div className="pb-[calc(env(safe-area-inset-bottom)+4.5rem)] lg:pb-0">{children}</div>
       </AppShell>
       <BottomNav items={bottomNav} />
+      <CommandPalette />
     </>
   );
 }

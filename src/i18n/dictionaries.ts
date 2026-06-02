@@ -48,6 +48,12 @@ const en = {
     noResults: 'No matches',
     all: 'All',
   },
+  command: {
+    placeholder: 'Search clients, deals, orders, products…',
+    nav: 'Go to',
+    results: 'Results',
+    empty: 'No results',
+  },
   calendar: {
     subtitle: 'Reminders & follow-ups',
     today: 'Today',
@@ -234,6 +240,12 @@ const fr: Dictionary = {
     search: 'Rechercher…',
     noResults: 'Aucun résultat',
     all: 'Tous',
+  },
+  command: {
+    placeholder: 'Rechercher clients, affaires, commandes, produits…',
+    nav: 'Aller à',
+    results: 'Résultats',
+    empty: 'Aucun résultat',
   },
   calendar: {
     subtitle: 'Rappels et relances',
