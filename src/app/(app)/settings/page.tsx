@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server'
 import { SettingsView, type TeamMember } from '@/components/settings/settings-view'
 import { DEFAULT_ROLE, isRole, type Role } from '@/rbac/config'
 import { isAuthBypassed } from '@/lib/dev-auth'
+import { getTheme } from '@/lib/theme-server'
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -39,6 +40,8 @@ export default async function SettingsPage() {
     }))
   }
 
+  const theme = await getTheme()
+
   return (
     <SettingsView
       email={email}
@@ -46,6 +49,7 @@ export default async function SettingsPage() {
       fullName={fullName}
       userId={userId}
       members={members}
+      theme={theme}
     />
   )
 }

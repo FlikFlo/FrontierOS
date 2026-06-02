@@ -26,10 +26,10 @@ export function BottomNav({ items }: BottomNavProps) {
     <nav
       className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-stretch"
       style={{
-        background: "rgba(10,12,16,0.92)",
+        background: "var(--bar-bg)",
         backdropFilter: "saturate(180%) blur(20px)",
         WebkitBackdropFilter: "saturate(180%) blur(20px)",
-        borderTop: "1px solid rgba(255,255,255,0.06)",
+        borderTop: "1px solid var(--bar-border)",
         paddingBottom: "env(safe-area-inset-bottom)",
       }}
     >

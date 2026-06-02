@@ -4,6 +4,7 @@ import { RoleProvider } from '@/rbac/provider'
 import { CrmShell } from '@/components/layout/crm-shell'
 import { DEFAULT_ROLE, isRole, type Role } from '@/rbac/config'
 import { isAuthBypassed } from '@/lib/dev-auth'
+import { getTheme } from '@/lib/theme-server'
 
 /**
  * Authenticated app layout. The proxy already gates unauthenticated traffic;
@@ -42,9 +43,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     overdueCount = count ?? 0
   }
 
+  const theme = await getTheme()
+
   return (
     <RoleProvider role={role}>
-      <CrmShell userEmail={email} overdueCount={overdueCount}>
+      <CrmShell userEmail={email} overdueCount={overdueCount} theme={theme}>
         {children}
       </CrmShell>
     </RoleProvider>

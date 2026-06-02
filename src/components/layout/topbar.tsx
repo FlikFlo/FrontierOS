@@ -24,10 +24,10 @@ export function Topbar({ brand, actions, onMenuClick, hideMenuButton = false }: 
     <header
       className="fixed top-0 left-0 right-0 z-50 h-12 flex items-center justify-between px-3 sm:px-4"
       style={{
-        background: "rgba(10,12,16,0.85)",
+        background: "var(--bar-bg)",
         backdropFilter: "saturate(180%) blur(20px)",
         WebkitBackdropFilter: "saturate(180%) blur(20px)",
-        borderBottom: "1px solid rgba(255,255,255,0.06)",
+        borderBottom: "1px solid var(--bar-border)",
       }}
     >
       <div className="flex items-center gap-2">

@@ -71,10 +71,10 @@ export function Sidebar({ pinned, sections, footer, open, onClose, heading = "Na
           open ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
         style={{
-          background: "rgba(10,12,16,0.95)",
+          background: "var(--bar-bg)",
           backdropFilter: "saturate(180%) blur(24px)",
           WebkitBackdropFilter: "saturate(180%) blur(24px)",
-          borderRight: "1px solid rgba(21,96,189,0.20)", // Croat: primary-tinted edge
+          borderRight: "1px solid var(--bar-edge)", // Croat: primary-tinted edge
         }}
       >
         <div className="px-6 py-4 flex items-center justify-between">
