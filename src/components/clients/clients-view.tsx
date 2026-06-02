@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2, MessageCircle, Globe } from 'lucide-react'
+import { Plus, Pencil, Trash2, MessageCircle, Globe, Download } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -11,14 +11,26 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ClientFormModal } from './client-form-modal'
-import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
+import { downloadCsv, type CsvColumn } from '@/lib/csv'
 import { removeClient } from '@/app/(app)/clients/actions'
+import { bulkDelete } from '@/app/(app)/bulk-actions'
 import { waLink } from '@/lib/utils'
 import type { Client, ClientStatus } from '@/types/database'
 
 const RT_TABLES = ['clients']
+
+const CLIENT_CSV: CsvColumn<Client>[] = [
+  { header: 'Name', value: (c) => c.name },
+  { header: 'Status', value: (c) => c.status },
+  { header: 'Industry', value: (c) => c.industry },
+  { header: 'Email', value: (c) => c.email },
+  { header: 'Phone', value: (c) => c.phone },
+  { header: 'Website', value: (c) => c.website },
+  { header: 'Address', value: (c) => c.address },
+]
 
 type ClientsViewProps =
   | { status: 'unconfigured' }
@@ -58,10 +70,16 @@ export function ClientsView(props: ClientsViewProps) {
     [rows, statusFilter],
   )
   const ctrl = useListControls(visible, clientSearch, CLIENT_SORTS, 'name')
+  const sel = useSelection()
 
   const [form, setForm] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null })
   const [toDelete, setToDelete] = useState<Client | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [bulkConfirm, setBulkConfirm] = useState(false)
+  const [bulkBusy, setBulkBusy] = useState(false)
+
+  const pageIds = ctrl.pageRows.map((c) => c.id)
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => sel.selected.has(id))
 
   async function confirmDelete() {
     if (!toDelete) return
@@ -69,6 +87,15 @@ export function ClientsView(props: ClientsViewProps) {
     await removeClient(toDelete.id)
     setDeleting(false)
     setToDelete(null)
+    router.refresh()
+  }
+
+  async function confirmBulkDelete() {
+    setBulkBusy(true)
+    await bulkDelete('clients', [...sel.selected])
+    setBulkBusy(false)
+    setBulkConfirm(false)
+    sel.clear()
     router.refresh()
   }
 
@@ -82,6 +109,12 @@ export function ClientsView(props: ClientsViewProps) {
         <div className="flex items-center gap-2">
           {props.status === 'ok' && rows.length > 0 && (
             <Badge variant="accent">{t('clients.total', { count: rows.length })}</Badge>
+          )}
+          {props.status === 'ok' && rows.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => downloadCsv('clients.csv', ctrl.rows, CLIENT_CSV)}>
+              <Download size={15} />
+              {t('common.export')}
+            </Button>
           )}
           {props.status === 'ok' && (
             <Button size="sm" onClick={() => setForm({ open: true, client: null })}>
@@ -109,6 +142,12 @@ export function ClientsView(props: ClientsViewProps) {
               ]}
             />
           </div>
+          <BulkBar count={sel.selected.size} onClear={sel.clear}>
+            <Button size="sm" variant="danger" onClick={() => setBulkConfirm(true)} disabled={bulkBusy}>
+              <Trash2 size={14} />
+              {t('common.deleteSelected')}
+            </Button>
+          </BulkBar>
           {ctrl.rows.length === 0 ? (
             <Card>
               <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
@@ -119,6 +158,13 @@ export function ClientsView(props: ClientsViewProps) {
                 <Table>
                   <THead>
                     <TR className="hover:bg-transparent">
+                      <TH className="w-10">
+                        <Checkbox
+                          checked={allOnPage}
+                          onChange={() => sel.setMany(pageIds, !allOnPage)}
+                          aria-label={t('common.selected', { n: sel.selected.size })}
+                        />
+                      </TH>
                       <TH>
                         <SortHeader label={t('clients.columns.name')} sortKey="name" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
@@ -136,6 +182,9 @@ export function ClientsView(props: ClientsViewProps) {
                   <TBody>
                     {ctrl.pageRows.map((c) => (
                   <TR key={c.id}>
+                    <TD className="w-10">
+                      <Checkbox checked={sel.selected.has(c.id)} onChange={() => sel.toggle(c.id)} />
+                    </TD>
                     <TD className="font-medium">
                       <Link href={`/clients/${c.id}`} className="text-white hover:text-primary-light transition-colors">
                         {c.name}
@@ -217,6 +266,16 @@ export function ClientsView(props: ClientsViewProps) {
         cancelLabel={t('common.cancel')}
         onConfirm={confirmDelete}
         onCancel={() => setToDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={bulkConfirm}
+        title={t('common.deleteSelected')}
+        body={t('common.bulkDeleteBody', { n: sel.selected.size })}
+        confirmLabel={bulkBusy ? t('common.saving') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setBulkConfirm(false)}
       />
     </div>
   )

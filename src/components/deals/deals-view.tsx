@@ -2,21 +2,25 @@
 
 import { useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { Plus, Pencil, Trash2, Download } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
+import { Select } from '../ui/input'
 import { Tabs } from '../ui/tabs'
 import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { DealsBoard } from './deals-board'
 import { DealFormModal, type ClientOption } from './deal-form-modal'
-import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
+import { downloadCsv, type CsvColumn } from '@/lib/csv'
 import { moveDeal, removeDeal } from '@/app/(app)/deals/actions'
+import { bulkDelete, bulkUpdateStage } from '@/app/(app)/bulk-actions'
 import type { Deal, DealStage } from '@/types/database'
 
 const RT_TABLES = ['deals']
@@ -41,6 +45,16 @@ const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'dang
 }
 
 const DEAL_STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']
+const DEAL_CSV: CsvColumn<DealRow>[] = [
+  { header: 'Title', value: (d) => d.title },
+  { header: 'Client', value: (d) => d.clientName },
+  { header: 'Stage', value: (d) => d.stage },
+  { header: 'Amount', value: (d) => d.amount },
+  { header: 'Currency', value: (d) => d.currency },
+  { header: 'Probability', value: (d) => d.probability },
+  { header: 'Expected close', value: (d) => d.expected_close_date },
+]
+
 const dealSearch = (d: DealRow) => `${d.title} ${d.clientName ?? ''}`
 const DEAL_SORTS: Record<string, (d: DealRow) => string | number> = {
   title: (d) => d.title.toLowerCase(),
@@ -53,7 +67,9 @@ const DEAL_SORTS: Record<string, (d: DealRow) => string | number> = {
 
 export function DealsView(props: DealsViewProps) {
   const { t, locale } = useI18n()
+  const router = useRouter()
   useRealtime(RT_TABLES)
+  const sel = useSelection()
   const clients = props.status === 'ok' ? props.clients : NO_CLIENTS
 
   // Local state powers optimistic kanban drag, but must re-sync whenever the
@@ -108,6 +124,28 @@ export function DealsView(props: DealsViewProps) {
     setToDelete(null)
   }
 
+  const pageIds = ctrl.pageRows.map((d) => d.id)
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => sel.selected.has(id))
+  const [bulkConfirm, setBulkConfirm] = useState(false)
+  const [bulkBusy, setBulkBusy] = useState(false)
+
+  async function confirmBulkDelete() {
+    setBulkBusy(true)
+    await bulkDelete('deals', [...sel.selected])
+    setBulkBusy(false)
+    setBulkConfirm(false)
+    sel.clear()
+    router.refresh()
+  }
+
+  async function applyBulkStage(stage: DealStage) {
+    setBulkBusy(true)
+    await bulkUpdateStage([...sel.selected], stage)
+    setBulkBusy(false)
+    sel.clear()
+    router.refresh()
+  }
+
   return (
     <div className="space-y-4">
       <div className="flex items-end justify-between gap-3">
@@ -116,10 +154,18 @@ export function DealsView(props: DealsViewProps) {
           <p className="mt-1 text-sm text-white/45">{t('pages.deals.subtitle')}</p>
         </div>
         {props.status === 'ok' && (
-          <Button size="sm" onClick={() => setForm({ open: true, deal: null })}>
-            <Plus size={15} />
-            {t('common.new')}
-          </Button>
+          <div className="flex items-center gap-2">
+            {deals.length > 0 && (
+              <Button size="sm" variant="outline" onClick={() => downloadCsv('deals.csv', ctrl.rows, DEAL_CSV)}>
+                <Download size={15} />
+                {t('common.export')}
+              </Button>
+            )}
+            <Button size="sm" onClick={() => setForm({ open: true, deal: null })}>
+              <Plus size={15} />
+              {t('common.new')}
+            </Button>
+          </div>
         )}
       </div>
 
@@ -155,6 +201,28 @@ export function DealsView(props: DealsViewProps) {
             )}
           </div>
 
+          {view === 'table' && (
+            <BulkBar count={sel.selected.size} onClear={sel.clear}>
+              <Select
+                value=""
+                disabled={bulkBusy}
+                onChange={(e) => e.target.value && applyBulkStage(e.target.value as DealStage)}
+                className="w-40"
+              >
+                <option value="">{t('common.changeStage')}</option>
+                {DEAL_STAGES.map((s) => (
+                  <option key={s} value={s}>
+                    {t(`deals.stage.${s}`)}
+                  </option>
+                ))}
+              </Select>
+              <Button size="sm" variant="danger" onClick={() => setBulkConfirm(true)} disabled={bulkBusy}>
+                <Trash2 size={14} />
+                {t('common.deleteSelected')}
+              </Button>
+            </BulkBar>
+          )}
+
           {deals.length === 0 ? (
             <DataState state="empty" />
           ) : ctrl.rows.length === 0 ? (
@@ -174,6 +242,13 @@ export function DealsView(props: DealsViewProps) {
                 <Table>
                   <THead>
                     <TR className="hover:bg-transparent">
+                      <TH className="w-10">
+                        <Checkbox
+                          checked={allOnPage}
+                          onChange={() => sel.setMany(pageIds, !allOnPage)}
+                          aria-label={t('common.selected', { n: sel.selected.size })}
+                        />
+                      </TH>
                       <TH>
                         <SortHeader label={t('deals.columns.title')} sortKey="title" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
@@ -198,6 +273,9 @@ export function DealsView(props: DealsViewProps) {
                   <TBody>
                     {ctrl.pageRows.map((d) => (
                       <TR key={d.id}>
+                        <TD className="w-10">
+                          <Checkbox checked={sel.selected.has(d.id)} onChange={() => sel.toggle(d.id)} />
+                        </TD>
                         <TD className="font-medium">
                           <Link href={`/deals/${d.id}`} className="text-white hover:text-primary-light transition-colors">
                             {d.title}
@@ -260,6 +338,16 @@ export function DealsView(props: DealsViewProps) {
         cancelLabel={t('common.cancel')}
         onConfirm={handleDelete}
         onCancel={() => setToDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={bulkConfirm}
+        title={t('common.deleteSelected')}
+        body={t('common.bulkDeleteBody', { n: sel.selected.size })}
+        confirmLabel={bulkBusy ? t('common.saving') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setBulkConfirm(false)}
       />
     </div>
   )

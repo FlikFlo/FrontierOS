@@ -101,6 +101,82 @@ export function Pager({
   )
 }
 
+/** useSelection — track a set of selected row ids for bulk actions. */
+export function useSelection() {
+  const [selected, setSelected] = useState<Set<string>>(new Set())
+  function toggle(id: string) {
+    setSelected((s) => {
+      const next = new Set(s)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  function setMany(ids: string[], on: boolean) {
+    setSelected((s) => {
+      const next = new Set(s)
+      for (const id of ids) {
+        if (on) next.add(id)
+        else next.delete(id)
+      }
+      return next
+    })
+  }
+  function clear() {
+    setSelected(new Set())
+  }
+  return { selected, toggle, setMany, clear }
+}
+
+export function Checkbox({
+  checked,
+  onChange,
+  'aria-label': ariaLabel,
+}: {
+  checked: boolean
+  onChange: () => void
+  'aria-label'?: string
+}) {
+  return (
+    <input
+      type="checkbox"
+      checked={checked}
+      onChange={onChange}
+      onClick={(e) => e.stopPropagation()}
+      aria-label={ariaLabel}
+      className="h-4 w-4 cursor-pointer rounded border-white/20 bg-white/[0.06] accent-[#1560BD]"
+    />
+  )
+}
+
+export function BulkBar({
+  count,
+  onClear,
+  children,
+}: {
+  count: number
+  onClear: () => void
+  children?: React.ReactNode
+}) {
+  const { t } = useI18n()
+  if (count === 0) return null
+  return (
+    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.08] px-3 py-2">
+      <span className="text-[13px] font-medium text-white">{t('common.selected', { n: count })}</span>
+      <div className="ml-auto flex flex-wrap items-center gap-2">
+        {children}
+        <button
+          type="button"
+          onClick={onClear}
+          className="rounded-lg px-2 py-1 text-[12px] text-white/55 hover:bg-white/[0.06] hover:text-white"
+        >
+          {t('common.clear')}
+        </button>
+      </div>
+    </div>
+  )
+}
+
 export function SearchInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
   const { t } = useI18n()
   return (

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Plus, Pencil, Trash2 } from 'lucide-react'
+import { Plus, Pencil, Trash2, Download } from 'lucide-react'
 import { Card } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
@@ -10,14 +10,25 @@ import { Table, THead, TBody, TR, TH, TD } from '../ui/table'
 import { ConfirmDialog } from '../ui/confirm-dialog'
 import { DataState } from '../data-state'
 import { ProductFormModal } from './product-form-modal'
-import { FilterSelect, Pager, SearchInput, SortHeader, useListControls } from '../list-controls'
+import { BulkBar, Checkbox, FilterSelect, Pager, SearchInput, SortHeader, useListControls, useSelection } from '../list-controls'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { formatMoney } from '@/lib/utils'
+import { downloadCsv, type CsvColumn } from '@/lib/csv'
 import { removeProduct } from '@/app/(app)/products/actions'
+import { bulkDelete } from '@/app/(app)/bulk-actions'
 import type { Product } from '@/types/database'
 
 const RT_TABLES = ['products']
+
+const PRODUCT_CSV: CsvColumn<Product>[] = [
+  { header: 'SKU', value: (p) => p.sku },
+  { header: 'Name', value: (p) => p.name },
+  { header: 'Price', value: (p) => p.price },
+  { header: 'Currency', value: (p) => p.currency },
+  { header: 'Unit', value: (p) => p.unit },
+  { header: 'Active', value: (p) => (p.active ? 'yes' : 'no') },
+]
 
 type ProductsViewProps =
   | { status: 'unconfigured' }
@@ -46,10 +57,16 @@ export function ProductsView(props: ProductsViewProps) {
     [rows, stateFilter],
   )
   const ctrl = useListControls(visible, productSearch, PRODUCT_SORTS, 'name')
+  const sel = useSelection()
 
   const [form, setForm] = useState<{ open: boolean; product: Product | null }>({ open: false, product: null })
   const [toDelete, setToDelete] = useState<Product | null>(null)
   const [deleting, setDeleting] = useState(false)
+  const [bulkConfirm, setBulkConfirm] = useState(false)
+  const [bulkBusy, setBulkBusy] = useState(false)
+
+  const pageIds = ctrl.pageRows.map((p) => p.id)
+  const allOnPage = pageIds.length > 0 && pageIds.every((id) => sel.selected.has(id))
 
   async function confirmDelete() {
     if (!toDelete) return
@@ -57,6 +74,15 @@ export function ProductsView(props: ProductsViewProps) {
     await removeProduct(toDelete.id)
     setDeleting(false)
     setToDelete(null)
+    router.refresh()
+  }
+
+  async function confirmBulkDelete() {
+    setBulkBusy(true)
+    await bulkDelete('products', [...sel.selected])
+    setBulkBusy(false)
+    setBulkConfirm(false)
+    sel.clear()
     router.refresh()
   }
 
@@ -70,6 +96,12 @@ export function ProductsView(props: ProductsViewProps) {
         <div className="flex items-center gap-2">
           {props.status === 'ok' && rows.length > 0 && (
             <Badge variant="accent">{t('products.total', { count: rows.length })}</Badge>
+          )}
+          {props.status === 'ok' && rows.length > 0 && (
+            <Button size="sm" variant="outline" onClick={() => downloadCsv('products.csv', ctrl.rows, PRODUCT_CSV)}>
+              <Download size={15} />
+              {t('common.export')}
+            </Button>
           )}
           {props.status === 'ok' && (
             <Button size="sm" onClick={() => setForm({ open: true, product: null })}>
@@ -98,6 +130,12 @@ export function ProductsView(props: ProductsViewProps) {
               ]}
             />
           </div>
+          <BulkBar count={sel.selected.size} onClear={sel.clear}>
+            <Button size="sm" variant="danger" onClick={() => setBulkConfirm(true)} disabled={bulkBusy}>
+              <Trash2 size={14} />
+              {t('common.deleteSelected')}
+            </Button>
+          </BulkBar>
           {ctrl.rows.length === 0 ? (
             <Card>
               <p className="text-[13px] text-white/45">{t('common.noResults')}</p>
@@ -108,6 +146,13 @@ export function ProductsView(props: ProductsViewProps) {
                 <Table>
                   <THead>
                     <TR className="hover:bg-transparent">
+                      <TH className="w-10">
+                        <Checkbox
+                          checked={allOnPage}
+                          onChange={() => sel.setMany(pageIds, !allOnPage)}
+                          aria-label={t('common.selected', { n: sel.selected.size })}
+                        />
+                      </TH>
                       <TH>
                         <SortHeader label={t('products.columns.sku')} sortKey="sku" current={ctrl.sortKey} dir={ctrl.dir} onSort={ctrl.onSort} />
                       </TH>
@@ -129,6 +174,9 @@ export function ProductsView(props: ProductsViewProps) {
                   <TBody>
                     {ctrl.pageRows.map((p) => (
                   <TR key={p.id}>
+                    <TD className="w-10">
+                      <Checkbox checked={sel.selected.has(p.id)} onChange={() => sel.toggle(p.id)} />
+                    </TD>
                     <TD className="font-mono text-[13px] text-white/60">{p.sku ?? '—'}</TD>
                     <TD className="font-medium text-white">{p.name}</TD>
                     <TD className="text-right font-mono tabular-nums text-white">
@@ -186,6 +234,16 @@ export function ProductsView(props: ProductsViewProps) {
         cancelLabel={t('common.cancel')}
         onConfirm={confirmDelete}
         onCancel={() => setToDelete(null)}
+      />
+
+      <ConfirmDialog
+        open={bulkConfirm}
+        title={t('common.deleteSelected')}
+        body={t('common.bulkDeleteBody', { n: sel.selected.size })}
+        confirmLabel={bulkBusy ? t('common.saving') : t('common.delete')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={confirmBulkDelete}
+        onCancel={() => setBulkConfirm(false)}
       />
     </div>
   )
