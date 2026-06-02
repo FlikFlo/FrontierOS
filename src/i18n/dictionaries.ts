@@ -68,6 +68,7 @@ const en = {
     created: 'created',
     updated: 'updated',
     deleted: 'deleted',
+    joined: 'joined as',
     entity: {
       client: 'client',
       deal: 'deal',
@@ -326,6 +327,7 @@ const fr: Dictionary = {
     created: 'a créé',
     updated: 'a modifié',
     deleted: 'a supprimé',
+    joined: 'a rejoint en tant que',
     entity: {
       client: 'client',
       deal: 'affaire',

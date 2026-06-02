@@ -6,7 +6,7 @@ export type Json = string | number | boolean | null | { [key: string]: Json | un
 
 export type UserRole = 'owner' | 'sales_manager' | 'brewer'
 export type EntityKind = 'deal' | 'client' | 'order'
-export type ActivityAction = 'created' | 'updated' | 'deleted'
+export type ActivityAction = 'created' | 'updated' | 'deleted' | 'joined'
 export type ClientStatus = 'lead' | 'active' | 'inactive'
 export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
 export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'

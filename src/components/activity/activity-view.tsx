@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Plus, Pencil, Trash2, type LucideIcon } from 'lucide-react'
+import { Plus, Pencil, Trash2, UserPlus, type LucideIcon } from 'lucide-react'
 import { Card } from '../ui/card'
 import { DataState } from '../data-state'
 import { useI18n } from '@/i18n/provider'
@@ -15,11 +15,13 @@ const ACTION_ICON: Record<ActivityAction, LucideIcon> = {
   created: Plus,
   updated: Pencil,
   deleted: Trash2,
+  joined: UserPlus,
 }
 const ACTION_STYLE: Record<ActivityAction, string> = {
   created: 'bg-success/15 text-success',
   updated: 'bg-info/15 text-info',
   deleted: 'bg-danger/15 text-danger',
+  joined: 'bg-accent/15 text-accent',
 }
 
 const ENTITY_PATH: Record<string, string> = {
@@ -98,11 +100,16 @@ export function ActivityView(props: ActivityViewProps) {
                 const path = ENTITY_PATH[row.entity]
                 const href = path && row.entity_id ? `${path}/${row.entity_id}` : null
                 const actor = row.actor ? row.actor.split('@')[0] : 'system'
+                // For a 'joined' row the entity holds the role → show it localised.
+                const subject =
+                  row.action === 'joined' ? t(`roles.${row.entity}`) : entityLabel(row.entity)
                 const body = (
                   <div className="flex min-w-0 flex-1 items-center gap-2">
                     <span className="text-[13px] text-white/80">
                       <span className="font-medium text-white">{actor}</span> {t(`activity.${row.action}`)}{' '}
-                      <span className="text-white/45">{entityLabel(row.entity)}</span>{' '}
+                      <span className={row.action === 'joined' ? 'font-medium text-white/90' : 'text-white/45'}>
+                        {subject}
+                      </span>{' '}
                       {row.label && <span className="font-medium text-white/90">{row.label}</span>}
                     </span>
                   </div>
