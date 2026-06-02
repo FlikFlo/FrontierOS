@@ -8,9 +8,17 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { ClientFormModal } from './client-form-modal'
 import { ContactFormModal } from './contact-form-modal'
+import { EntityThread, type AttachmentView } from '../entity-thread'
 import { useI18n } from '@/i18n/provider'
 import { formatDate, formatMoney, waLink } from '@/lib/utils'
-import type { Client, Contact, ClientStatus, DealStage, OrderStatus } from '@/types/database'
+import type {
+  Client,
+  Contact,
+  Comment,
+  ClientStatus,
+  DealStage,
+  OrderStatus,
+} from '@/types/database'
 
 export type DealMini = { id: string; title: string; stage: DealStage; amount: number; currency: string }
 export type OrderMini = {
@@ -62,11 +70,15 @@ export function ClientDetailView({
   contacts,
   deals,
   orders,
+  comments,
+  attachments,
 }: {
   client: Client
   contacts: Contact[]
   deals: DealMini[]
   orders: OrderMini[]
+  comments: Comment[]
+  attachments: AttachmentView[]
 }) {
   const { t, locale } = useI18n()
   const [editOpen, setEditOpen] = useState(false)
@@ -228,6 +240,8 @@ export function ClientDetailView({
           </CardContent>
         </Card>
       </div>
+
+      <EntityThread entity="client" entityId={client.id} comments={comments} attachments={attachments} />
 
       {editOpen && (
         <ClientFormModal open client={client} onClose={() => setEditOpen(false)} />

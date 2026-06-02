@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { Card } from '../ui/card'
@@ -162,7 +163,11 @@ export function OrdersView(props: OrdersViewProps) {
                   <TBody>
                     {ctrl.pageRows.map((o) => (
                   <TR key={o.id}>
-                    <TD className="font-mono text-[13px] font-medium text-white">{o.order_number}</TD>
+                    <TD className="font-mono text-[13px] font-medium">
+                      <Link href={`/orders/${o.id}`} className="text-white hover:text-primary-light transition-colors">
+                        {o.order_number}
+                      </Link>
+                    </TD>
                     <TD>{o.clientName ?? '—'}</TD>
                     <TD>
                       <Badge variant={STATUS_VARIANT[o.status]}>{t(`orders.status.${o.status}`)}</Badge>

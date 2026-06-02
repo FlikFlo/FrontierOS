@@ -3,11 +3,17 @@
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
 import { isAuthBypassed } from '@/lib/dev-auth'
+import type { EntityKind } from '@/types/database'
 
-const BUCKET = 'deal-attachments'
+const BUCKET = 'attachments'
 type ActionResult = { error: string | null }
+type Supa = NonNullable<Awaited<ReturnType<typeof createClient>>>
 
-async function authorLabel(supabase: NonNullable<Awaited<ReturnType<typeof createClient>>>): Promise<string> {
+function entityPath(entity: EntityKind, id: string) {
+  return entity === 'deal' ? `/deals/${id}` : entity === 'client' ? `/clients/${id}` : `/orders/${id}`
+}
+
+async function authorLabel(supabase: Supa): Promise<string> {
   if (isAuthBypassed()) return 'dev@local'
   const {
     data: { user },
@@ -15,47 +21,47 @@ async function authorLabel(supabase: NonNullable<Awaited<ReturnType<typeof creat
   return user?.email ?? 'unknown'
 }
 
-export async function addComment(dealId: string, body: string): Promise<ActionResult> {
+export async function addComment(entity: EntityKind, entityId: string, body: string): Promise<ActionResult> {
   const text = body.trim()
   if (!text) return { error: 'Empty comment' }
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
-
   const author = await authorLabel(supabase)
-  const { error } = await supabase.from('deal_comments').insert({ deal_id: dealId, body: text, author })
+  const { error } = await supabase.from('comments').insert({ entity, entity_id: entityId, body: text, author })
   if (error) return { error: error.message }
-
-  revalidatePath(`/deals/${dealId}`)
+  revalidatePath(entityPath(entity, entityId))
   return { error: null }
 }
 
-export async function removeComment(id: string, dealId: string): Promise<ActionResult> {
+export async function removeComment(id: string, entity: EntityKind, entityId: string): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
-  const { error } = await supabase.from('deal_comments').delete().eq('id', id)
+  const { error } = await supabase.from('comments').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath(`/deals/${dealId}`)
+  revalidatePath(entityPath(entity, entityId))
   return { error: null }
 }
 
 export async function uploadAttachment(formData: FormData): Promise<ActionResult> {
-  const dealId = String(formData.get('dealId') ?? '')
+  const entity = String(formData.get('entity') ?? '') as EntityKind
+  const entityId = String(formData.get('entityId') ?? '')
   const file = formData.get('file')
-  if (!dealId || !(file instanceof File) || file.size === 0) return { error: 'No file' }
+  if (!entity || !entityId || !(file instanceof File) || file.size === 0) return { error: 'No file' }
 
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
 
   const safe = file.name.replace(/[^\w.\-]+/g, '_')
-  const path = `${dealId}/${crypto.randomUUID()}-${safe}`
+  const path = `${entity}/${entityId}/${crypto.randomUUID()}-${safe}`
 
   const { error: upErr } = await supabase.storage
     .from(BUCKET)
     .upload(path, file, { contentType: file.type || undefined, upsert: false })
   if (upErr) return { error: upErr.message }
 
-  const { error } = await supabase.from('deal_attachments').insert({
-    deal_id: dealId,
+  const { error } = await supabase.from('attachments').insert({
+    entity,
+    entity_id: entityId,
     name: file.name,
     path,
     mime: file.type || null,
@@ -63,16 +69,21 @@ export async function uploadAttachment(formData: FormData): Promise<ActionResult
   })
   if (error) return { error: error.message }
 
-  revalidatePath(`/deals/${dealId}`)
+  revalidatePath(entityPath(entity, entityId))
   return { error: null }
 }
 
-export async function removeAttachment(id: string, dealId: string, path: string): Promise<ActionResult> {
+export async function removeAttachment(
+  id: string,
+  entity: EntityKind,
+  entityId: string,
+  path: string,
+): Promise<ActionResult> {
   const supabase = await createClient()
   if (!supabase) return { error: 'Supabase is not configured' }
   await supabase.storage.from(BUCKET).remove([path])
-  const { error } = await supabase.from('deal_attachments').delete().eq('id', id)
+  const { error } = await supabase.from('attachments').delete().eq('id', id)
   if (error) return { error: error.message }
-  revalidatePath(`/deals/${dealId}`)
+  revalidatePath(entityPath(entity, entityId))
   return { error: null }
 }

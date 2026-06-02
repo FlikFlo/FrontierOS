@@ -5,6 +5,7 @@
 export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[]
 
 export type UserRole = 'owner' | 'sales_manager' | 'brewer'
+export type EntityKind = 'deal' | 'client' | 'order'
 export type ClientStatus = 'lead' | 'active' | 'inactive'
 export type DealStage = 'lead' | 'qualified' | 'proposal' | 'negotiation' | 'won' | 'lost'
 export type OrderStatus = 'draft' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled'
@@ -201,35 +202,31 @@ export interface Database {
           },
         ]
       }
-      deal_comments: {
+      comments: {
         Row: {
           id: string
-          deal_id: string
+          entity: EntityKind
+          entity_id: string
           body: string
           author: string | null
           created_at: string
         }
         Insert: {
           id?: string
-          deal_id: string
+          entity: EntityKind
+          entity_id: string
           body: string
           author?: string | null
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['deal_comments']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'deal_comments_deal_id_fkey'
-            columns: ['deal_id']
-            referencedRelation: 'deals'
-            referencedColumns: ['id']
-          },
-        ]
+        Update: Partial<Database['public']['Tables']['comments']['Insert']>
+        Relationships: []
       }
-      deal_attachments: {
+      attachments: {
         Row: {
           id: string
-          deal_id: string
+          entity: EntityKind
+          entity_id: string
           name: string
           path: string
           mime: string | null
@@ -238,22 +235,16 @@ export interface Database {
         }
         Insert: {
           id?: string
-          deal_id: string
+          entity: EntityKind
+          entity_id: string
           name: string
           path: string
           mime?: string | null
           size?: number | null
           created_at?: string
         }
-        Update: Partial<Database['public']['Tables']['deal_attachments']['Insert']>
-        Relationships: [
-          {
-            foreignKeyName: 'deal_attachments_deal_id_fkey'
-            columns: ['deal_id']
-            referencedRelation: 'deals'
-            referencedColumns: ['id']
-          },
-        ]
+        Update: Partial<Database['public']['Tables']['attachments']['Insert']>
+        Relationships: []
       }
       reminders: {
         Row: {
@@ -336,5 +327,5 @@ export type Deal = Database['public']['Tables']['deals']['Row']
 export type Order = Database['public']['Tables']['orders']['Row']
 export type OrderItem = Database['public']['Tables']['order_items']['Row']
 export type Reminder = Database['public']['Tables']['reminders']['Row']
-export type DealComment = Database['public']['Tables']['deal_comments']['Row']
-export type DealAttachment = Database['public']['Tables']['deal_attachments']['Row']
+export type Comment = Database['public']['Tables']['comments']['Row']
+export type Attachment = Database['public']['Tables']['attachments']['Row']

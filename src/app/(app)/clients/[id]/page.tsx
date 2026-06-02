@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ClientDetailView, type DealMini, type OrderMini } from '@/components/clients/client-detail-view'
+import { fetchThread } from '@/lib/thread'
 
 export default async function ClientDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
@@ -44,12 +45,16 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     total: totals.get(o.id) ?? 0,
   }))
 
+  const { comments, attachments } = await fetchThread(supabase, 'client', id)
+
   return (
     <ClientDetailView
       client={clientRes.data}
       contacts={contactsRes.data ?? []}
       deals={(dealsRes.data ?? []) as DealMini[]}
       orders={orderRows}
+      comments={comments}
+      attachments={attachments}
     />
   )
 }
