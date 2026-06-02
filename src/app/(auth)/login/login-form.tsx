@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input, Label } from '@/components/ui/input'
+import { Tabs } from '@/components/ui/tabs'
 import { useI18n } from '@/i18n/provider'
 import { createClient } from '@/lib/supabase/client'
 
@@ -17,6 +18,14 @@ export function LoginForm({ next }: { next: string }) {
   const [error, setError] = useState<string | null>(null)
   const [info, setInfo] = useState<string | null>(null)
   const [pending, setPending] = useState(false)
+
+  const isSignup = mode === 'signup'
+
+  function switchMode(next: 'signin' | 'signup') {
+    setMode(next)
+    setError(null)
+    setInfo(null)
+  }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault()
@@ -60,9 +69,29 @@ export function LoginForm({ next }: { next: string }) {
 
   return (
     <Card className="p-6">
-      <div className="mb-6 text-center">
+      <div className="mb-5 text-center">
         <span className="text-accent text-sm font-semibold tracking-[0.2em]">FRONTIER&nbsp;OS</span>
-        <p className="mt-2 text-[13px] text-white/45">{t('auth.tagline')}</p>
+      </div>
+
+      {/* Explicit mode switch so it's obvious whether you're signing in or registering. */}
+      <Tabs
+        variant="segmented"
+        value={mode}
+        onChange={(v) => switchMode(v as 'signin' | 'signup')}
+        items={[
+          { value: 'signin', label: t('auth.signIn') },
+          { value: 'signup', label: t('auth.signUp') },
+        ]}
+        className="mb-5"
+      />
+
+      <div className="mb-5 text-center">
+        <h1 className="text-lg font-semibold text-white">
+          {isSignup ? t('auth.signUpTitle') : t('auth.signInTitle')}
+        </h1>
+        <p className="mt-1 text-[13px] text-white/45">
+          {isSignup ? t('auth.signUpSubtitle') : t('auth.signInSubtitle')}
+        </p>
       </div>
 
       <form onSubmit={onSubmit} className="space-y-4">
@@ -83,31 +112,29 @@ export function LoginForm({ next }: { next: string }) {
           <Input
             id="password"
             type="password"
-            autoComplete={mode === 'signin' ? 'current-password' : 'new-password'}
+            autoComplete={isSignup ? 'new-password' : 'current-password'}
             required
             minLength={6}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {isSignup && <p className="text-[12px] text-white/35">{t('auth.passwordHint')}</p>}
         </div>
 
         {info && <p className="text-[13px] text-success">{info}</p>}
         {error && <p className="text-[13px] text-danger">{error}</p>}
 
         <Button type="submit" className="w-full" disabled={pending}>
-          {pending ? t('auth.pending') : mode === 'signin' ? t('auth.signIn') : t('auth.signUp')}
+          {pending ? t('auth.pending') : isSignup ? t('auth.signUp') : t('auth.signIn')}
         </Button>
       </form>
 
       <button
         type="button"
-        onClick={() => {
-          setMode((m) => (m === 'signin' ? 'signup' : 'signin'))
-          setError(null)
-        }}
+        onClick={() => switchMode(isSignup ? 'signin' : 'signup')}
         className="mt-4 w-full text-center text-[13px] text-white/45 hover:text-white/70 transition-colors"
       >
-        {mode === 'signin' ? t('auth.toSignUp') : t('auth.toSignIn')}
+        {isSignup ? t('auth.toSignIn') : t('auth.toSignUp')}
       </button>
     </Card>
   )
