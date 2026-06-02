@@ -1,6 +1,7 @@
 'use client'
 
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, X, ChevronUp, ChevronDown, ChevronLeft, ChevronRight } from 'lucide-react'
 import { Input, Select } from './ui/input'
 import { useI18n } from '@/i18n/provider'
@@ -160,20 +161,31 @@ export function BulkBar({
 }) {
   const { t } = useI18n()
   if (count === 0) return null
-  return (
-    <div className="flex flex-wrap items-center gap-2 rounded-xl border border-primary/30 bg-primary/[0.08] px-3 py-2">
-      <span className="text-[13px] font-medium text-white">{t('common.selected', { n: count })}</span>
-      <div className="ml-auto flex flex-wrap items-center gap-2">
-        {children}
+
+  // Floating toolbar portaled to <body>: it overlays content at the bottom
+  // centre and never shifts the page layout when a selection appears.
+  return createPortal(
+    <div className="pointer-events-none fixed inset-x-0 bottom-[5.5rem] z-[60] flex justify-center px-4 lg:bottom-6">
+      <div
+        className="pointer-events-auto flex max-w-[calc(100vw-2rem)] items-center gap-2 rounded-2xl border border-white/[0.12] px-3 py-2 shadow-2xl animate-fade-up"
+        style={{ background: 'rgba(20,24,33,0.97)', backdropFilter: 'saturate(180%) blur(16px)' }}
+      >
+        <span className="whitespace-nowrap pl-1 pr-1 text-[13px] font-medium text-white tabular-nums">
+          {t('common.selected', { n: count })}
+        </span>
+        <span className="h-5 w-px flex-shrink-0 bg-white/[0.12]" />
+        <div className="flex flex-wrap items-center gap-2">{children}</div>
         <button
           type="button"
           onClick={onClear}
-          className="rounded-lg px-2 py-1 text-[12px] text-white/55 hover:bg-white/[0.06] hover:text-white"
+          aria-label={t('common.clear')}
+          className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg text-white/50 hover:bg-white/[0.08] hover:text-white"
         >
-          {t('common.clear')}
+          <X size={16} />
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
