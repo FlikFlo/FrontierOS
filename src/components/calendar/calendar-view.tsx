@@ -16,7 +16,7 @@ const RT_TABLES = ['reminders']
 type CalendarViewProps =
   | { status: 'unconfigured' }
   | { status: 'error' }
-  | { status: 'ok'; reminders: Reminder[]; clients: ClientOpt[]; members: MemberOpt[] }
+  | { status: 'ok'; reminders: Reminder[]; clients: ClientOpt[]; members: MemberOpt[]; dealTitles?: Record<string, string> }
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const dateKey = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
@@ -30,6 +30,7 @@ export function CalendarView(props: CalendarViewProps) {
   const reminders = props.status === 'ok' ? props.reminders : (NO as Reminder[])
   const clients = props.status === 'ok' ? props.clients : (NO as ClientOpt[])
   const members = props.status === 'ok' ? props.members : (NO as MemberOpt[])
+  const dealTitles = props.status === 'ok' ? props.dealTitles ?? {} : {}
 
   const now = new Date()
   const [cursor, setCursor] = useState(new Date(now.getFullYear(), now.getMonth(), 1))
@@ -184,6 +185,8 @@ export function CalendarView(props: CalendarViewProps) {
           open
           clients={clients}
           members={members}
+          dealTitle={form.reminder?.deal_id ? dealTitles[form.reminder.deal_id] ?? null : null}
+          dealId={form.reminder?.deal_id ?? null}
           reminder={form.reminder}
           defaultDate={form.date}
           onClose={() => setForm((f) => ({ ...f, open: false }))}

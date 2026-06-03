@@ -2,13 +2,14 @@
 
 import { useState, type DragEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Pencil, Trash2 } from 'lucide-react'
+import { Pencil, Trash2, CalendarClock, CircleAlert } from 'lucide-react'
 import { useI18n } from '@/i18n/provider'
-import { formatMoney, cn } from '@/lib/utils'
+import { formatMoney, formatDate, cn } from '@/lib/utils'
 import type { DealStage } from '@/types/database'
 import type { DealRow } from './deals-view'
 
 const STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']
+const OPEN_STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation']
 
 const STAGE_DOT: Record<DealStage, string> = {
   lead: 'bg-white/40',
@@ -133,6 +134,24 @@ export function DealsBoard({
                       </span>
                       <span className="text-[10px] text-white/40">{deal.probability}%</span>
                     </div>
+                    {deal.nextStep ? (
+                      <div
+                        className={cn(
+                          'mt-2 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px]',
+                          deal.nextStep.overdue ? 'bg-danger/15 text-danger' : 'bg-white/[0.06] text-white/55',
+                        )}
+                      >
+                        <CalendarClock size={11} />
+                        {deal.nextStep.overdue
+                          ? t('deals.nextStep.overdue')
+                          : t('deals.nextStep.on', { date: formatDate(deal.nextStep.dueDate, locale) })}
+                      </div>
+                    ) : OPEN_STAGES.includes(deal.stage) ? (
+                      <div className="mt-2 inline-flex items-center gap-1 rounded-md bg-warning/10 px-1.5 py-0.5 text-[10px] text-warning/90">
+                        <CircleAlert size={11} />
+                        {t('deals.nextStep.none')}
+                      </div>
+                    ) : null}
                     {/* Touch-friendly stage move (drag is desktop-only). */}
                     <select
                       value={deal.stage}

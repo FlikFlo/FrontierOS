@@ -69,6 +69,42 @@ export async function removeDeal(id: string): Promise<{ error: string | null }> 
   return { error: null }
 }
 
+/**
+ * Schedule a follow-up for a deal — the link between the kanban and the
+ * calendar. The reminder inherits the deal's client and owner, so it shows up
+ * in the calendar, the notification bell, and the deal's "next step".
+ */
+export async function addDealFollowup(
+  dealId: string,
+  dueDate: string,
+  note: string,
+): Promise<{ error: string | null }> {
+  const supabase = await createClient()
+  if (!supabase) return { error: 'Supabase is not configured' }
+
+  const { data: deal } = await supabase
+    .from('deals')
+    .select('title, client_id, owner_id')
+    .eq('id', dealId)
+    .single()
+
+  const title = note.trim() || `Follow up: ${deal?.title ?? 'deal'}`
+  const { error } = await supabase.from('reminders').insert({
+    title,
+    due_date: dueDate,
+    client_id: deal?.client_id ?? null,
+    assignee_id: deal?.owner_id ?? null,
+    deal_id: dealId,
+    done: false,
+  })
+  if (error) return { error: error.message }
+
+  revalidatePath('/deals')
+  revalidatePath('/calendar')
+  revalidatePath('/dashboard')
+  return { error: null }
+}
+
 /** Move a deal to a new pipeline stage (kanban drag-and-drop). */
 export async function moveDeal(id: string, stage: DealStage): Promise<{ error: string | null }> {
   const supabase = await createClient()

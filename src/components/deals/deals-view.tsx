@@ -19,13 +19,15 @@ import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
 import { downloadCsv, type CsvColumn } from '@/lib/csv'
-import { moveDeal, removeDeal } from '@/app/(app)/deals/actions'
+import { moveDeal, removeDeal, addDealFollowup } from '@/app/(app)/deals/actions'
+import { FollowupPrompt } from './followup-prompt'
 import { bulkDelete, bulkUpdateStage } from '@/app/(app)/bulk-actions'
 import type { Deal, DealStage } from '@/types/database'
 
 const RT_TABLES = ['deals']
 
-export type DealRow = Deal & { clientName: string | null }
+export type DealNextStep = { dueDate: string; overdue: boolean }
+export type DealRow = Deal & { clientName: string | null; nextStep?: DealNextStep | null }
 
 type DealsViewProps =
   | { status: 'unconfigured' }
@@ -46,6 +48,7 @@ const STAGE_VARIANT: Record<DealStage, 'default' | 'warning' | 'success' | 'dang
 }
 
 const DEAL_STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation', 'won', 'lost']
+const OPEN_STAGES: DealStage[] = ['lead', 'qualified', 'proposal', 'negotiation']
 const DEAL_CSV: CsvColumn<DealRow>[] = [
   { header: 'Title', value: (d) => d.title },
   { header: 'Client', value: (d) => d.clientName },
@@ -116,11 +119,34 @@ export function DealsView(props: DealsViewProps) {
     clientName: d.client_id ? nameById.get(d.client_id) ?? null : null,
   })
 
+  const [followup, setFollowup] = useState<{ dealId: string; dealTitle: string; defaultDate: string } | null>(null)
+  const [followupBusy, setFollowupBusy] = useState(false)
+
   async function handleMove(id: string, stage: DealStage) {
     const prev = deals
+    const moved = prev.find((d) => d.id === id)
     setDeals((ds) => ds.map((d) => (d.id === id ? { ...d, stage } : d)))
     const res = await moveDeal(id, stage)
-    if (res.error) setDeals(prev)
+    if (res.error) {
+      setDeals(prev)
+      return
+    }
+    // Prompt to schedule the next step — but only when moving into an open stage
+    // and the deal has no upcoming follow-up (so it never nags needlessly).
+    if (moved && OPEN_STAGES.includes(stage) && !moved.nextStep) {
+      const d = new Date()
+      d.setDate(d.getDate() + 3)
+      setFollowup({ dealId: id, dealTitle: moved.title, defaultDate: d.toISOString().slice(0, 10) })
+    }
+  }
+
+  async function scheduleFollowup(dueDate: string, note: string) {
+    if (!followup) return
+    setFollowupBusy(true)
+    await addDealFollowup(followup.dealId, dueDate, note)
+    setFollowupBusy(false)
+    setFollowup(null)
+    router.refresh()
   }
 
   function handleSaved(deal: Deal) {
@@ -344,6 +370,17 @@ export function DealsView(props: DealsViewProps) {
           deal={form.deal}
           onClose={() => setForm({ open: false, deal: null })}
           onSaved={handleSaved}
+        />
+      )}
+
+      {followup && (
+        <FollowupPrompt
+          open
+          dealTitle={followup.dealTitle}
+          defaultDate={followup.defaultDate}
+          busy={followupBusy}
+          onSchedule={scheduleFollowup}
+          onSkip={() => setFollowup(null)}
         />
       )}
 

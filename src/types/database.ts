@@ -321,6 +321,7 @@ export interface Database {
           due_date: string
           client_id: string | null
           assignee_id: string | null
+          deal_id: string | null
           done: boolean
           created_at: string
           updated_at: string
@@ -331,6 +332,7 @@ export interface Database {
           due_date: string
           client_id?: string | null
           assignee_id?: string | null
+          deal_id?: string | null
           done?: boolean
           created_at?: string
           updated_at?: string

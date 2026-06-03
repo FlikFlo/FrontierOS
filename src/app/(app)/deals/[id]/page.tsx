@@ -9,12 +9,22 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
   const supabase = await createClient()
   if (!supabase) notFound()
 
-  const [dealRes, clientsRes, members] = await Promise.all([
+  const [dealRes, clientsRes, followupsRes, members] = await Promise.all([
     supabase.from('deals').select('*').eq('id', id).single(),
     supabase.from('clients').select('id, name').order('name'),
+    supabase.from('reminders').select('id, title, due_date, done').eq('deal_id', id).order('due_date'),
     getTeamMembers(),
   ])
   if (dealRes.error || !dealRes.data) notFound()
+
+  const today = new Date().toISOString().slice(0, 10)
+  const followups = (followupsRes.data ?? []).map((r) => ({
+    id: r.id,
+    title: r.title,
+    dueDate: r.due_date,
+    done: r.done,
+    overdue: !r.done && r.due_date < today,
+  }))
 
   const clients = (clientsRes.data ?? []).map((c) => ({ id: c.id, name: c.name }))
   const nameById = new Map(clients.map((c) => [c.id, c.name]))
@@ -50,6 +60,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       contact={contact}
       comments={comments}
       attachments={attachments}
+      followups={followups}
     />
   )
 }

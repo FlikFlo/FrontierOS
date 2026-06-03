@@ -3,19 +3,22 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { ArrowLeft, Pencil } from 'lucide-react'
+import { ArrowLeft, Pencil, Plus, CalendarClock } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '../ui/card'
 import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { EntityThread, type AttachmentView } from '../entity-thread'
 import { DealFormModal, type ClientOption, type MemberOption } from './deal-form-modal'
+import { FollowupPrompt } from './followup-prompt'
 import { useI18n } from '@/i18n/provider'
 import { useRealtime } from '@/lib/use-realtime'
 import { formatDate, formatMoney } from '@/lib/utils'
+import { addDealFollowup } from '@/app/(app)/deals/actions'
 import type { Comment, Deal, DealStage } from '@/types/database'
 
 export type DealDetail = Deal & { clientName: string | null }
 export type DealContact = { name: string; title: string | null; phone: string | null; email: string | null }
+export type DealFollowup = { id: string; title: string; dueDate: string; done: boolean; overdue: boolean }
 export type { AttachmentView }
 
 const RT_TABLES = ['deals']
@@ -45,6 +48,7 @@ export function DealDetailView({
   contact,
   comments,
   attachments,
+  followups = [],
 }: {
   deal: DealDetail
   clients: ClientOption[]
@@ -52,12 +56,30 @@ export function DealDetailView({
   contact?: DealContact | null
   comments: Comment[]
   attachments: AttachmentView[]
+  followups?: DealFollowup[]
 }) {
   const { t, locale } = useI18n()
   const router = useRouter()
   useRealtime(RT_TABLES)
   const [editOpen, setEditOpen] = useState(false)
+  const [followupOpen, setFollowupOpen] = useState(false)
+  const [followupBusy, setFollowupBusy] = useState(false)
   const ownerName = deal.owner_id ? members.find((m) => m.id === deal.owner_id)?.name ?? null : null
+  const openFollowups = followups.filter((f) => !f.done)
+
+  function defaultFollowupDate() {
+    const d = new Date()
+    d.setDate(d.getDate() + 3)
+    return d.toISOString().slice(0, 10)
+  }
+
+  async function scheduleFollowup(dueDate: string, note: string) {
+    setFollowupBusy(true)
+    await addDealFollowup(deal.id, dueDate, note)
+    setFollowupBusy(false)
+    setFollowupOpen(false)
+    router.refresh()
+  }
   const weighted = (deal.amount * deal.probability) / 100
   const cases = deal.est_cases_per_month
   const weightedCases = Math.round((cases * deal.probability) / 100)
@@ -142,7 +164,49 @@ export function DealDetailView({
         </Card>
       )}
 
+      <Card>
+        <CardHeader className="flex items-center justify-between">
+          <CardTitle>
+            <span className="inline-flex items-center gap-2">
+              <CalendarClock size={16} />
+              {t('deals.followup.sectionTitle')}
+            </span>
+          </CardTitle>
+          <Button size="sm" onClick={() => setFollowupOpen(true)}>
+            <Plus size={14} />
+            {t('deals.followup.add')}
+          </Button>
+        </CardHeader>
+        <CardContent>
+          {openFollowups.length === 0 ? (
+            <p className="text-[13px] text-white/45">{t('deals.followup.empty')}</p>
+          ) : (
+            <ul className="divide-y divide-white/[0.06]">
+              {openFollowups.map((f) => (
+                <li key={f.id} className="flex items-center justify-between gap-3 py-2 text-sm">
+                  <span className="min-w-0 truncate text-white/85">{f.title}</span>
+                  <Badge variant={f.overdue ? 'danger' : 'default'}>
+                    {f.overdue ? t('deals.nextStep.overdue') : formatDate(f.dueDate, locale)}
+                  </Badge>
+                </li>
+              ))}
+            </ul>
+          )}
+        </CardContent>
+      </Card>
+
       <EntityThread entity="deal" entityId={deal.id} comments={comments} attachments={attachments} />
+
+      {followupOpen && (
+        <FollowupPrompt
+          open
+          dealTitle={deal.title}
+          defaultDate={defaultFollowupDate()}
+          busy={followupBusy}
+          onSchedule={scheduleFollowup}
+          onSkip={() => setFollowupOpen(false)}
+        />
+      )}
 
       {editOpen && (
         <DealFormModal

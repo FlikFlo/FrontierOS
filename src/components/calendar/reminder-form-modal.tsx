@@ -2,7 +2,8 @@
 
 import { useState, type FormEvent } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2 } from 'lucide-react'
+import Link from 'next/link'
+import { Trash2, Handshake } from 'lucide-react'
 import { Modal } from '../ui/modal'
 import { Button } from '../ui/button'
 import { Input, Label, Select } from '../ui/input'
@@ -25,6 +26,8 @@ export function ReminderFormModal({
   members = [],
   reminder,
   defaultDate,
+  dealId = null,
+  dealTitle = null,
 }: {
   open: boolean
   onClose: () => void
@@ -32,6 +35,8 @@ export function ReminderFormModal({
   members?: MemberOpt[]
   reminder?: Reminder | null
   defaultDate: string
+  dealId?: string | null
+  dealTitle?: string | null
 }) {
   const { t } = useI18n()
   const router = useRouter()
@@ -119,6 +124,18 @@ export function ReminderFormModal({
             ))}
           </Select>
         </div>
+
+        {dealId && (
+          <Link
+            href={`/deals/${dealId}`}
+            onClick={onClose}
+            className="flex items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-[13px] text-primary-light transition-colors hover:bg-white/[0.06]"
+          >
+            <Handshake size={14} />
+            <span className="text-white/45">{t('calendar.form.linkedDeal')}:</span>
+            <span className="truncate">{dealTitle ?? '—'}</span>
+          </Link>
+        )}
 
         <label className="flex items-center gap-2 text-sm text-white/70">
           <input
