@@ -346,6 +346,8 @@ const en = {
     pending: 'Please wait…',
     genericError: 'Authentication failed. Check your details and try again.',
     checkEmail: 'Account created. Check your email to confirm, then sign in.',
+    invalidEmail: 'Enter a valid email address.',
+    passwordShort: 'Password must be at least 6 characters.',
   },
   a11y: {
     notifications: 'Notifications',
@@ -699,6 +701,8 @@ const fr: Dictionary = {
     pending: 'Veuillez patienter…',
     genericError: 'Échec de l’authentification. Vérifiez vos informations et réessayez.',
     checkEmail: 'Compte créé. Vérifiez votre e-mail pour confirmer, puis connectez-vous.',
+    invalidEmail: 'Saisissez une adresse e-mail valide.',
+    passwordShort: 'Le mot de passe doit comporter au moins 6 caractères.',
   },
   a11y: {
     notifications: 'Notifications',

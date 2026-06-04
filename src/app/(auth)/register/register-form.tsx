@@ -29,9 +29,25 @@ export function RegisterForm({ token, role }: { token: string; role: string | nu
     )
   }
 
-  async function onSubmit(e: FormEvent) {
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
+
+    // Read straight from the form so browser/password-manager autofill works even
+    // when React's onChange never fired (a common mobile cause of a "dead" button).
+    const fd = new FormData(e.currentTarget)
+    const emailValue = String(fd.get('email') ?? '').trim()
+    const passwordValue = String(fd.get('password') ?? '')
+
+    if (!emailValue || !/.+@.+/.test(emailValue)) {
+      setError(t('auth.invalidEmail'))
+      return
+    }
+    if (passwordValue.length < 6) {
+      setError(t('auth.passwordShort'))
+      return
+    }
+
     setPending(true)
 
     const supabase = createClient()
@@ -42,7 +58,10 @@ export function RegisterForm({ token, role }: { token: string; role: string | nu
     }
 
     // 1) create the account (lands as 'pending' via the DB trigger)
-    const { data, error: signUpError } = await supabase.auth.signUp({ email, password })
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: emailValue,
+      password: passwordValue,
+    })
     if (signUpError) {
       setError(signUpError.message || t('auth.genericError'))
       setPending(false)
@@ -84,6 +103,7 @@ export function RegisterForm({ token, role }: { token: string; role: string | nu
           <Label htmlFor="email">{t('auth.email')}</Label>
           <Input
             id="email"
+            name="email"
             type="email"
             autoComplete="email"
             required
@@ -96,6 +116,7 @@ export function RegisterForm({ token, role }: { token: string; role: string | nu
           <Label htmlFor="password">{t('auth.password')}</Label>
           <Input
             id="password"
+            name="password"
             type="password"
             autoComplete="new-password"
             required
@@ -108,7 +129,7 @@ export function RegisterForm({ token, role }: { token: string; role: string | nu
 
         {error && <p className="text-[13px] text-danger">{error}</p>}
 
-        <Button type="submit" className="w-full" disabled={pending || !email || password.length < 6}>
+        <Button type="submit" className="w-full" disabled={pending}>
           {pending ? t('auth.pending') : t('auth.activate')}
         </Button>
       </form>
