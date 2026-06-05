@@ -8,9 +8,10 @@ import { Badge } from '../ui/badge'
 import { Button } from '../ui/button'
 import { Input, Select } from '../ui/input'
 import { LangSwitcher } from '../ui/lang-switcher'
+import { ConfirmDialog } from '../ui/confirm-dialog'
 import { useI18n } from '@/i18n/provider'
 import { createClient } from '@/lib/supabase/client'
-import { updateMyProfile, updateMember } from '@/app/(app)/settings/actions'
+import { updateMyProfile, updateMember, removeMember } from '@/app/(app)/settings/actions'
 import { createInvite, revokeInvite, type InviteRow } from '@/app/(app)/settings/invite-actions'
 import { ROLES, type Role } from '@/rbac/config'
 
@@ -270,8 +271,11 @@ function MemberRow({
   const [role, setRole] = useState<Role>(member.role)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [removing, setRemoving] = useState(false)
 
   const dirty = name !== (member.full_name ?? '') || role !== member.role
+  const label = member.full_name?.trim() || member.email || t('settings.unnamed')
 
   async function save() {
     setSaving(true)
@@ -282,6 +286,14 @@ function MemberRow({
       setSaved(true)
       onSaved()
     }
+  }
+
+  async function remove() {
+    setRemoving(true)
+    const res = await removeMember(member.id)
+    setRemoving(false)
+    setConfirmOpen(false)
+    if (!res.error) onSaved()
   }
 
   return (
@@ -316,6 +328,27 @@ function MemberRow({
         {saved ? <Check size={15} /> : null}
         {saving ? t('common.saving') : saved ? t('settings.saved') : t('common.save')}
       </Button>
+      {!isSelf && (
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          aria-label={t('settings.removeMember')}
+          title={t('settings.removeMember')}
+          className="inline-flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg text-white/40 transition-colors hover:bg-danger/10 hover:text-danger"
+        >
+          <Trash2 size={15} />
+        </button>
+      )}
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title={t('settings.removeMember')}
+        body={t('settings.removeMemberBody', { name: label })}
+        confirmLabel={removing ? t('common.saving') : t('settings.removeMember')}
+        cancelLabel={t('common.cancel')}
+        onConfirm={remove}
+        onCancel={() => setConfirmOpen(false)}
+      />
     </li>
   )
 }

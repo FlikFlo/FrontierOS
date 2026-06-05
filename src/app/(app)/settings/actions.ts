@@ -34,3 +34,14 @@ export async function updateMember(id: string, fullName: string, role: Role): Pr
   revalidatePath('/settings')
   return {}
 }
+
+/** Owner-only — remove a member (deletes their profile → revokes all access). */
+export async function removeMember(id: string): Promise<Result> {
+  const supabase = await createClient()
+  if (!supabase) return { error: 'unconfigured' }
+  const rpc = supabase.rpc.bind(supabase) as unknown as RpcFn
+  const { error } = await rpc('admin_remove_member', { p_id: id })
+  if (error) return { error: error.message }
+  revalidatePath('/settings')
+  return {}
+}
